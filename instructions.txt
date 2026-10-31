@@ -1,0 +1,437 @@
+# MASTER BUILD PROMPT — MONOLITH
+
+You are building **MONOLITH**, a fully functional personal planning and scheduling application. This is not a UI concept, prototype, or static demo. Build a working application with persistent data, real scheduling logic, editable calendars, and AI-assisted planning.
+
+## 1. Product vision
+
+MONOLITH is a personal planning environment where I can explain my goals, commitments, courses, projects, and deadlines in natural language.
+
+The application should turn that information into an organized, realistic schedule.
+
+For example, I might say:
+
+"I have an Agentic AI course with 10 sessions. I want to complete half a session every Saturday. Mondays are for my personal project, and Tuesdays are for university work. I also have university classes during the week."
+
+The app should:
+- Understand the information and extract individual tasks, commitments, and goals.
+- Create a structured plan.
+- Assign tasks to appropriate dates and available time slots.
+- Estimate when projects and courses will be completed.
+- Show the resulting schedule in a calendar.
+- Let me edit, move, add, remove, complete, or skip activities.
+- Recalculate future plans when something changes.
+
+The experience should feel like a personal command center, not a conventional to-do list.
+
+## 2. Visual direction — MONOLITH meets dotfiles
+
+**The main design language is MONOLITH. The calendar is where the dotfiles aesthetic comes in.**
+
+### Overall interface: MONOLITH
+- Experimental brutalism with Swiss-inspired graphic design.
+- Strong typographic hierarchy and oversized editorial typography.
+- High-contrast surfaces, asymmetric layouts, deliberate whitespace.
+- Architectural composition rather than conventional dashboard cards.
+- Restrained color palette, with a distinctive accent color.
+- Visually bold, sophisticated, and slightly unconventional.
+
+### Calendar: dotfiles / Hyprland-inspired
+The calendar should feel like a beautifully customized Linux desktop environment.
+
+Consider:
+- Compact, precise, information-dense layouts.
+- Monospaced typography for dates, time labels, metadata, and task details.
+- Floating panels, thin borders, subtle separators, and small status indicators.
+- Minimal but distinctive visual representations of scheduled activities.
+- A custom status-bar-like area for date, workload, progress, and schedule information.
+- Carefully designed hover, selection, and active states.
+
+Do not turn the entire application into a terminal. The calendar should borrow the visual language of dotfiles while remaining intuitive and easy to use.
+
+### Design principles
+- Avoid generic SaaS dashboards.
+- Avoid excessive rounded cards, gradients, and meaningless decorative elements.
+- Do not sacrifice usability for visual experimentation.
+- Make the calendar readable at a glance.
+- Ensure the interface works on desktop and remains usable on smaller screens.
+- Use real interface elements and working interactions, not decorative mock controls.
+
+## 3. Core application structure
+
+Create these main areas:
+
+### A. Command / Planning input
+A prominent natural-language input where I can describe:
+- New goals.
+- Courses and their sessions.
+- Projects and milestones.
+- Recurring routines.
+- Deadlines.
+- Weekly commitments.
+- Changes to existing plans.
+
+Example:
+
+"Add a machine learning course with 12 lessons. Schedule one lesson every Sunday, starting next week. I want to finish it before December."
+
+The assistant should interpret the request, extract structured information, and show me a reviewable plan before applying significant changes.
+
+### B. Calendar
+The central part of the application.
+
+Provide:
+- Month view.
+- Week view.
+- Day view.
+- Clear representation of scheduled tasks and fixed commitments.
+- Distinct visual treatment for university classes, projects, courses, personal routines, and deadlines.
+- Previous/next navigation and a jump-to-today action.
+- Workload indicators.
+- Completed, overdue, and unscheduled task states.
+
+Allow me to click an activity to inspect and edit it. Support moving activities to another date, preferably with drag and drop, with an accessible alternative.
+
+### C. Projects and courses
+A place to inspect larger goals and their progress.
+
+Each project or course should show:
+- Name and description.
+- Total tasks or sessions.
+- Completed and remaining work.
+- Milestones.
+- Target deadline, if any.
+- Estimated completion date.
+- Upcoming scheduled sessions.
+- Progress indicator.
+
+I should be able to open a course and see its individual sessions, or open a project and see its milestones and tasks.
+
+### D. Tasks and backlog
+Show tasks that are:
+- Scheduled.
+- Unscheduled.
+- Overdue.
+- Completed.
+- Waiting on a dependency.
+
+Allow manual task creation and editing without AI.
+
+### E. Settings
+Include settings for:
+- Weekly availability.
+- Working days.
+- Preferred working hours.
+- Default session duration.
+- Minimum break between sessions.
+- Timezone.
+- Scheduling preferences.
+- AI provider and model configuration.
+
+## 4. The scheduling engine — essential functionality
+
+This is one of the most important parts of MONOLITH.
+
+Do not implement scheduling as a simple AI-generated list of dates. Build a separate, deterministic scheduling engine that takes structured tasks and calendar constraints and produces a valid schedule.
+
+The AI should interpret my intentions. The scheduling engine should decide where work actually fits.
+
+### Task information
+
+A task should support fields such as:
+- Title and description.
+- Estimated total duration.
+- Remaining duration.
+- Deadline.
+- Priority.
+- Preferred days.
+- Preferred time range.
+- Minimum and maximum session duration.
+- Whether it can be split into multiple sessions.
+- Whether it is flexible or must happen at a fixed time.
+- Associated project or course.
+- Dependencies.
+- Completion status.
+
+Not every field needs to be supplied. Use sensible defaults and allow me to edit them.
+
+### Fixed commitments
+
+Support recurring and one-time commitments.
+
+Examples:
+- University classes every Wednesday at 10:00.
+- Personal project work every Monday.
+- Academic study every Tuesday.
+- Course sessions every Saturday.
+- A one-time appointment on a particular date.
+
+Fixed commitments must take precedence over flexible tasks. Never silently schedule another activity on top of them.
+
+### Scheduling rules
+
+Implement the following rules:
+
+1. Respect fixed commitments and unavailable time.
+2. Respect the user's weekly availability and preferred working hours.
+3. Schedule tasks before their deadlines whenever possible.
+4. Prioritize urgent and important tasks without ignoring older commitments.
+5. Respect dependencies: a dependent task cannot be scheduled before its prerequisite is completed.
+6. Respect preferred days and recurring routines when possible.
+7. Split large tasks into smaller sessions when allowed.
+8. Respect minimum and maximum session durations.
+9. Include breaks between demanding sessions.
+10. Avoid unrealistic daily workloads.
+11. Avoid scheduling every available minute. Preserve reasonable free time.
+12. Spread long-term work across available days rather than unnecessarily concentrating it.
+13. Never silently discard a task that cannot be scheduled.
+
+### Example: splitting course sessions
+
+Suppose a course has 10 sessions, each estimated to take 2 hours.
+
+I say:
+
+"I want to study half a session every Saturday."
+
+The scheduler should:
+- Interpret half a session as approximately 1 hour.
+- Create 20 study blocks.
+- Schedule one block each Saturday.
+- Preserve the order of the course sessions.
+- Calculate the projected completion date.
+- Update that estimate if I change the schedule or complete sessions early.
+
+If the duration or meaning is ambiguous, ask me instead of inventing important details.
+
+### Handling conflicts
+
+If there is not enough time before a deadline:
+- Do not overbook the calendar.
+- Identify the conflicting tasks.
+- Explain why they cannot all fit.
+- Show which tasks remain unscheduled.
+- Offer reasonable alternatives, such as moving flexible work, reducing session duration, or changing a deadline.
+
+Never pretend that an impossible schedule is achievable.
+
+### Rescheduling
+
+The scheduling engine must be able to recalculate future activities when:
+- I complete a task.
+- I miss a scheduled session.
+- I move an activity.
+- I add a new deadline.
+- I change my availability.
+- I change a recurring commitment.
+- A task takes longer than expected.
+
+Preserve completed activities and fixed commitments. Do not unexpectedly rearrange everything whenever I make a small change.
+
+Provide a preview of significant rescheduling changes before applying them. Clearly distinguish locked activities from flexible ones.
+
+### Scheduling transparency
+
+When a task is assigned to a date, I should be able to understand why.
+
+For example:
+"Scheduled Saturday because it matches your preferred study day, has one hour available, and does not conflict with your university commitments."
+
+The scheduler should also provide a reason when it cannot assign a task.
+
+## 5. AI assistant
+
+Build an AI integration layer that can work with free-access models.
+
+Preferred providers:
+- Google Gemini API, using an available free tier.
+- OpenRouter, using models that are currently available at no cost.
+
+Do not require paid APIs or subscriptions.
+
+The AI should:
+- Understand natural-language planning requests.
+- Extract tasks, durations, dates, deadlines, and recurring patterns.
+- Identify missing or ambiguous information.
+- Ask clarifying questions when necessary.
+- Turn requests into structured data.
+- Explain proposed plans in understandable language.
+- Understand changes to existing plans.
+- Summarize progress and upcoming work.
+
+Important: the AI must not directly write arbitrary dates into the calendar. It should submit structured scheduling requests to the scheduling engine.
+
+Use a provider-independent architecture so that another model can be configured later.
+
+Keep API keys out of frontend code and source control. Store credentials securely on the local backend, and provide a clear configuration interface or environment-variable setup.
+
+The application must remain usable without an AI API key. Manual task creation, editing, and scheduling should still work.
+
+Do not make up AI responses or simulate successful API calls.
+
+## 6. Data and persistence
+
+This must be a genuinely usable application.
+
+Implement:
+- Persistent storage.
+- Projects, courses, tasks, commitments, deadlines, and calendar events.
+- Reliable editing and deletion.
+- Completion tracking.
+- Recurring commitments.
+- Data validation.
+- Basic error handling.
+- Database migrations or a reliable schema initialization process.
+- Backup and export of user data.
+
+Prefer a local-first design. My personal planning data should be stored locally rather than requiring a hosted database or paid cloud service.
+
+Use SQLite or another lightweight local database.
+
+Avoid mandatory account creation, authentication services, paid hosting, or subscriptions.
+
+## 7. Recommended technical direction
+
+Choose a lightweight, maintainable architecture suitable for a Linux laptop with 16 GB RAM and integrated graphics.
+
+Suggested stack:
+- Frontend: React + TypeScript + Vite.
+- Styling: Tailwind CSS or a similarly lightweight styling approach.
+- Backend: Python + FastAPI.
+- Database: SQLite.
+- Data validation: Pydantic.
+- Calendar interactions: a suitable maintained calendar library, customized to match the visual direction.
+- AI integration: backend provider adapters for Gemini and OpenRouter.
+
+These are recommendations, not a reason to discard a better existing project structure. Inspect the repository first and reuse working code where appropriate.
+
+Avoid unnecessary dependencies and complicated infrastructure.
+
+## 8. Essential user interactions
+
+The following must genuinely work:
+
+- Create a project or course.
+- Add tasks manually.
+- Add tasks through natural language.
+- Create recurring commitments.
+- Generate a schedule.
+- Preview and apply proposed scheduling changes.
+- Open and edit scheduled activities.
+- Move an activity to another date.
+- Mark tasks complete.
+- Skip or reschedule missed tasks.
+- Delete tasks and projects with appropriate confirmation.
+- Change availability.
+- Recalculate future schedules.
+- View project progress and estimated completion dates.
+- See unscheduled tasks and understand why they remain unscheduled.
+- Close and reopen the application without losing data.
+
+Use confirmation for destructive actions and meaningful changes. Do not make buttons that only look functional.
+
+## 9. Development and quality requirements
+
+Do not stop after generating a design, mockup, or architecture plan.
+
+Work through the actual implementation.
+
+Suggested order:
+
+**Phase 1 — Foundation**
+- Inspect the repository.
+- Establish the application architecture.
+- Implement the database and data models.
+- Create the main application layout.
+- Implement the MONOLITH visual system.
+
+**Phase 2 — Calendar**
+- Build the calendar views.
+- Implement fixed and flexible activities.
+- Add task creation, editing, completion, and movement.
+- Connect the calendar to persistent storage.
+
+**Phase 3 — Scheduling engine**
+- Implement availability and recurring commitments.
+- Implement task prioritization and date assignment.
+- Handle split sessions, deadlines, dependencies, and conflicts.
+- Implement rescheduling and explanations.
+- Write automated tests.
+
+**Phase 4 — AI**
+- Add Gemini and OpenRouter adapters.
+- Implement structured extraction from natural language.
+- Validate AI-generated task data.
+- Connect AI proposals to the scheduling engine.
+- Add clarification and approval flows.
+
+**Phase 5 — Reliability**
+- Test data persistence.
+- Test scheduling edge cases.
+- Test conflicting commitments and impossible deadlines.
+- Test missed and completed activities.
+- Fix errors and improve usability.
+- Document installation, configuration, and usage.
+
+Do not leave important features as TODOs or placeholder buttons.
+
+## 10. Testing scenarios
+
+Use these scenarios to verify the actual application:
+
+**Scenario A — Course scheduling**
+
+I create a course with 10 sessions, each estimated at 2 hours. I request half a session every Saturday.
+
+Expected result: 20 one-hour study blocks, in order, with a calculated completion date.
+
+**Scenario B — Weekly commitments**
+
+I specify:
+- Monday: personal project.
+- Tuesday: university academics.
+- Saturday: course study.
+- Several fixed university classes throughout the week.
+
+Expected result: recurring commitments are respected, and flexible work is fitted around them.
+
+**Scenario C — Deadline conflict**
+
+I create multiple tasks with overlapping deadlines and insufficient availability.
+
+Expected result: the application identifies the conflict instead of overbooking.
+
+**Scenario D — Missed session**
+
+I miss a scheduled course session.
+
+Expected result: the application offers to reschedule remaining work while preserving completed sessions and fixed commitments.
+
+**Scenario E — Changing availability**
+
+I make Wednesdays unavailable.
+
+Expected result: future flexible activities are recalculated, and the application shows what changed.
+
+**Scenario F — Persistence**
+
+I close and reopen the application.
+
+Expected result: all projects, tasks, commitments, progress, and schedules remain intact.
+
+## 11. Final instructions
+
+- Prioritize a reliable scheduling engine over flashy AI features.
+- Prioritize actual functionality over impressive-looking mockups.
+- Keep the application lightweight and free to operate.
+- Do not require paid services.
+- Do not hardcode example tasks as the application's real data.
+- Use sample data only as optional demo content that I can remove.
+- Make sensible implementation decisions independently.
+- If an important requirement is ambiguous, ask me before making an irreversible design decision.
+- Keep the code modular, readable, and maintainable.
+- Run the application and test the implemented functionality.
+- Provide clear setup instructions for Fedora/Linux.
+
+**Definition of done:** I can open MONOLITH, enter my real university timetable and personal commitments, describe a course or project in natural language, receive a realistic proposed schedule, approve it, see it on the calendar, edit it, complete tasks, and have the remaining schedule adapt intelligently. My data survives restarts, and the application works even when AI is not configured.
+
+Build the actual application, not another prototype.

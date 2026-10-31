@@ -1,0 +1,254 @@
+================================================================================
+MONOLITH — REMAINING WORK & FIX PLAN (V2)
+Compiled 2026-10-31. Supersedes the "all phases [COMPLETED]" claims in
+ACTION_PLAN.txt, which are only partially true: the app is real and broad, but
+two blockers violate the flagship requirements and the test suite does not
+check them. This file lists only what is left.
+================================================================================
+VERIFIED BASELINE (what already works — do not rebuild)
+- Both servers run clean: backend 12/12 tests pass, tsc -b clean, browser
+  console clean with backend on :8000 + Vite on :5174.
+- Full UI exists: Waybar/nav, CommandBar, Calendar (day/week/month, inspector,
+  conflicts panel, keybindings), Projects (+ course generator modal),
+  Commitments (full CRUD + tag filter), Tasks, Settings (incl. export/import/
+  demo/wipe).
+- Scheduler core is genuinely implemented: commitment overlap blocking,
+  commitment minutes toward daily cap, min/max session durations, splittable
+  flag, active 15-min breaks, strict datetime dependencies, deadline gating,
+  fact-based unscheduled diagnostics, reschedule-missed refund.
+- AI layer: real Gemini/OpenRouter HTTP calls (no mockery), server-side key
+  storage, deterministic offline parser fallback (usable with no key).
+- Persistence: SQLite with FKs, export/import round-trip, demo seed/reset.
+
+================================================================================
+CURRENT ISSUES / ERRORS FOUND (audit results, first-hand verified where marked)
+================================================================================
+BLOCKERS
+ B1 +--+ Confirmed first-hand | scheduler.py:685-691:
+      Chained single-session tasks pack onto the SAME day ("unless the task is
+      not splittable" comment inverts Rule 12). Result: 20-course blocks land
+      on 3 Saturdays (7/7/6) instead of 1 block per Saturday. Directly
+      violates instructions.txt:194-199 (Scenario A) and Rule 12.
+      Test A passes only because it asserts weekday()==5, not cadence.
+ B2 +--+ Confirmed first-hand | routers/schedule.py:33: dedupe set built only
+      from preserved rows where locked is truthy, but completed/skipped/past
+      preserved rows are locked=0, while run_schedule re-emits them as
+      locked=True (scheduler.py:747). Every /schedule/apply and /regenerate
+      re-inserts another copy of every completed/past block: clutter,
+      double-counted daily capacity, inflated diffs.
+ B3  API key leaks: GET /settings returns ai_api_key plaintext
+      (routers/settings.py:7-9) and GET /export embeds it (db.export_all).
+      instructions.txt:265 requires keys stay server-side.
+      Also invalid CORS combo: allow_origins=["*"] + allow_credentials=True
+      (main.py:8-14).
+
+MAJOR FUNCTIONAL GAPS (spec features still missing or half-built)
+ G1  Pre-commitment free time unreachable: scheduler.py:464-467/541-544 seeds
+      day_last_end from ALL blocked intervals; a 09:00-10:00 gap before a
+      10:00 class can never be filled. Underuses commitment days.
+ G2  TasksView cannot EDIT tasks (api.tasks.update dead code); no UI for
+      preferred_start/preferred_end (model supports, scheduler uses), no
+      inputs for min/max session minutes (state exists, no controls);
+      dependency dropdown allows self-cycle; no overdue /
+      dependency-waiting row indicators.
+ G3  generate-sessions endpoint (routers/projects.py): start_date accepted
+      but ignored; deadline stamped onto EVERY session (whole course forced
+      before one date); estimated_weeks == block_count (frequency unused);
+      repeated POST duplicates the whole chain (no idempotence).
+ G4  Skip semantics: skipped blocks stay as ghosts on the calendar AND the
+      engine re-books the minutes on next regen; skip refunds nothing.
+ G5  Editing a commitment leaves stale locked blocks for the old time; next
+      regen double-books both old and new. db.update_commitment never touches
+      schedule_blocks.
+ G6  Timezone wiring dead: settings.timezone and default_session_minutes are
+      stored but read by nothing (spec 3.E wants them). reschedule-missed
+      compares naive-local timestamps against a UTC-aware "now" as strings —
+      wrong "missed" marking for any negative UTC offset. Mixed clocks
+      (local date.today() vs UTC parse_dt) inside one engine run.
+ G7  Clarification loop broken at both ends: (a) frontend REFINE button is a
+      stale-closure bug — the typed answer never reaches /ai/extract
+      (CommandBar.tsx:167-172); (b) backend clarifications are a passive
+      string list nothing consumes (ai/offline_parser.py:216-222).
+ G8  "Preview on Calendar" is misleading: it previews a regen of the CURRENT
+      db, ignoring the pending proposal (CommandBar.tsx:62-71). Proposal
+      cards are the only true preview.
+ G9  Month view fetch window starts 2 weeks before current week — the first
+      1-2 weeks of the month grid can render empty; month header row also
+      sits inside a 6-row grid (layout spill).
+ G10 Fake telemetry presented as real: Waybar "72% DAY COMPLETED" is a
+      hardcoded initializer that goes stale; "CPU 12% | RAM 4.2G" invented
+      (App.tsx:19, Waybar.tsx:150-152). Spec: "no buttons/objects that only
+      look functional".
+
+ROBUSTNESS/API DEFECTS
+ R1  PATCH endpoints cannot null/clear deadline or target dates
+      (all routers filter v is not None).
+ R2  /schedule/blocks/{id}/move does not set locked=True (patch endpoint
+      does) → manually moved blocks are silently deleted by next regen
+      (violates "don't unexpectedly rearrange", instructions.txt:228).
+ R3  import_all (db.py:362-459): no validation; bad payload raises raw
+      IntegrityError → 500 AFTER reset_db already wiped user data.
+ R4  /demo/seed is not idempotent (double-seed duplicates everything).
+ R5  No schema migration path (CREATE TABLE IF NOT EXISTS only;
+      instructions.txt:283). In-progress "today" blocks are neither preserved
+      nor deleted on apply (double-booking the rest of the day).
+ R6  AI-path apply can 500: apply_proposal indexes required keys directly
+      (service.py:52-93); AI JSON missing keys kills apply. proposal.summary
+      renders as "undefined" on the AI path too (CommandBar.tsx:130).
+ R7  Hardcoded frontend BASE (api.ts:1) bypasses the (dead) Vite /api proxy;
+      works only when backend is on exactly 127.0.0.1:8000.
+
+FRONTEND POLISH
+ P1  ~12 handlers without try/catch (Tasks/Calendar/Projects create, complete,
+      move, delete) — failures are silent button dead-ends.
+ P2  REGEN [r] hotkey calls /schedule/apply directly (mutates the db, no
+      preview/confirm); footer hint "[1-3] views" is wrong; hotkeys leak into
+      focused buttons.
+ P3  Dead weight: react-big-calendar + lucide-react + react-router-dom (+
+      @types/react-big-calendar) never imported; App.css dead; Material
+      Symbols font loaded unused; scrollRef never scrolled; 6 dead api.ts
+      methods; stale dist/ and starter assets.
+ P4  Commitments form: kind/year controls missing (always "fixed"); weekly
+      commitment with 0 days accepted and silently never fires; delete
+      confirm text wrong for one-time entries.
+
+TESTS
+ T1  Tests mutate the real dev DB (backend/data/monolith.db) — needs a
+      temp-DB fixture.
+ T2  Docstrings promise more than asserts check (Scenario A/F weakest;
+      B asserts overlap only if placement happens to be Wednesday).
+ MISSING TESTS: apply-no-duplication, pre-commitment gap usage, one-block-per-
+      preferred-day cadence, UTC-5 missed logic, PATCH null-clearing, import
+      validation, skip refund, /move locking.
+
+================================================================================
+STEP-BY-STEP ACTION PLAN (tackle in order; each step is small and shippable)
+================================================================================
+
+PHASE 0 — SECRET + SAFETY HYGIENE (tiny diffs, do first)
+ Step 0.1 routers/settings.py GET: never return ai_api_key
+          (return "********" when set, "" when unset). Mask in db.export_all
+          settings row the same way. [Fixes B3]
+ Step 0.2 main.py CORS: drop allow_credentials=True or pin explicit origins
+          (["http://localhost:5174","http://127.0.0.1:5174"]).
+ Acceptance: curl /settings and /export contain no key material.
+
+PHASE 1 — SCHEDULER CORRECTNESS (the core spec)
+ Step 1.1 [B1] scheduler.py:685-691: advance cur_earliest to the NEXT working
+          day when a task is non-splittable AND has a dependency (or simply
+          always for non-splittable single-block tasks). One line: reuse the
+          existing next-day expression unconditionally.
+          + test: 20 chained/flex tasks → exactly 1 block per distinct date.
+ Step 1.2 [B2] routers/schedule.py apply: build dedupe key set from ALL
+          preserved rows regardless of lock: add (b["start_dt"], b["title"])
+          for completed/skipped/past rows too (same 1-2 lines).
+          + test: generate → complete a block → apply twice → assert
+          block count unchanged.
+ Step 1.3 [G5] db.update_commitment: delete future locked blocks of that
+          commitment id and trigger regen from the router (commitments.py
+          update → after db update call the same delete used by apply).
+ Step 1.4 [G1] Replace day_last_end pointer walk with free-INTERVAL scan:
+          per day, subtract blocked intervals from the working window and
+          iterate free segments (scheduler has all data already). Removes
+          systematic underuse of pre-commitment morning gaps.
+ Step 1.5 [G4] Task skip: refund remaining_minutes (+= block minutes) in
+          routers/tasks.py skip, and treat skipped like completed in the
+          engine's busy/preserved filters + delete_future_flexible_blocks
+          (ghosts gone, minutes rebookable is replaced by refund).
+ Step 1.6 [R2] routers/schedule.py /move: set locked=True (mirror PATCH).
+ Step 1.7 [G6 partial] Clock hygiene: parse and compare ALL datetimes as
+          naive-local (drop mixed UTC-aware now in reschedule-missed; use
+          local now). Wire settings.timezone: convert now/day computation
+          through it (ZoneInfo(settings.timezone)) — one helper.
+ Acceptance: pytest suite green incl. new cadence + dedupe + gap tests.
+
+PHASE 2 — COURSES / GENERATOR / COMMITMENTS API
+ Step 2.1 [G3] projects.py generate-sessions: use req.start_date as anchor;
+          drop per-task deadline stamp (apply project deadline to LAST task
+          or none); estimated_weeks = math.ceil(block_count/sessions_per_week)
+          with half flag; delete prior generated tasks+blocks for this
+          project before regenerating (idempotent re-run).
+ Step 2.2 [R1] PATCH routers: switch `v is not None` filters to
+          model_dump(exclude_unset=True) so explicit nulls clear fields.
+ Step 2.3 [R3] demo.py import: wrap db.import_all in try/except → HTTP 400
+          with message; pre-validate FK ids/required keys before reset_db.
+ Step 2.4 [R4] demo/seed: skip seeds whose project name already exists.
+ Step 2.5 [R5] Migration shim: small ensure-column helper (PRAGMA
+          table_info + ALTER TABLE ADD COLUMN) called at startup; also
+          handle in-progress-today blocks in apply (preserve them immutably
+          for the remainder of the day).
+
+PHASE 3 — FRONTEND BUG FIXES
+ Step 3.1 [G7a] CommandBar REFINE: pass the composed string into submit()
+          directly (one-line change).
+ Step 3.2 [R6] Normalize AI proposals before apply: single normalize()
+          (projects get name; tasks/commitments get title/start_time/
+          end_time defaults with .get()) client-side + defensive backend
+          .get() in apply_proposal; CommandBar render
+          proposal.summary ?? goal.
+ Step 3.3 [G8] Honest preview: rename button "REGENERATE PREVIEW (what-if)"
+          and keep proposal cards as the plan preview — OR implement
+          dry-run: POST /ai/apply?preview=1 that creates in a transaction,
+          previews, rolls back. Start with the rename (smallest honest fix).
+ Step 3.4 [G2] TasksView: wire api.tasks.update in an edit modal; add
+          preferred_start/end + min/max session inputs; forbid
+          self-dependency; add OVERDUE / WAITING badges (deadline < today,
+          unsatisfied dependencies).
+ Step 3.5 [G9] CalendarView month fetch window from startOfMonth - 1 week;
+          move weekday header out of grid-rows-6 flow.
+ Step 3.6 [G10] Waybar: compute day % from today's real blocks (and reset at
+          midnight); remove the fake CPU/RAM readout or label DECORATIVE.
+ Step 3.7 [P1] api.ts: add one tiny `guard(promise)` helper that catches and
+          surfaces a shared error banner state; wrap the 12 try-less
+          handlers.
+ Step 3.8 [P2] Hotkey handler: ignore when target is BUTTON/checkbox; `r`
+          calls api.schedule.regenerate (preview) instead of apply; footer
+          hint corrected.
+ Step 3.9 [P4] CommitmentsView: add `kind` select; validate weekly needs
+          >=1 day, once needs one_time_date; fix delete-confirm text.
+ Step 3.10 [P3 + R7] Wiring/waste cleanup:
+          - api.ts: BASE = "/api" + vite proxy rewrite
+            ('/api' → target :8000, rewrite strip ^/api); delete dead proxy
+            discrepancy and the CORS "*" dependence.
+          - npm uninstall react-big-calendar lucide-react react-router-dom
+            @types/react-big-calendar; delete App.css, Material Symbols link,
+            scrollRef, dead api methods, stale dist/, unused assets.
+
+PHASE 4 — INFRASTRUCTURE / TESTS
+ Step 4.1 [T1] Temp-DB fixture: make app/config.py honor MONOLITH_DB env
+          var; tests use tmp_path fixture; stop touching the dev DB.
+ Step 4.2 [T2] Strengthen Scenario A: assert 20 DISTINCT Saturdays, exactly
+          1 course block each, ordered. Scenario B: assert no task block
+          overlaps any commitment block regardless of weekday; cap includes
+          commitment minutes. D: assert future block recreated + completed
+          preserved. F: assert export→reset→import round-trip equality (it
+          already does the reset — keep).
+ Step 4.3 Add regression tests: apply-no-duplication, pre-commitment gap
+          usage, UTC-5 missed marking, PATCH null-clearing, import 400,
+          skip refund, /move lock, offline-parser clarifications list.
+ Step 4.4 [Documentation instructions.txt:433] README: Fedora/Linux setup
+          (uvicorn + vite commands, optional AI env vars), and note the
+          temp-DB test flag.
+
+PHASE 5 — DEFERRED (confirm with user before building; instructions.txt:430
+          says ask before irreversible design decisions)
+ Step 5.1 Milestones as a first-class entity (spec 3.C lists milestones;
+          today the session roadmap plays that role). Either a tiny
+          milestones table + project detail section, or document the
+          roadmap-as-milestones decision.
+ Step 5.2 Hour-level drag-and-drop on the calendar (accessible +1/-1 day
+          buttons already exist and satisfy the spec's alternative clause).
+ Step 5.3 Multi-week "spread" heuristics beyond the cadence fix (fair-share
+          across preferred days when tasks lack dependencies).
+
+================================================================================
+END-STATE ACCEPTANCE (definition of done for this plan)
+================================================================================
+1. Demo seed + /schedule/generate: 20 half-session blocks, ONE per Saturday.
+2. Complete a block, apply regen twice: zero duplicates, count stable.
+3. No API key material in /settings, /export, or any client response.
+4. Refine loop actually forwards the user's clarification.
+5. Edit commitment → regen: no stale double-booked blocks.
+6. Morning gap before a class can be filled.
+7. Unit-tests run against a temp DB; scenarios assert stated expectations.
+8. Every UI action either works or shows a visible error — no silent no-ops.

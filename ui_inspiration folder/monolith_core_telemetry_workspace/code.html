@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Chivo:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-tertiary-fixed":"#1b1c1c","on-error":"#690005","on-secondary-container":"#bcbcb6","tertiary-fixed":"#e3e2e2","primary":"#ffffff","tertiary-container":"#e3e2e2","surface-container-highest":"#353534","outline-variant":"#434935","on-tertiary":"#2f3031","surface-tint":"#a1d811","surface":"#131313","inverse-primary":"#4b6700","inverse-on-surface":"#313030","surface-variant":"#353534","on-error-container":"#ffdad6","on-surface":"#e5e2e1","on-tertiary-container":"#646464","surface-container-low":"#1c1b1b","on-tertiary-fixed-variant":"#464747","on-background":"#e5e2e1","primary-fixed-dim":"#a1d811","surface-bright":"#3a3939","surface-container":"#201f1f","on-secondary-fixed-variant":"#464743","on-primary-fixed":"#141f00","tertiary":"#ffffff","secondary-fixed-dim":"#c6c7c1","on-primary-fixed-variant":"#384e00","error-container":"#93000a","background":"#131313","primary-container":"#bcf538","surface-dim":"#131313","on-primary":"#253600","on-surface-variant":"#c3c9af","primary-fixed":"#bcf538","on-secondary-fixed":"#1a1c19","tertiary-fixed-dim":"#c7c6c6","error":"#ffb4ab","outline":"#8d937b","on-secondary":"#2f312d","secondary":"#c6c7c1","surface-container-high":"#2a2a2a","secondary-container":"#4a4c48","secondary-fixed":"#e3e3dd","on-primary-container":"#506e00","inverse-surface":"#e5e2e1","surface-container-lowest":"#0e0e0e"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-lg":"1.5rem","space-xl":"3rem","space-sm":"0.5rem","margin":"1rem","margin-desktop":"1.5rem","gutter":"0px","gutter-desktop":"0px","space-xs":"0.25rem","space-md":"1rem"},"fontFamily":{"body-lg":["Space Mono"],"display-hero-mobile":["Chivo"],"body-md":["Space Mono"],"body-sm":["Space Mono"],"label-meta":["JetBrains Mono"],"headline-lg-mobile":["Chivo"],"label-code":["JetBrains Mono"],"display-hero":["Chivo"],"headline-lg":["Chivo"],"headline-sm":["Chivo"],"headline-md":["Chivo"]},"fontSize":{"body-lg":["15px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"400"}],"display-hero-mobile":["44px",{"lineHeight":"48px","letterSpacing":"-0.03em","fontWeight":"900"}],"body-md":["13px",{"lineHeight":"20px","letterSpacing":"0em","fontWeight":"400"}],"body-sm":["11px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"label-meta":["10px",{"lineHeight":"12px","letterSpacing":"0.08em","fontWeight":"700"}],"headline-lg-mobile":["32px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"800"}],"label-code":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"500"}],"display-hero":["80px",{"lineHeight":"84px","letterSpacing":"-0.04em","fontWeight":"900"}],"headline-lg":["48px",{"lineHeight":"52px","letterSpacing":"-0.03em","fontWeight":"800"}],"headline-sm":["20px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"700"}],"headline-md":["28px",{"lineHeight":"32px","letterSpacing":"-0.02em","fontWeight":"700"}]}}}};</script></head><body class="bg-surface-container-lowest font-body-md text-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container"><aside class="fixed left-0 top-0 h-screen w-20 bg-surface-container-lowest border-r border-surface-container-highest z-50 flex flex-col justify-between select-none"><div class="flex flex-col items-center"><div class="w-20 h-14 border-b border-surface-container-highest flex items-center justify-center p-space-xs bg-surface"><img alt="MONOLITH Emblem" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XlzCP17424PvTh9aEri5AfzXVxHXP2fgo3TANzm2ffH8ctY0AfUWiCGTHU1xXZZJBU9cqXk_CUSRRCD3UNeMyfIRSlcrwhg75APVBcfu9A6S07oJA0GEWUIZEM33oo38TwW6ntX0Bufcb2vq4ELagWPPceAY0lYR2hZiVkkhyO6SBS5Nv7Fr-8LmmKCh7wGoctvI9CB0-MPXnIuZicclpDrGz-Ge4Icu8ZwjontxlW"/></div><div class="w-full py-space-xs border-b border-surface-container-highest flex items-center justify-center"><span class="font-label-meta text-label-meta tracking-wider text-outline">RAIL.01</span></div><nav class="w-full flex flex-col" data-active-classes="bg-primary-container text-on-primary-container border-l-2 border-primary-container font-label-code"><a aria-current="page" class="group relative w-full h-28 flex flex-col items-center justify-between p-space-xs transition-none bg-primary-container text-on-primary-container border-l-2 border-primary-container font-label-code" data-path="core-telemetry" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">01</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">SYS.01 // CORE</span><span class="w-1.5 h-1.5 bg-primary-container group-hover:bg-on-primary"></span></a><a class="group relative w-full h-28 border-b border-surface-container-highest flex flex-col items-center justify-between p-space-xs text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-none" data-path="academic-nexus" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">02</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">MOD.02 // ACADEMICS</span><span class="w-1.5 h-1.5 bg-surface-container-highest group-hover:bg-on-primary"></span></a><a class="group relative w-full h-28 border-b border-surface-container-highest flex flex-col items-center justify-between p-space-xs text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-none" data-path="neural-synthesis" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">03</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">REC.03 // SYNTHESIS</span><span class="w-1.5 h-1.5 bg-surface-container-highest group-hover:bg-on-primary"></span></a><a class="group relative w-full h-28 border-b border-surface-container-highest flex flex-col items-center justify-between p-space-xs text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-none" data-path="project-lab" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">04</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">PRJ.04 // LAB</span><span class="w-1.5 h-1.5 bg-surface-container-highest group-hover:bg-on-primary"></span></a><a class="group relative w-full h-28 border-b border-surface-container-highest flex flex-col items-center justify-between p-space-xs text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-none" data-path="system-configuration" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">05</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">CFG.05 // SETTINGS</span><span class="w-1.5 h-1.5 bg-surface-container-highest group-hover:bg-on-primary"></span></a></nav></div><div class="w-full flex flex-col border-t border-surface-container-highest bg-surface-container-low"><div class="p-space-xs flex flex-col items-center gap-1 border-b border-surface-container-highest"><div class="w-2 h-2 bg-primary-container animate-pulse"></div><span class="font-label-meta text-label-meta text-on-surface-variant uppercase text-center leading-tight">SYS_OK<br/>99.8%</span></div><div class="h-10 flex items-center justify-center font-label-meta text-label-meta text-outline">TS//04</div></div></aside><div class="pl-20"><header class="fixed top-0 left-20 right-0 h-14 bg-surface border-b border-surface-container-highest z-40 flex items-center justify-between px-space-md"><div class="flex items-center gap-space-md"><span class="font-headline-sm text-headline-sm uppercase text-primary tracking-tight font-black">MONOLITH</span><span class="font-label-code text-label-code text-primary-container border border-surface-container-highest px-space-xs py-0.5 bg-surface-container-low">v4.2.0-STABLE</span><div class="hidden md:flex items-center gap-space-sm border-l border-surface-container-highest pl-space-md font-label-meta text-label-meta text-on-surface-variant"><span class="text-outline">CLOCK:</span><span class="tabular-nums text-on-surface">2025.02.24 // 14:02:18 UTC</span></div><div class="hidden lg:flex items-center gap-space-sm border-l border-surface-container-highest pl-space-md font-label-meta text-label-meta text-on-surface-variant"><span class="text-outline">BUFFER:</span><span class="tabular-nums text-primary-container">1.42 GB / 64 GB</span></div></div><div class="flex items-center gap-space-md"><button class="h-9 px-space-md border border-surface-container-highest bg-surface-container-low text-on-surface hover:bg-primary-container hover:text-on-primary-container font-label-code text-label-code flex items-center gap-space-sm transition-none"><span class="text-primary-container group-hover:text-on-primary-container">■</span><span>⌘K / AGENT SHELL</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="relative pt-14 w-full bg-surface-container-lowest min-h-screen"><div class="flex flex-col w-full">
+<!-- ARCHITECTURAL BANNER / TELEMETRY RUNNER -->
+<section class="w-full bg-surface-container-lowest border-b border-surface-container-highest px-space-md py-space-sm flex flex-wrap items-center justify-between gap-y-2">
+<div class="flex items-center gap-space-md font-label-meta text-label-meta tracking-widest text-outline">
+<span class="flex items-center gap-1.5 text-on-surface">
+<span class="w-2 h-2 bg-primary-container inline-block"></span>
+        DISPATCH_MODE: AUTONOMOUS
+      </span>
+<span class="hidden md:inline text-surface-container-highest">/</span>
+<span class="hidden md:inline uppercase text-on-surface-variant">SYS_CYCLE: <span class="text-primary tabular-nums">0042</span></span>
+<span class="hidden md:inline text-surface-container-highest">/</span>
+<span class="hidden lg:inline uppercase text-on-surface-variant">UTC_EPOCH: <span class="text-primary tabular-nums" id="telemetry-utc">1729778538</span></span>
+<span class="hidden lg:inline text-surface-container-highest">/</span>
+<span class="uppercase text-primary-container font-label-code text-label-code px-1.5 py-0.5 bg-surface-container-low border border-surface-container-highest">STATE: OPTIMAL_HYPERFOCUS</span>
+</div>
+<div class="flex items-center gap-4 font-label-code text-label-code">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span>MEM_ALLOC:</span>
+<span class="text-on-surface tabular-nums">2.41GB // VMM-OK</span>
+</div>
+<div class="w-px h-3 bg-surface-container-highest"></div>
+<div class="flex items-center gap-1 text-primary-container">
+<span>●</span>
+<span class="tracking-widest">REALTIME</span>
+</div>
+</div>
+</section>
+<!-- EDITORIAL HERO & MASSIVE TYPOGRAPHIC DECLARATION -->
+<section class="w-full bg-surface border-b border-surface-container-highest p-space-md lg:p-space-lg flex flex-col justify-between relative overflow-hidden">
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-2 mb-space-xs font-label-meta text-label-meta text-outline tracking-widest uppercase">
+<span>OPERATIONAL MATRIX</span>
+<span class="text-primary-container">■</span>
+<span>BUILD 2024.10.24</span>
+<span class="text-primary-container">■</span>
+<span>COORDINATE: 47°22'N 08°32'E</span>
+</div>
+<h1 class="font-display-hero text-display-hero uppercase tracking-tighter text-primary font-black leading-none select-none">
+          YOUR TIME<span class="text-primary-container">.</span><br/>YOUR TERMS<span class="text-primary-container">.</span>
+</h1>
+</div>
+<!-- TEMPORAL CADENCE / WEEK STRIP -->
+<div class="w-full lg:w-auto flex flex-col items-start lg:items-end gap-2">
+<div class="font-label-meta text-label-meta tracking-widest uppercase text-outline flex items-center gap-2">
+<span>TEMPORAL CADENCE // OCT 2024</span>
+<span class="text-on-surface-variant tabular-nums">[W43]</span>
+</div>
+<div class="grid grid-cols-7 border border-surface-container-highest bg-surface-container-lowest w-full lg:w-[490px]">
+<!-- Day Mon -->
+<div class="p-2 border-r border-surface-container-highest flex flex-col justify-between h-20 bg-surface-container-low hover:bg-surface-container transition-none">
+<span class="font-label-meta text-label-meta text-outline">MON 21</span>
+<div class="flex flex-col gap-1">
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">7.8h</span>
+<div class="h-1 w-full bg-surface-container-highest"><div class="h-full bg-secondary w-full"></div></div>
+</div>
+</div>
+<!-- Day Tue -->
+<div class="p-2 border-r border-surface-container-highest flex flex-col justify-between h-20 bg-surface-container-low hover:bg-surface-container transition-none">
+<span class="font-label-meta text-label-meta text-outline">TUE 22</span>
+<div class="flex flex-col gap-1">
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">8.2h</span>
+<div class="h-1 w-full bg-surface-container-highest"><div class="h-full bg-secondary w-full"></div></div>
+</div>
+</div>
+<!-- Day Wed -->
+<div class="p-2 border-r border-surface-container-highest flex flex-col justify-between h-20 bg-surface-container-low hover:bg-surface-container transition-none">
+<span class="font-label-meta text-label-meta text-outline">WED 23</span>
+<div class="flex flex-col gap-1">
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">6.5h</span>
+<div class="h-1 w-full bg-surface-container-highest"><div class="h-full bg-secondary w-3/4"></div></div>
+</div>
+</div>
+<!-- Day Thu (CURRENT) -->
+<div class="p-2 border-r border-surface-container-highest flex flex-col justify-between h-20 bg-primary-container text-on-primary-container">
+<div class="flex items-center justify-between">
+<span class="font-label-meta text-label-meta font-black text-on-primary-container">THU 24</span>
+<span class="w-1.5 h-1.5 bg-on-primary-container"></span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-code text-label-code font-black tabular-nums">9.4h*</span>
+<div class="h-1.5 w-full bg-on-primary-container/20"><div class="h-full bg-on-primary-container w-[82%]"></div></div>
+</div>
+</div>
+<!-- Day Fri -->
+<div class="p-2 border-r border-surface-container-highest flex flex-col justify-between h-20 bg-surface-container-low hover:bg-surface-container transition-none">
+<span class="font-label-meta text-label-meta text-outline">FRI 25</span>
+<div class="flex flex-col gap-1">
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">PLN</span>
+<div class="h-1 w-full bg-surface-container-highest"><div class="h-full bg-primary-container/40 w-1/2"></div></div>
+</div>
+</div>
+<!-- Day Sat -->
+<div class="p-2 border-r border-surface-container-highest flex flex-col justify-between h-20 bg-surface-container-low hover:bg-surface-container transition-none">
+<span class="font-label-meta text-label-meta text-outline">SAT 26</span>
+<div class="flex flex-col gap-1">
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">PLN</span>
+<div class="h-1 w-full bg-surface-container-highest"><div class="h-full bg-outline w-1/4"></div></div>
+</div>
+</div>
+<!-- Day Sun -->
+<div class="p-2 flex flex-col justify-between h-20 bg-surface-container-low hover:bg-surface-container transition-none">
+<span class="font-label-meta text-label-meta text-outline">SUN 27</span>
+<div class="flex flex-col gap-1">
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">REV</span>
+<div class="h-1 w-full bg-surface-container-highest"><div class="h-full bg-outline w-1/3"></div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- NATURAL-LANGUAGE AI PLANNING CLI / PROMPT INTERFACE -->
+<section class="w-full bg-surface-container-low border-b border-surface-container-highest p-space-md">
+<div class="border border-surface-container-highest bg-surface-container-lowest focus-within:border-primary-container transition-none flex flex-col">
+<div class="flex items-center justify-between px-space-md py-1.5 border-b border-surface-container-highest bg-surface font-label-meta text-label-meta text-outline">
+<div class="flex items-center gap-2">
+<span class="text-primary-container font-black">AGENTIC_PLANNER_v2</span>
+<span>//</span>
+<span>MODEL: MONOLITH-ORCHESTRATOR-LARGE-8B</span>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant font-label-code text-label-code">
+<span>LATENCY: <span class="text-primary-container tabular-nums">18ms</span></span>
+<span class="hidden sm:inline">CTX: <span class="text-primary tabular-nums">128k</span> / <span class="text-primary-container tabular-nums">4.2k USED</span></span>
+</div>
+</div>
+<div class="p-space-md flex items-center gap-3">
+<span class="font-headline-sm text-headline-sm text-primary-container font-black select-none">&gt;</span>
+<input class="w-full bg-transparent text-primary font-body-lg text-body-lg focus:outline-none placeholder-outline" id="cli-input" placeholder="Command dispatch or autonomous re-planning directive..." type="text" value="Synthesize next deep-work sprint or reorganize university deadlines based on cognitive load"/>
+<span class="w-2.5 h-6 bg-primary-container animate-pulse shrink-0"></span>
+</div>
+<div class="flex flex-wrap items-center justify-between border-t border-surface-container-highest px-space-md py-2 bg-surface gap-2">
+<div class="flex flex-wrap items-center gap-2">
+<button class="px-2 py-1 bg-surface-container-low border border-surface-container-highest hover:bg-primary-container hover:text-on-primary-container font-label-code text-label-code text-on-surface transition-none flex items-center gap-1.5">
+<span class="text-primary-container">[RET]</span> EXECUTE DISPATCH
+          </button>
+<button class="px-2 py-1 bg-surface-container-low border border-surface-container-highest hover:bg-primary-container hover:text-on-primary-container font-label-code text-label-code text-on-surface transition-none flex items-center gap-1.5">
+<span class="text-outline">[TAB]</span> AUTOCOMPLETE
+          </button>
+<button class="px-2 py-1 bg-surface-container-low border border-surface-container-highest hover:bg-primary-container hover:text-on-primary-container font-label-code text-label-code text-on-surface transition-none flex items-center gap-1.5">
+<span class="text-outline">[ESC]</span> CLEAR BUFFER
+          </button>
+</div>
+<div class="font-label-meta text-label-meta text-outline uppercase tracking-wider flex items-center gap-2">
+<span>PARSER: RIGID_AST</span>
+<span class="text-primary-container">●</span>
+<span>SAFETY_CONSTRAINTS: ACTIVE</span>
+</div>
+</div>
+</div>
+</section>
+<!-- TWO-COLUMN ASYMMETRICAL EDITORIAL WORKSPACE -->
+<div class="w-full grid grid-cols-1 lg:grid-cols-12">
+<!-- LEFT CENTRAL COLUMN (WIDE - ~62% / 7 COLUMNS) -->
+<div class="lg:col-span-7 flex flex-col border-b lg:border-b-0 lg:border-r border-surface-container-highest">
+<!-- SECTION A: SCHEDULE MATRIX -->
+<div class="w-full flex flex-col border-b border-surface-container-highest">
+<!-- QUADRANT HEADER -->
+<div class="px-space-md py-2 border-b border-surface-container-highest bg-surface flex items-center justify-between">
+<div class="flex items-center gap-2 font-label-meta text-label-meta">
+<span class="w-2 h-2 bg-primary"></span>
+<span class="text-primary uppercase tracking-widest font-bold">SCHEDULE_MATRIX // TODAY'S DISPATCH</span>
+</div>
+<div class="font-label-code text-label-code text-outline tracking-widest uppercase">
+            REGIME: DEEP_SYNTHESIS
+          </div>
+</div>
+<!-- TIMETABLE LIST -->
+<div class="divide-y divide-surface-container-highest flex flex-col bg-surface-container-lowest">
+<!-- ITEM 1: COMPLETED -->
+<div class="group px-space-md py-space-sm hover:bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-3 border-l-2 border-transparent hover:border-surface-variant transition-none">
+<div class="flex items-start md:items-center gap-4">
+<span class="w-20 font-label-code text-label-code text-outline tabular-nums shrink-0 pt-0.5 md:pt-0">07:30 - 08:30</span>
+<div class="flex items-center gap-2 bg-surface-container-high px-2 py-0.5 border border-surface-container-highest text-on-surface-variant font-label-meta text-label-meta shrink-0">
+<span>✓</span>
+<span>DONE</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface-variant line-through">Physical Conditioning &amp; Cold Protocol</span>
+<span class="font-label-meta text-label-meta text-outline">HEART_RATE_AVG: 142BPM // VO2_ACTIVE // COMPLETED</span>
+</div>
+</div>
+<div class="font-label-code text-label-code text-outline shrink-0 tabular-nums self-end md:self-auto">
+              [+60M LOAD]
+            </div>
+</div>
+<!-- ITEM 2: IN PROGRESS (ACTIVE ACID LIME) -->
+<div class="group px-space-md py-space-md bg-surface-container border-l-2 border-primary-container flex flex-col md:flex-row md:items-center justify-between gap-4 transition-none">
+<div class="flex items-start md:items-center gap-4">
+<span class="w-20 font-label-code text-label-code text-primary-container tabular-nums shrink-0 font-bold pt-0.5 md:pt-0">09:00 - 11:30</span>
+<div class="flex items-center gap-1.5 bg-primary-container text-on-primary-container px-2 py-0.5 font-label-meta text-label-meta font-black shrink-0">
+<span class="animate-pulse">●</span>
+<span>RUNNING: 74%</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-primary uppercase">Agentic AI: Cognitive Architecture &amp; Consensus</span>
+<span class="font-label-code text-label-code text-on-surface-variant">SUB-TASK: Multi-Agent Turn-Taking Verification Loop</span>
+</div>
+</div>
+<div class="flex items-center gap-3 shrink-0 self-end md:self-auto">
+<div class="w-24 bg-surface-container-highest h-2 border border-surface-container-highest">
+<div class="bg-primary-container h-full w-[74%]"></div>
+</div>
+<span class="font-label-code text-label-code text-primary-container tabular-nums font-bold">1h 51m</span>
+</div>
+</div>
+<!-- ITEM 3: PENDING -->
+<div class="group px-space-md py-space-sm hover:bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-3 border-l-2 border-transparent hover:border-primary-container transition-none">
+<div class="flex items-start md:items-center gap-4">
+<span class="w-20 font-label-code text-label-code text-primary tabular-nums shrink-0 pt-0.5 md:pt-0">13:00 - 15:00</span>
+<div class="flex items-center gap-1.5 bg-surface-container-low px-2 py-0.5 border border-surface-container-highest text-on-surface font-label-meta text-label-meta shrink-0">
+<span>◻</span>
+<span>QUEUED</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-primary font-bold">Distributed Systems: Raft Consensus Lab</span>
+<span class="font-label-meta text-label-meta text-outline">NODE_SIMULATION: 5 CLUSTERS // LOG REPLICATION FAULT DRILL</span>
+</div>
+</div>
+<div class="font-label-code text-label-code text-outline shrink-0 tabular-nums self-end md:self-auto">
+              [EST: 120M]
+            </div>
+</div>
+<!-- ITEM 4: PENDING -->
+<div class="group px-space-md py-space-sm hover:bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-3 border-l-2 border-transparent hover:border-primary-container transition-none">
+<div class="flex items-start md:items-center gap-4">
+<span class="w-20 font-label-code text-label-code text-primary tabular-nums shrink-0 pt-0.5 md:pt-0">16:30 - 18:00</span>
+<div class="flex items-center gap-1.5 bg-surface-container-low px-2 py-0.5 border border-surface-container-highest text-on-surface font-label-meta text-label-meta shrink-0">
+<span>◻</span>
+<span>QUEUED</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-primary font-bold">MONOLITH OS Engine v0.9: WebGL Shader Pipeline</span>
+<span class="font-label-meta text-label-meta text-outline">INTEGRATION // UNIFORM BUFFER ZERO-OVERHEAD TESTING</span>
+</div>
+</div>
+<div class="font-label-code text-label-code text-outline shrink-0 tabular-nums self-end md:self-auto">
+              [EST: 90M]
+            </div>
+</div>
+<!-- ITEM 5: PENDING -->
+<div class="group px-space-md py-space-sm hover:bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-3 border-l-2 border-transparent hover:border-primary-container transition-none">
+<div class="flex items-start md:items-center gap-4">
+<span class="w-20 font-label-code text-label-code text-on-surface-variant tabular-nums shrink-0 pt-0.5 md:pt-0">20:00 - 21:00</span>
+<div class="flex items-center gap-1.5 bg-surface-container-low px-2 py-0.5 border border-surface-container-highest text-on-surface font-label-meta text-label-meta shrink-0">
+<span>◻</span>
+<span>QUEUED</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Paper Critique: "Mechanistic Interpretability in SAEs"</span>
+<span class="font-label-meta text-label-meta text-outline">ANTHROPIC DISPATCH 2024 // SPARSE REPRESENTATIONS IN LLMS</span>
+</div>
+</div>
+<div class="font-label-code text-label-code text-outline shrink-0 tabular-nums self-end md:self-auto">
+              [EST: 60M]
+            </div>
+</div>
+</div>
+</div>
+<!-- SECTION B: ACTIVE COURSE MATRIX -->
+<div class="w-full flex flex-col bg-surface-container-lowest">
+<!-- QUADRANT HEADER -->
+<div class="px-space-md py-2 border-b border-surface-container-highest bg-surface flex items-center justify-between">
+<div class="flex items-center gap-2 font-label-meta text-label-meta">
+<span class="w-2 h-2 bg-primary-container"></span>
+<span class="text-primary uppercase tracking-widest font-bold">DEEP_MODULE // ACTIVE COURSE MATRIX</span>
+</div>
+<div class="font-label-code text-label-code text-primary-container tracking-widest uppercase">
+            60% COMPLETE // 6/10 MASTERED
+          </div>
+</div>
+<div class="p-space-md flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-surface-container-highest pb-3">
+<div>
+<span class="font-label-meta text-label-meta text-outline tracking-wider uppercase">ADVANCED RESEARCH CURRICULUM // MIT-EECS</span>
+<h2 class="font-headline-sm text-headline-sm text-primary uppercase font-extrabold tracking-tight">AGENTIC AI SYSTEMS: 10-LECTURE INTENSIVE</h2>
+</div>
+<div class="font-label-code text-label-code text-on-surface-variant flex items-center gap-2">
+<span class="text-outline">FACULTY:</span>
+<span class="text-primary font-bold">Dr. V. Mercer</span>
+</div>
+</div>
+<!-- 10 ARCHITECTURAL SEGMENT BLOCKS -->
+<div class="grid grid-cols-5 md:grid-cols-10 gap-1.5 w-full">
+<!-- 01 COMPLETED -->
+<div class="flex flex-col gap-1 p-2 bg-primary-container text-on-primary-container border border-primary-container">
+<span class="font-label-meta text-label-meta font-black">L01</span>
+<span class="font-label-code text-label-code text-on-primary">DONE</span>
+</div>
+<!-- 02 COMPLETED -->
+<div class="flex flex-col gap-1 p-2 bg-primary-container text-on-primary-container border border-primary-container">
+<span class="font-label-meta text-label-meta font-black">L02</span>
+<span class="font-label-code text-label-code text-on-primary">DONE</span>
+</div>
+<!-- 03 COMPLETED -->
+<div class="flex flex-col gap-1 p-2 bg-primary-container text-on-primary-container border border-primary-container">
+<span class="font-label-meta text-label-meta font-black">L03</span>
+<span class="font-label-code text-label-code text-on-primary">DONE</span>
+</div>
+<!-- 04 COMPLETED -->
+<div class="flex flex-col gap-1 p-2 bg-primary-container text-on-primary-container border border-primary-container">
+<span class="font-label-meta text-label-meta font-black">L04</span>
+<span class="font-label-code text-label-code text-on-primary">DONE</span>
+</div>
+<!-- 05 COMPLETED -->
+<div class="flex flex-col gap-1 p-2 bg-primary-container text-on-primary-container border border-primary-container">
+<span class="font-label-meta text-label-meta font-black">L05</span>
+<span class="font-label-code text-label-code text-on-primary">DONE</span>
+</div>
+<!-- 06 COMPLETED -->
+<div class="flex flex-col gap-1 p-2 bg-primary-container text-on-primary-container border border-primary-container">
+<span class="font-label-meta text-label-meta font-black">L06</span>
+<span class="font-label-code text-label-code text-on-primary">DONE</span>
+</div>
+<!-- 07 CURRENT ACTIVE (PULSING) -->
+<div class="flex flex-col gap-1 p-2 bg-surface-container-high border-2 border-primary-container relative overflow-hidden">
+<div class="absolute top-0 right-0 w-2 h-2 bg-primary-container animate-ping"></div>
+<span class="font-label-meta text-label-meta font-black text-primary-container">L07</span>
+<span class="font-label-code text-label-code text-primary font-bold">ACTIVE</span>
+</div>
+<!-- 08 PENDING -->
+<div class="flex flex-col gap-1 p-2 bg-surface-container-low border border-surface-container-highest text-outline">
+<span class="font-label-meta text-label-meta">L08</span>
+<span class="font-label-code text-label-code">LOCK</span>
+</div>
+<!-- 09 PENDING -->
+<div class="flex flex-col gap-1 p-2 bg-surface-container-low border border-surface-container-highest text-outline">
+<span class="font-label-meta text-label-meta">L09</span>
+<span class="font-label-code text-label-code">LOCK</span>
+</div>
+<!-- 10 PENDING -->
+<div class="flex flex-col gap-1 p-2 bg-surface-container-low border border-surface-container-highest text-outline">
+<span class="font-label-meta text-label-meta">L10</span>
+<span class="font-label-code text-label-code">LOCK</span>
+</div>
+</div>
+<!-- LECTURE 07 TARGET DOSSIER -->
+<div class="p-space-md bg-surface border border-surface-container-highest flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-label-meta text-label-meta text-primary-container bg-surface-container-low px-1.5 py-0.5 border border-surface-container-highest">IMMEDIATE OBJECTIVE</span>
+<span class="font-label-meta text-label-meta text-outline">AUDIO + JUPYTER DECK READY</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">LEC 07: Autonomous Tool Invocation &amp; Vector Context Boundaries</span>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xl">
+                Analysis of deterministic safety boundary limits when allowing tool calling loops within low-latency environments.
+              </p>
+</div>
+<button class="px-space-md py-space-sm bg-primary-container text-on-primary-container font-label-code text-label-code font-black hover:bg-primary hover:text-surface-container-lowest transition-none uppercase shrink-0 flex items-center gap-2">
+<span>RESUME LECTURE</span>
+<span>→</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT SECONDARY COLUMN (NARROW - ~38% / 5 COLUMNS) -->
+<div class="lg:col-span-5 flex flex-col bg-surface-container-lowest">
+<!-- SECTION C: SYSTEM COMMITS / LAB PROJECT -->
+<div class="w-full flex flex-col border-b border-surface-container-highest">
+<!-- QUADRANT HEADER -->
+<div class="px-space-md py-2 border-b border-surface-container-highest bg-surface flex items-center justify-between">
+<div class="flex items-center gap-2 font-label-meta text-label-meta">
+<span class="w-2 h-2 bg-outline"></span>
+<span class="text-primary uppercase tracking-widest font-bold">SYSTEM COMMITS // LAB PROJECT</span>
+</div>
+<span class="font-label-code text-label-code text-primary-container">RUST / WASM CORE</span>
+</div>
+<div class="p-space-md flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<span class="font-body-lg text-body-lg font-bold text-primary">HYPERSTRUCTURE_CORE</span>
+<span class="font-label-code text-label-code px-2 py-0.5 bg-surface-container-high border border-surface-container-highest text-on-surface">BRANCH: main#49a0f</span>
+</div>
+<div class="p-space-sm bg-surface border border-surface-container-highest flex flex-col gap-1">
+<div class="flex items-center justify-between font-label-meta text-label-meta">
+<span class="text-outline">TARGET MILESTONE:</span>
+<span class="text-primary-container font-bold">DUE IN 48 HOURS</span>
+</div>
+<span class="font-body-md text-body-md text-primary font-bold">v0.9.4 Zero-Copy Buffer Zeroization</span>
+<div class="w-full bg-surface-container-highest h-1.5 mt-1">
+<div class="bg-primary-container h-full w-[85%]"></div>
+</div>
+<div class="flex items-center justify-between font-label-meta text-label-meta text-outline pt-1">
+<span>TEST SUITE: 342/342 PASS</span>
+<span>COVERAGE: 91.4%</span>
+</div>
+</div>
+<!-- RECENT COMMITS TELEMETRY -->
+<div class="flex flex-col divide-y divide-surface-container-highest border-t border-surface-container-highest mt-1">
+<div class="py-2 flex items-center justify-between font-label-code text-label-code">
+<div class="flex items-center gap-2">
+<span class="text-primary-container">cf812e</span>
+<span class="text-on-surface truncate max-w-[200px]">mem: optimize ringbuffer atomic read</span>
+</div>
+<span class="text-outline tabular-nums">2h ago</span>
+</div>
+<div class="py-2 flex items-center justify-between font-label-code text-label-code">
+<div class="flex items-center gap-2">
+<span class="text-primary-container">89b101</span>
+<span class="text-on-surface truncate max-w-[200px]">sim: add deterministic timeout loop</span>
+</div>
+<span class="text-outline tabular-nums">5h ago</span>
+</div>
+<div class="py-2 flex items-center justify-between font-label-code text-label-code">
+<div class="flex items-center gap-2">
+<span class="text-outline">28da41</span>
+<span class="text-on-surface-variant truncate max-w-[200px]">bench: update micro-criterion specs</span>
+</div>
+<span class="text-outline tabular-nums">14h ago</span>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION D: ACADEMIC NEXUS -->
+<div class="w-full flex flex-col border-b border-surface-container-highest">
+<!-- QUADRANT HEADER -->
+<div class="px-space-md py-2 border-b border-surface-container-highest bg-surface flex items-center justify-between">
+<div class="flex items-center gap-2 font-label-meta text-label-meta">
+<span class="w-2 h-2 bg-primary"></span>
+<span class="text-primary uppercase tracking-widest font-bold">ACADEMIC NEXUS // UNIVERSITY</span>
+</div>
+<span class="font-label-code text-label-code text-outline">SEMESTER: AUTUMN</span>
+</div>
+<div class="p-space-md flex flex-col gap-3">
+<!-- CRITICAL DEADLINE COUNTDOWN BADGE -->
+<div class="p-space-sm bg-surface-container-low border border-primary-container flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-primary-container font-black">!</span>
+<span class="font-label-code text-label-code uppercase tracking-wider text-primary font-bold">NEXT CRITICAL TARGET:</span>
+</div>
+<span class="font-label-code text-label-code text-primary-container font-black tabular-nums bg-surface px-2 py-0.5 border border-primary-container">
+              3D 14H 12M
+            </span>
+</div>
+<!-- OBLIGATION 1 -->
+<div class="p-3 bg-surface border border-surface-container-highest flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-primary-container">CS-8803 // ADVANCED COMPUTE</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant font-bold">DUE: OCT 28</span>
+</div>
+<span class="font-body-md text-body-md text-primary font-bold">Midterm Paper Review &amp; Synthesis</span>
+<div class="flex items-center justify-between font-label-meta text-label-meta text-outline">
+<span>WEIGHT: 20% OF GRADE</span>
+<span class="text-primary-container">READING COMPLETED</span>
+</div>
+</div>
+<!-- OBLIGATION 2 -->
+<div class="p-3 bg-surface border border-surface-container-highest flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline">MATH-6120 // DIFF GEOMETRY</span>
+<span class="font-label-meta text-label-meta text-primary-container font-bold">80% SUBMITTED</span>
+</div>
+<span class="font-body-md text-body-md text-primary font-bold">Problem Set #04: Curvature Tensors</span>
+<div class="w-full bg-surface-container-highest h-1">
+<div class="bg-primary-container h-full w-[80%]"></div>
+</div>
+</div>
+<!-- OBLIGATION 3 -->
+<div class="p-3 bg-surface border border-surface-container-highest flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline">NEURO-4010 // COGNITIVE SCIENCE</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">DUE: NOV 02</span>
+</div>
+<span class="font-body-md text-body-md text-primary font-bold">Reading Dossier: Predictive Coding Models</span>
+<div class="flex items-center justify-between font-label-meta text-label-meta text-outline">
+<span>3 ARTICLES ASSIGNED</span>
+<span>PENDING INTAKE</span>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION E: EFFICIENCY METRICS -->
+<div class="w-full flex flex-col">
+<!-- QUADRANT HEADER -->
+<div class="px-space-md py-2 border-b border-surface-container-highest bg-surface flex items-center justify-between">
+<div class="flex items-center gap-2 font-label-meta text-label-meta">
+<span class="w-2 h-2 bg-primary-container"></span>
+<span class="text-primary uppercase tracking-widest font-bold">WEEKLY EFFICIENCY METRICS</span>
+</div>
+<span class="font-label-code text-label-code text-on-surface-variant">Q3_WK43</span>
+</div>
+<div class="p-space-md flex flex-col gap-4">
+<div class="grid grid-cols-2 gap-3">
+<div class="p-3 bg-surface border border-surface-container-highest flex flex-col">
+<span class="font-label-meta text-label-meta text-outline uppercase">FOCUSED HOURS</span>
+<span class="font-headline-md text-headline-md text-primary font-black tabular-nums my-1">38.4<span class="text-body-md text-outline font-normal"> / 45h</span></span>
+<div class="w-full bg-surface-container-highest h-1.5">
+<div class="bg-primary-container h-full w-[85%]"></div>
+</div>
+</div>
+<div class="p-3 bg-surface border border-surface-container-highest flex flex-col">
+<span class="font-label-meta text-label-meta text-outline uppercase">DEEP WORK QUOTIENT</span>
+<span class="font-headline-md text-headline-md text-primary-container font-black tabular-nums my-1">94.2%</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">+3.1% FROM PREV WK</span>
+</div>
+</div>
+<div class="border border-surface-container-highest bg-surface">
+<div class="px-3 py-1.5 border-b border-surface-container-highest font-label-meta text-label-meta text-outline flex items-center justify-between">
+<span>PARAMETER</span>
+<span>INDEX VALUE</span>
+</div>
+<div class="divide-y divide-surface-container-highest font-label-code text-label-code">
+<div class="px-3 py-2 flex items-center justify-between">
+<span class="text-on-surface">Drift Factor (Distractions)</span>
+<span class="text-primary-container font-bold tabular-nums">1.8%</span>
+</div>
+<div class="px-3 py-2 flex items-center justify-between">
+<span class="text-on-surface">Context Switches / Hour</span>
+<span class="text-on-surface tabular-nums">0.42</span>
+</div>
+<div class="px-3 py-2 flex items-center justify-between">
+<span class="text-on-surface">Cognitive Recovery Speed</span>
+<span class="text-primary-container font-bold tabular-nums">11.4 min</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- FOOTER STATUS STRIP -->
+<footer class="w-full bg-surface-container-lowest border-t border-surface-container-highest px-space-md py-space-sm flex flex-col sm:flex-row items-center justify-between gap-2 font-label-meta text-label-meta text-outline">
+<div class="flex items-center gap-3">
+<span class="text-primary-container">■</span>
+<span class="text-on-surface">MONOLITH ARCHITECTURAL TERMINAL v4.2</span>
+<span>//</span>
+<span>NODE_ID: 0x882A-ZURICH</span>
+</div>
+<div class="flex items-center gap-4">
+<span>LATENCY: 12ms</span>
+<span>SECURE_ENCLAVE: VERIFIED</span>
+<span class="text-primary">ALL SUB-SYSTEMS RUNNING</span>
+</div>
+</footer>
+<script>
+    // Live update for epoch clock
+    setInterval(() => {
+      const el = document.getElementById('telemetry-utc');
+      if (el) {
+        el.innerText = Math.floor(Date.now() / 1000);
+      }
+    }, 1000);
+
+    // CLI quick clear trigger
+    const input = document.getElementById('cli-input');
+    if (input) {
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.activeElement === input) {
+          input.value = '';
+        }
+      });
+    }
+  </script>
+</div></main></div></body></html>

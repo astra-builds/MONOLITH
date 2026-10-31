@@ -1,0 +1,16 @@
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local database (contains settings incl. AI API keys)
+backend/data/
+*.db
+
+# Node / frontend build
+frontend/node_modules/
+frontend/dist/
+
+# OS / editor
+.DS_Store

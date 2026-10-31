@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Chivo:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-tertiary-fixed":"#1b1c1c","on-error":"#690005","on-secondary-container":"#bcbcb6","tertiary-fixed":"#e3e2e2","primary":"#ffffff","tertiary-container":"#e3e2e2","surface-container-highest":"#353534","outline-variant":"#434935","on-tertiary":"#2f3031","surface-tint":"#a1d811","surface":"#131313","inverse-primary":"#4b6700","inverse-on-surface":"#313030","surface-variant":"#353534","on-error-container":"#ffdad6","on-surface":"#e5e2e1","on-tertiary-container":"#646464","surface-container-low":"#1c1b1b","on-tertiary-fixed-variant":"#464747","on-background":"#e5e2e1","primary-fixed-dim":"#a1d811","surface-bright":"#3a3939","surface-container":"#201f1f","on-secondary-fixed-variant":"#464743","on-primary-fixed":"#141f00","tertiary":"#ffffff","secondary-fixed-dim":"#c6c7c1","on-primary-fixed-variant":"#384e00","error-container":"#93000a","background":"#131313","primary-container":"#bcf538","surface-dim":"#131313","on-primary":"#253600","on-surface-variant":"#c3c9af","primary-fixed":"#bcf538","on-secondary-fixed":"#1a1c19","tertiary-fixed-dim":"#c7c6c6","error":"#ffb4ab","outline":"#8d937b","on-secondary":"#2f312d","secondary":"#c6c7c1","surface-container-high":"#2a2a2a","secondary-container":"#4a4c48","secondary-fixed":"#e3e3dd","on-primary-container":"#506e00","inverse-surface":"#e5e2e1","surface-container-lowest":"#0e0e0e"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-lg":"1.5rem","space-xl":"3rem","space-sm":"0.5rem","margin":"1rem","margin-desktop":"1.5rem","gutter":"0px","gutter-desktop":"0px","space-xs":"0.25rem","space-md":"1rem"},"fontFamily":{"body-lg":["Space Mono"],"display-hero-mobile":["Chivo"],"body-md":["Space Mono"],"body-sm":["Space Mono"],"label-meta":["JetBrains Mono"],"headline-lg-mobile":["Chivo"],"label-code":["JetBrains Mono"],"display-hero":["Chivo"],"headline-lg":["Chivo"],"headline-sm":["Chivo"],"headline-md":["Chivo"]},"fontSize":{"body-lg":["15px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"400"}],"display-hero-mobile":["44px",{"lineHeight":"48px","letterSpacing":"-0.03em","fontWeight":"900"}],"body-md":["13px",{"lineHeight":"20px","letterSpacing":"0em","fontWeight":"400"}],"body-sm":["11px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"label-meta":["10px",{"lineHeight":"12px","letterSpacing":"0.08em","fontWeight":"700"}],"headline-lg-mobile":["32px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"800"}],"label-code":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"500"}],"display-hero":["80px",{"lineHeight":"84px","letterSpacing":"-0.04em","fontWeight":"900"}],"headline-lg":["48px",{"lineHeight":"52px","letterSpacing":"-0.03em","fontWeight":"800"}],"headline-sm":["20px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"700"}],"headline-md":["28px",{"lineHeight":"32px","letterSpacing":"-0.02em","fontWeight":"700"}]}}}};</script></head><body class="bg-surface-container-lowest font-body-md text-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container"><aside class="fixed left-0 top-0 h-screen w-20 bg-surface-container-lowest border-r border-surface-container-highest z-50 flex flex-col justify-between select-none"><div class="flex flex-col items-center"><div class="w-20 h-14 border-b border-surface-container-highest flex items-center justify-center p-space-xs bg-surface"><img alt="MONOLITH Emblem" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XlzCP17424PvTh9aEri5AfzXVxHXP2fgo3TANzm2ffH8ctY0AfUWiCGTHU1xXZZJBU9cqXk_CUSRRCD3UNeMyfIRSlcrwhg75APVBcfu9A6S07oJA0GEWUIZEM33oo38TwW6ntX0Bufcb2vq4ELagWPPceAY0lYR2hZiVkkhyO6SBS5Nv7Fr-8LmmKCh7wGoctvI9CB0-MPXnIuZicclpDrGz-Ge4Icu8ZwjontxlW"/></div><div class="w-full py-space-xs border-b border-surface-container-highest flex items-center justify-center"><span class="font-label-meta text-label-meta tracking-wider text-outline">RAIL.01</span></div><nav class="w-full flex flex-col" data-active-classes="bg-primary-container text-on-primary-container border-l-2 border-primary-container font-label-code"><a class="group relative w-full h-28 border-b border-surface-container-highest flex flex-col items-center justify-between p-space-xs text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-none" data-path="core-telemetry" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">01</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">SYS.01 // CORE</span><span class="w-1.5 h-1.5 bg-primary-container group-hover:bg-on-primary"></span></a><a class="group relative w-full h-28 border-b border-surface-container-highest flex flex-col items-center justify-between p-space-xs text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-none" data-path="academic-nexus" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">02</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">MOD.02 // ACADEMICS</span><span class="w-1.5 h-1.5 bg-surface-container-highest group-hover:bg-on-primary"></span></a><a class="group relative w-full h-28 border-b border-surface-container-highest flex flex-col items-center justify-between p-space-xs text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-none" data-path="neural-synthesis" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">03</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">REC.03 // SYNTHESIS</span><span class="w-1.5 h-1.5 bg-surface-container-highest group-hover:bg-on-primary"></span></a><a class="group relative w-full h-28 border-b border-surface-container-highest flex flex-col items-center justify-between p-space-xs text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-none" data-path="project-lab" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">04</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">PRJ.04 // LAB</span><span class="w-1.5 h-1.5 bg-surface-container-highest group-hover:bg-on-primary"></span></a><a class="group relative w-full h-28 border-b border-surface-container-highest flex flex-col items-center justify-between p-space-xs text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-none" data-path="system-configuration" href="#"><span class="font-label-meta text-label-meta text-outline group-hover:text-on-primary-container self-start">05</span><span class="font-label-code text-label-code uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 text-center whitespace-nowrap">CFG.05 // SETTINGS</span><span class="w-1.5 h-1.5 bg-surface-container-highest group-hover:bg-on-primary"></span></a></nav></div><div class="w-full flex flex-col border-t border-surface-container-highest bg-surface-container-low"><div class="p-space-xs flex flex-col items-center gap-1 border-b border-surface-container-highest"><div class="w-2 h-2 bg-primary-container animate-pulse"></div><span class="font-label-meta text-label-meta text-on-surface-variant uppercase text-center leading-tight">SYS_OK<br/>99.8%</span></div><div class="h-10 flex items-center justify-center font-label-meta text-label-meta text-outline">TS//04</div></div></aside><div class="pl-20"><header class="fixed top-0 left-20 right-0 h-14 bg-surface border-b border-surface-container-highest z-40 flex items-center justify-between px-space-md"><div class="flex items-center gap-space-md"><span class="font-headline-sm text-headline-sm uppercase text-primary tracking-tight font-black">MONOLITH</span><span class="font-label-code text-label-code text-primary-container border border-surface-container-highest px-space-xs py-0.5 bg-surface-container-low">v4.2.0-STABLE</span><div class="hidden md:flex items-center gap-space-sm border-l border-surface-container-highest pl-space-md font-label-meta text-label-meta text-on-surface-variant"><span class="text-outline">CLOCK:</span><span class="tabular-nums text-on-surface">2025.02.24 // 14:02:18 UTC</span></div><div class="hidden lg:flex items-center gap-space-sm border-l border-surface-container-highest pl-space-md font-label-meta text-label-meta text-on-surface-variant"><span class="text-outline">BUFFER:</span><span class="tabular-nums text-primary-container">1.42 GB / 64 GB</span></div></div><div class="flex items-center gap-space-md"><button class="h-9 px-space-md border border-surface-container-highest bg-surface-container-low text-on-surface hover:bg-primary-container hover:text-on-primary-container font-label-code text-label-code flex items-center gap-space-sm transition-none"><span class="text-primary-container group-hover:text-on-primary-container">■</span><span>⌘K / AGENT SHELL</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="relative pt-14 w-full bg-surface-container-lowest min-h-screen"><div class="flex flex-col w-full">
+<!-- TOP TELEMETRY & SUB-HEADER STRIP -->
+<section class="w-full bg-surface-container-lowest border-b border-surface-container-highest">
+<div class="grid grid-cols-1 xl:grid-cols-12 border-b border-surface-container-highest">
+<!-- Masthead Headline Block -->
+<div class="xl:col-span-8 p-space-md lg:p-space-lg flex flex-col justify-between border-b xl:border-b-0 xl:border-r border-surface-container-highest bg-surface-container-lowest">
+<div class="flex items-center gap-space-sm mb-space-md">
+<span class="w-2 h-2 bg-primary-container"></span>
+<span class="font-label-meta text-label-meta text-on-surface-variant tracking-widest uppercase">MODULE PRJ.04 // LAB &amp; ENGINE</span>
+<span class="text-surface-container-highest">/</span>
+<span class="font-label-code text-label-code text-primary-container">ARCH_LEVEL_0</span>
+</div>
+<div>
+<h1 class="font-display-hero text-headline-lg lg:text-display-hero uppercase tracking-tighter text-on-surface leading-none font-black select-none">
+            HYPERSTRUCTURE<br/>
+<span class="text-primary-container">ARCHITECTURE</span><span class="text-on-surface-variant font-light">.</span>
+</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-md max-w-3xl leading-relaxed">
+            Deterministic zero-copy SIMD compute kernel, low-overhead context bus, and real-time execution matrix for low-latency neural synthesis.
+          </p>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm pt-space-lg">
+<div class="px-space-sm py-0.5 bg-surface-container-high border border-surface-container-highest font-label-code text-label-code text-on-surface flex items-center gap-1.5">
+<span class="text-primary-container">■</span> REPO: <span class="text-primary">HYPERSTRUCTURE_CORE</span>
+</div>
+<div class="px-space-sm py-0.5 bg-surface-container-high border border-surface-container-highest font-label-code text-label-code text-on-surface flex items-center gap-1.5">
+<span class="text-outline">REF:</span> <span class="text-primary-container">main#49a0f</span>
+</div>
+<div class="px-space-sm py-0.5 bg-surface-container-high border border-surface-container-highest font-label-code text-label-code text-on-surface flex items-center gap-1.5">
+<span class="text-outline">TARGET:</span> <span class="text-on-surface">RUST / WASM-SIMD128 / CUDA</span>
+</div>
+</div>
+</div>
+<!-- Real-Time Target Telemetry Panel -->
+<div class="xl:col-span-4 bg-surface-container-low flex flex-col justify-between">
+<div class="border-b border-surface-container-highest px-space-md py-space-sm flex items-center justify-between bg-surface">
+<span class="font-label-meta text-label-meta text-outline tracking-wider uppercase">ENV_TELEMETRY // INSTANCE.08</span>
+<span class="font-label-code text-label-code text-primary-container flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-primary-container animate-pulse"></span> LOCK_ACQUIRED
+          </span>
+</div>
+<div class="grid grid-cols-2 divide-x divide-y divide-surface-container-highest">
+<div class="p-space-md">
+<span class="font-label-meta text-label-meta text-outline uppercase block mb-1">PIPELINE RUNNER</span>
+<div class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">PASS: 342/342</div>
+<div class="font-label-code text-label-code text-primary-container mt-1">BENCHMARK_GREEN</div>
+</div>
+<div class="p-space-md">
+<span class="font-label-meta text-label-meta text-outline uppercase block mb-1">END-TO-END LATENCY</span>
+<div class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight tabular-nums">4.12 <span class="text-body-sm font-normal text-on-surface-variant">ms</span></div>
+<div class="font-label-code text-label-code text-on-surface-variant mt-1">P99: 5.84ms</div>
+</div>
+<div class="p-space-md">
+<span class="font-label-meta text-label-meta text-outline uppercase block mb-1">MEMORY ALLOCATOR</span>
+<div class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">ZERO-COPY</div>
+<div class="font-label-code text-label-code text-on-surface-variant mt-1">PAGE_LOCKED_ARENA</div>
+</div>
+<div class="p-space-md">
+<span class="font-label-meta text-label-meta text-outline uppercase block mb-1">KERNEL THROUGHPUT</span>
+<div class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight tabular-nums">1.44 <span class="text-body-sm font-normal text-on-surface-variant">TFLOPS</span></div>
+<div class="font-label-code text-label-code text-primary-container mt-1">UTIL: 91.4%</div>
+</div>
+</div>
+<div class="p-space-md border-t border-surface-container-highest bg-surface-container-lowest flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-label-code text-label-code text-outline">BUFFER:</span>
+<span class="font-label-code text-label-code text-on-surface tabular-nums">524.288 KB / RING</span>
+</div>
+<button class="px-space-md py-1.5 border border-surface-container-highest bg-surface-container text-on-surface hover:bg-primary-container hover:text-on-primary-container hover:border-primary-container font-label-code text-label-code transition-none flex items-center gap-1.5 cursor-pointer" id="trigger-run-bench">
+<span>■</span> RUN DISPATCH BENCH
+          </button>
+</div>
+</div>
+</div>
+</section>
+<!-- ARCHITECTURE TOPOLOGY SCHEMATIC SECTION -->
+<section class="w-full bg-surface-container-lowest border-b border-surface-container-highest">
+<div class="px-space-md py-space-sm border-b border-surface-container-highest flex items-center justify-between bg-surface">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-code text-label-code text-primary-container">SCHEMATIC.01</span>
+<span class="text-surface-container-highest">/</span>
+<span class="font-label-meta text-label-meta text-on-surface tracking-wider uppercase">SUB-SYSTEM INTERCONNECT &amp; BUS PIPELINE</span>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-code text-label-code text-outline hidden sm:inline">DATA_BUS: 128-BIT AVX/NEON</span>
+<span class="font-label-meta text-label-meta text-primary-container">SYNC: LOCKED</span>
+</div>
+</div>
+<!-- Interactive Technical Topology Canvas -->
+<div class="w-full p-space-md lg:p-space-lg bg-surface-container-lowest overflow-x-auto">
+<div class="min-w-[960px] border border-surface-container-highest bg-surface-container-low p-space-lg relative">
+<div class="absolute top-2 right-3 font-label-meta text-label-meta text-outline uppercase select-none">
+          TOPOLOGY_RENDER // BUS_FREQUENCY: 3.20GHz
+        </div>
+<div class="grid grid-cols-4 gap-0 border border-surface-container-highest relative z-10 bg-surface">
+<!-- Node 1: Client/User Agent -->
+<div class="p-space-md border-r border-surface-container-highest flex flex-col justify-between relative group hover:bg-surface-container transition-none">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-meta text-label-meta text-outline">TIER.01 // EDGE</span>
+<span class="w-2 h-2 bg-primary-container"></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary font-bold">CLIENT AGENT</h3>
+<p class="font-label-code text-label-code text-primary-container mt-1">WASM SIMD-128</p>
+<div class="mt-space-md space-y-1 font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex justify-between"><span>Frame Pool:</span><span class="text-on-surface tabular-nums">60 FPS</span></div>
+<div class="flex justify-between"><span>Mem Boundary:</span><span class="text-on-surface tabular-nums">16 MB</span></div>
+<div class="flex justify-between"><span>Overhead:</span><span class="text-primary-container tabular-nums">0.12 ms</span></div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-sm border-t border-surface-container-highest flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline">OUT: WEBSOCKET/IPC</span>
+<span class="font-label-code text-label-code text-on-surface">54 MB/s</span>
+</div>
+</div>
+<!-- Node 2: Zero-Copy Ringbuffer -->
+<div class="p-space-md border-r border-surface-container-highest flex flex-col justify-between relative group hover:bg-surface-container transition-none">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-meta text-label-meta text-outline">TIER.02 // PIPE</span>
+<span class="w-2 h-2 bg-primary-container"></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary font-bold">RINGBUFFER</h3>
+<p class="font-label-code text-label-code text-primary-container mt-1">ZERO-COPY IPC</p>
+<div class="mt-space-md space-y-1 font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex justify-between"><span>Head Pointer:</span><span class="text-on-surface font-label-code">0x7FFE94A0</span></div>
+<div class="flex justify-between"><span>Tail Pointer:</span><span class="text-on-surface font-label-code">0x7FFE94B8</span></div>
+<div class="flex justify-between"><span>Contention:</span><span class="text-primary-container tabular-nums">0.00%</span></div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-sm border-t border-surface-container-highest flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline">LOCKLESS ATOMIC</span>
+<span class="font-label-code text-label-code text-on-surface">1.2 GB/s</span>
+</div>
+</div>
+<!-- Node 3: Vector DB & Context Boundary -->
+<div class="p-space-md border-r border-surface-container-highest flex flex-col justify-between relative group hover:bg-surface-container transition-none">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-meta text-label-meta text-outline">TIER.03 // EMBED</span>
+<span class="w-2 h-2 bg-primary-container"></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary font-bold">VECTOR CONTEXT</h3>
+<p class="font-label-code text-label-code text-primary-container mt-1">HNSW FLAT INDEX</p>
+<div class="mt-space-md space-y-1 font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex justify-between"><span>Dim Size:</span><span class="text-on-surface tabular-nums">1536 f32</span></div>
+<div class="flex justify-between"><span>Index Nodes:</span><span class="text-on-surface tabular-nums">245,760</span></div>
+<div class="flex justify-between"><span>Recall@10:</span><span class="text-primary-container tabular-nums">99.78%</span></div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-sm border-t border-surface-container-highest flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline">COSINE METRIC</span>
+<span class="font-label-code text-label-code text-on-surface">0.84 ms</span>
+</div>
+</div>
+<!-- Node 4: Local LLM Kernel / Hardware Enclave -->
+<div class="p-space-md flex flex-col justify-between relative group hover:bg-surface-container transition-none">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-meta text-label-meta text-outline">TIER.04 // COMPUTE</span>
+<span class="w-2 h-2 bg-primary-container animate-pulse"></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary font-bold">LLM KERNEL</h3>
+<p class="font-label-code text-label-code text-primary-container mt-1">CUDA SM_89 / METAL</p>
+<div class="mt-space-md space-y-1 font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex justify-between"><span>Quantization:</span><span class="text-on-surface">FP8 / INT4</span></div>
+<div class="flex justify-between"><span>K/V Cache:</span><span class="text-on-surface tabular-nums">8.2 GB</span></div>
+<div class="flex justify-between"><span>Decode Speed:</span><span class="text-primary-container tabular-nums">118 t/s</span></div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-sm border-t border-surface-container-highest flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline">ENCLAVE SECURE</span>
+<span class="font-label-code text-label-code text-primary-container">ISOLATED</span>
+</div>
+</div>
+</div>
+<!-- Directional Architectural Bus Diagram Visualizer (SVG) -->
+<div class="w-full mt-4 h-16 border-t border-surface-container-highest pt-2">
+<svg class="w-full h-full text-on-surface-variant overflow-visible" fill="none" preserveaspectratio="none" viewbox="0 0 960 50">
+<!-- Main Horizontal Bus Line -->
+<line class="opacity-40" stroke="currentColor" stroke-dasharray="3 3" stroke-width="1" x1="20" x2="940" y1="25" y2="25"></line>
+<!-- Nodes on Line -->
+<circle class="fill-surface stroke-primary-container" cx="120" cy="25" r="4" stroke-width="2"></circle>
+<circle class="fill-surface stroke-primary-container" cx="360" cy="25" r="4" stroke-width="2"></circle>
+<circle class="fill-surface stroke-primary-container" cx="600" cy="25" r="4" stroke-width="2"></circle>
+<circle class="fill-primary-container" cx="840" cy="25" r="4"></circle>
+<!-- Arrows & Throughput Annotations -->
+<path class="text-surface-container-highest" d="M 230 22 L 250 25 L 230 28 Z" fill="currentColor"></path>
+<path class="text-surface-container-highest" d="M 470 22 L 490 25 L 470 28 Z" fill="currentColor"></path>
+<path class="text-primary-container" d="M 710 22 L 730 25 L 710 28 Z" fill="currentColor"></path>
+<text class="font-label-meta text-[9px] fill-on-surface-variant" text-anchor="middle" x="120" y="44">CLIENT.RX</text>
+<text class="font-label-meta text-[9px] fill-on-surface-variant" text-anchor="middle" x="360" y="44">LOCKLESS.SYNC</text>
+<text class="font-label-meta text-[9px] fill-on-surface-variant" text-anchor="middle" x="600" y="44">EMBED.DISPATCH</text>
+<text class="font-label-meta text-[9px] fill-primary-container font-bold" text-anchor="middle" x="840" y="44">CUDA.ACTIVE</text>
+</svg>
+</div>
+</div>
+</div>
+</section>
+<!-- DUAL QUADRANT: REPOSITORY INSPECTION & LIVE EXECUTION TERMINAL -->
+<section class="w-full grid grid-cols-1 lg:grid-cols-12 border-b border-surface-container-highest bg-surface-container-lowest">
+<!-- LEFT: REPOSITORY COMMITS & PIPELINE STREAM (Col 6) -->
+<div class="lg:col-span-6 border-b lg:border-b-0 lg:border-r border-surface-container-highest flex flex-col justify-between">
+<!-- Section Header -->
+<div class="px-space-md py-space-sm border-b border-surface-container-highest flex items-center justify-between bg-surface">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-code text-label-code text-primary-container">STREAM.02</span>
+<span class="text-surface-container-highest">/</span>
+<span class="font-label-meta text-label-meta text-on-surface tracking-wider uppercase">COMMIT STREAM &amp; PATCH INVENTORY</span>
+</div>
+<span class="font-label-code text-label-code text-outline tabular-nums">4 ARTIFACTS</span>
+</div>
+<!-- Commit Filters -->
+<div class="px-space-md py-space-xs border-b border-surface-container-highest bg-surface-container flex items-center gap-1 overflow-x-auto">
+<button class="px-space-sm py-1 bg-primary-container text-on-primary-container font-label-code text-label-code border border-primary-container font-bold uppercase transition-none">
+          ALL COMMITS
+        </button>
+<button class="px-space-sm py-1 bg-surface-container-low text-on-surface-variant hover:bg-surface-bright hover:text-on-surface font-label-code text-label-code border border-surface-container-highest uppercase transition-none">
+          KERNEL_DIFFS
+        </button>
+<button class="px-space-sm py-1 bg-surface-container-low text-on-surface-variant hover:bg-surface-bright hover:text-on-surface font-label-code text-label-code border border-surface-container-highest uppercase transition-none">
+          WASM_RUNTIME
+        </button>
+<button class="px-space-sm py-1 bg-surface-container-low text-on-surface-variant hover:bg-surface-bright hover:text-on-surface font-label-code text-label-code border border-surface-container-highest uppercase transition-none">
+          BENCHMARKS
+        </button>
+</div>
+<!-- Commit Log Entries -->
+<div class="divide-y divide-surface-container-highest bg-surface-container-lowest font-body-md text-body-md flex-1">
+<!-- Commit 1 -->
+<div class="p-space-md hover:bg-surface-container cursor-pointer transition-none border-l-2 border-primary-container">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-2">
+<span class="font-label-code text-label-code bg-surface-container-high px-1.5 py-0.5 text-primary-container border border-surface-container-highest">cf812e</span>
+<span class="font-label-meta text-label-meta text-outline uppercase">AGENT_01 [PARSER]</span>
+</div>
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">04:12 UTC</span>
+</div>
+<p class="font-body-md text-on-surface font-medium leading-snug">
+            feat(simd): implement lockless ringbuffer arena for context tensor broadcast
+          </p>
+<div class="flex items-center justify-between mt-space-sm font-label-code text-label-code">
+<span class="text-on-surface-variant">diff: <span class="text-primary-container">+482</span> <span class="text-error">-19</span> in 6 files</span>
+<span class="text-primary-container flex items-center gap-1">✓ 18/18 microbench passed</span>
+</div>
+</div>
+<!-- Commit 2 -->
+<div class="p-space-md hover:bg-surface-container cursor-pointer transition-none border-l-2 border-transparent hover:border-surface-variant">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-2">
+<span class="font-label-code text-label-code bg-surface-container-high px-1.5 py-0.5 text-secondary border border-surface-container-highest">89b101</span>
+<span class="font-label-meta text-label-meta text-outline uppercase">AGENT_03 [CUDA]</span>
+</div>
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">02:48 UTC</span>
+</div>
+<p class="font-body-md text-on-surface font-medium leading-snug">
+            perf(cuda): unroll flash-attention tiled GEMM loop for Ada Lovelace SM_89
+          </p>
+<div class="flex items-center justify-between mt-space-sm font-label-code text-label-code">
+<span class="text-on-surface-variant">diff: <span class="text-primary-container">+114</span> <span class="text-error">-84</span> in 2 files</span>
+<span class="text-primary-container flex items-center gap-1">✓ +8.4% FLOPs uplift</span>
+</div>
+</div>
+<!-- Commit 3 -->
+<div class="p-space-md hover:bg-surface-container cursor-pointer transition-none border-l-2 border-transparent hover:border-surface-variant">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-2">
+<span class="font-label-code text-label-code bg-surface-container-high px-1.5 py-0.5 text-secondary border border-surface-container-highest">28da41</span>
+<span class="font-label-meta text-label-meta text-outline uppercase">HUMAN_SUPERVISOR</span>
+</div>
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">YESTERDAY</span>
+</div>
+<p class="font-body-md text-on-surface font-medium leading-snug">
+            fix(wasm): align SIMD load boundaries to 16-byte byte offsets to prevent trap
+          </p>
+<div class="flex items-center justify-between mt-space-sm font-label-code text-label-code">
+<span class="text-on-surface-variant">diff: <span class="text-primary-container">+12</span> <span class="text-error">-3</span> in 1 file</span>
+<span class="text-primary-container flex items-center gap-1">✓ regression test pass</span>
+</div>
+</div>
+<!-- Commit 4 -->
+<div class="p-space-md hover:bg-surface-container cursor-pointer transition-none border-l-2 border-transparent hover:border-surface-variant">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-2">
+<span class="font-label-code text-label-code bg-surface-container-high px-1.5 py-0.5 text-secondary border border-surface-container-highest">f701c9</span>
+<span class="font-label-meta text-label-meta text-outline uppercase">AGENT_02 [EMBED]</span>
+</div>
+<span class="font-label-code text-label-code text-on-surface-variant tabular-nums">YESTERDAY</span>
+</div>
+<p class="font-body-md text-on-surface font-medium leading-snug">
+            refactor(hnsw): prune edge connections above M=32 during graph serialization
+          </p>
+<div class="flex items-center justify-between mt-space-sm font-label-code text-label-code">
+<span class="text-on-surface-variant">diff: <span class="text-primary-container">+96</span> <span class="text-error">-140</span> in 4 files</span>
+<span class="text-primary-container flex items-center gap-1">✓ index size -18%</span>
+</div>
+</div>
+</div>
+<!-- Action Footer for Commits -->
+<div class="p-space-sm border-t border-surface-container-highest bg-surface-container-low flex items-center justify-between">
+<div class="font-label-meta text-label-meta text-outline uppercase">
+          WORKSPACE CLEAN // TREE DIRTY: 0
+        </div>
+<div class="flex items-center gap-2">
+<button class="px-space-sm py-1 border border-surface-container-highest bg-surface text-on-surface hover:bg-primary-container hover:text-on-primary-container font-label-code text-label-code uppercase transition-none">
+            INSPECT AST
+          </button>
+<button class="px-space-sm py-1 border border-surface-container-highest bg-surface text-on-surface hover:bg-primary-container hover:text-on-primary-container font-label-code text-label-code uppercase transition-none">
+            EXPORT DIFF
+          </button>
+</div>
+</div>
+</div>
+<!-- RIGHT: LIVE TERMINAL & EXECUTION TRACE ENGINE (Col 6) -->
+<div class="lg:col-span-6 flex flex-col justify-between bg-surface-container-lowest">
+<!-- Section Header -->
+<div class="px-space-md py-space-sm border-b border-surface-container-highest flex items-center justify-between bg-surface">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-code text-label-code text-primary-container">TRACE.03</span>
+<span class="text-surface-container-highest">/</span>
+<span class="font-label-meta text-label-meta text-on-surface tracking-wider uppercase">JIT TRACE ENGINE &amp; PROMPT STREAM</span>
+</div>
+<div class="flex items-center gap-2 font-label-code text-label-code text-outline">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span>TTY://DEV_CONSOLE</span>
+</div>
+</div>
+<!-- Active Thread Concurrency Worker Matrix -->
+<div class="border-b border-surface-container-highest bg-surface-container-low px-space-md py-space-xs">
+<div class="flex items-center justify-between mb-1.5">
+<span class="font-label-meta text-label-meta text-outline uppercase tracking-wider">THREAD_POOL // WORKER CONCURRENCY (8 CORES)</span>
+<span class="font-label-code text-label-code text-primary-container tabular-nums">LOAD: 87.2%</span>
+</div>
+<div class="grid grid-cols-8 gap-1 font-label-code text-label-code text-center">
+<div class="bg-primary-container text-on-primary-container py-1 border border-primary-container">W.00</div>
+<div class="bg-primary-container text-on-primary-container py-1 border border-primary-container">W.01</div>
+<div class="bg-primary-container text-on-primary-container py-1 border border-primary-container">W.02</div>
+<div class="bg-primary-container text-on-primary-container py-1 border border-primary-container">W.03</div>
+<div class="bg-primary-container text-on-primary-container py-1 border border-primary-container">W.04</div>
+<div class="bg-primary-container text-on-primary-container py-1 border border-primary-container">W.05</div>
+<div class="bg-surface-container-high text-on-surface-variant py-1 border border-surface-container-highest">W.06</div>
+<div class="bg-primary-container text-on-primary-container py-1 border border-primary-container">W.07</div>
+</div>
+</div>
+<!-- Terminal Output Pane -->
+<div class="p-space-md bg-surface-container-lowest font-label-code text-label-code leading-relaxed space-y-1 overflow-y-auto max-h-[380px] min-h-[340px] text-on-surface select-text" id="terminal-body">
+<div class="text-outline">[14:02:01.002] [BOOT] monolith-lab runtime initialised (v4.2.0-STABLE-x86_64)</div>
+<div class="text-outline">[14:02:01.045] [INFO] Memory pool mapped 536,870,912 bytes at 0x7FFF00000000</div>
+<div class="text-on-surface-variant">[14:02:01.120] [DEBUG] SIMD128 instruction set verified: AVX2 detected, FMA enabled</div>
+<div><span class="text-primary-container">[14:02:02.408] [TRACE]</span> ringbuffer::allocator: arena pointer allocated: 0x7FFE94A000</div>
+<div><span class="text-primary-container">[14:02:03.119] [PERF]</span> JIT ASM emission completed in 0.084ms (0 instructions trapped)</div>
+<div class="text-on-surface-variant">[14:02:04.901] [INFO] Dispatching 256 parallel batch vectors into CUDA SM_89 stream#2</div>
+<div><span class="text-primary-container">[14:02:05.340] [TRACE]</span> gemm_f16_tiled: throughput 1,442 GFLOPS | delta: 0.0003</div>
+<div class="text-outline">[14:02:06.012] [DEBUG] Vector index sweep finished: 10/10 nearest neighbor matches aligned</div>
+<div class="text-primary-container font-bold">[14:02:07.820] [OK] PIPELINE CYCLE COMPLETED: 4.12ms E2E latency. STATUS: ALL_SYSTEMS_OPTIMAL</div>
+<div class="text-on-surface flex items-center gap-1 mt-2 pt-2 border-t border-surface-container-highest" id="terminal-stream-line">
+<span class="text-primary-container font-bold">&gt;</span>
+<span class="text-outline font-label-code">monolith-lab --profile=zero-overhead --emit=asm</span>
+<span class="w-2 h-4 bg-primary-container inline-block animate-pulse"></span>
+</div>
+</div>
+<!-- Terminal Input Command Bar -->
+<div class="border-t border-surface-container-highest p-space-sm bg-surface-container-low">
+<form class="flex items-center gap-2" id="terminal-cli-form">
+<div class="flex-1 flex items-center bg-surface border border-surface-container-highest px-space-md py-1.5 focus-within:border-primary-container">
+<span class="text-primary-container font-bold mr-2 select-none">&gt;</span>
+<input class="w-full bg-transparent font-label-code text-label-code text-on-surface focus:outline-none placeholder:text-outline" id="terminal-input" placeholder="Type kernel command (e.g. bench, trace, asm, dump-ir)..." type="text"/>
+</div>
+<button class="px-space-md py-1.5 border border-surface-container-highest bg-surface text-on-surface hover:bg-primary-container hover:text-on-primary-container font-label-code text-label-code font-bold uppercase transition-none cursor-pointer" type="submit">
+            EXEC
+          </button>
+</form>
+</div>
+</div>
+</section>
+<!-- LOWER METRICS & HARDWARE PROFILER SECTION -->
+<section class="w-full bg-surface-container-lowest">
+<div class="px-space-md py-space-sm border-b border-surface-container-highest flex items-center justify-between bg-surface">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-code text-label-code text-primary-container">METRICS.04</span>
+<span class="text-surface-container-highest">/</span>
+<span class="font-label-meta text-label-meta text-on-surface tracking-wider uppercase">HARDWARE KERNEL PROFILING &amp; REGISTER DUMPS</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-space-sm py-1 border border-surface-container-highest bg-surface text-on-surface hover:bg-primary-container hover:text-on-primary-container font-label-code text-label-code uppercase transition-none">
+          GENERATE REPO REPORT
+        </button>
+</div>
+</div>
+<!-- 4-Quadrant Micro-Telemetry Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-surface-container-highest border-b border-surface-container-highest">
+<!-- Metric 1: Cache Miss Rate -->
+<div class="p-space-md bg-surface-container-lowest flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline uppercase">L1/L2 CACHE MISS</span>
+<span class="font-label-code text-label-code text-primary-container">0.04%</span>
+</div>
+<div class="font-headline-md text-headline-md text-primary font-black tracking-tight mt-1 tabular-nums">
+            0.041 <span class="text-body-sm font-normal text-on-surface-variant">%</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-normal">
+            SIMD alignment eliminates unaligned load penalties in L1D cache.
+          </p>
+</div>
+<div class="w-full h-8 mt-space-md pt-2 border-t border-surface-container-highest flex items-end gap-1">
+<div class="h-3 w-1/8 bg-surface-container-highest"></div>
+<div class="h-4 w-1/8 bg-surface-container-highest"></div>
+<div class="h-2 w-1/8 bg-surface-container-highest"></div>
+<div class="h-3 w-1/8 bg-surface-container-highest"></div>
+<div class="h-5 w-1/8 bg-surface-container-highest"></div>
+<div class="h-2 w-1/8 bg-surface-container-highest"></div>
+<div class="h-3 w-1/8 bg-surface-container-highest"></div>
+<div class="h-2 w-1/8 bg-primary-container"></div>
+</div>
+</div>
+<!-- Metric 2: Memory Allocation Curve -->
+<div class="p-space-md bg-surface-container-lowest flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline uppercase">MEMORY PROFILE</span>
+<span class="font-label-code text-label-code text-on-surface">512 MB ARENA</span>
+</div>
+<div class="font-headline-md text-headline-md text-primary font-black tracking-tight mt-1 tabular-nums">
+            ZERO-COPY
+          </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-normal">
+            No heap allocations per token generation loop. Locked static virtual address space.
+          </p>
+</div>
+<div class="w-full h-8 mt-space-md pt-2 border-t border-surface-container-highest flex items-center justify-between font-label-meta text-label-meta text-outline">
+<span>MIN: 480MB</span>
+<span class="text-primary-container">PEAK: 512MB</span>
+<span>HEAP: 0KB</span>
+</div>
+</div>
+<!-- Metric 3: Vector Recall Precision -->
+<div class="p-space-md bg-surface-container-lowest flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline uppercase">VECTOR RECALL @ K=10</span>
+<span class="font-label-code text-label-code text-primary-container">PRECISION_MAX</span>
+</div>
+<div class="font-headline-md text-headline-md text-primary font-black tracking-tight mt-1 tabular-nums">
+            99.82 <span class="text-body-sm font-normal text-on-surface-variant">%</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-normal">
+            Cosine similarity matrix computed over 245K hyperstructure node embeddings.
+          </p>
+</div>
+<div class="w-full h-8 mt-space-md pt-2 border-t border-surface-container-highest flex items-center">
+<div class="w-full bg-surface-container h-2 border border-surface-container-highest overflow-hidden">
+<div class="bg-primary-container h-full w-[99.82%]"></div>
+</div>
+</div>
+</div>
+<!-- Metric 4: Instruction Execution Frequency -->
+<div class="p-space-md bg-surface-container-lowest flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-meta text-label-meta text-outline uppercase">BRANCH MISPREDICT</span>
+<span class="font-label-code text-label-code text-primary-container">&lt; 0.001%</span>
+</div>
+<div class="font-headline-md text-headline-md text-primary font-black tracking-tight mt-1 tabular-nums">
+            0.0008 <span class="text-body-sm font-normal text-on-surface-variant">%</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-normal">
+            Loop invariants hoisted; branching replaced with SIMD conditional select bitmasks.
+          </p>
+</div>
+<div class="w-full h-8 mt-space-md pt-2 border-t border-surface-container-highest flex items-center justify-between font-label-code text-label-code">
+<span class="text-outline">CMOV: 100%</span>
+<span class="text-primary-container font-bold">STATE: STABLE</span>
+</div>
+</div>
+</div>
+</section>
+<!-- INLINE CLIENT SCRIPT FOR INTERACTION -->
+<script>
+    (function initMonolithLab() {
+      const form = document.getElementById('terminal-cli-form');
+      const input = document.getElementById('terminal-input');
+      const terminalBody = document.getElementById('terminal-body');
+      const streamLine = document.getElementById('terminal-stream-line');
+      const benchBtn = document.getElementById('trigger-run-bench');
+
+      function appendLog(level, msg, colorClass) {
+        const time = new Date().toISOString().substring(11, 23);
+        const div = document.createElement('div');
+        div.className = colorClass || 'text-on-surface-variant';
+        div.innerHTML = `<span class="text-outline">[${time}]</span> <span class="font-bold">[${level}]</span> ${msg}`;
+        terminalBody.insertBefore(div, streamLine);
+        terminalBody.scrollTop = terminalBody.scrollHeight;
+      }
+
+      if (form && input) {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const cmd = input.value.trim();
+          if (!cmd) return;
+
+          appendLog('USER', `monolith-lab &gt; ${cmd}`, 'text-on-surface');
+          input.value = '';
+
+          const normalized = cmd.toLowerCase();
+          setTimeout(() => {
+            if (normalized === 'bench') {
+              appendLog('PERF', 'Benchmark running: 10,000 iterations over 1536-dim vector space...', 'text-primary-container');
+              setTimeout(() => {
+                appendLog('PERF', 'Average latency: 3.98ms | FLOPs: 1.48 TFLOPS (Delta: -0.14ms)', 'text-primary-container');
+              }, 400);
+            } else if (normalized === 'trace') {
+              appendLog('TRACE', 'Thread ringbuffer locks: 0 contention events recorded on workers 00-07', 'text-on-surface');
+            } else if (normalized === 'asm') {
+              appendLog('ASM', 'vmovdqa64 zmm0, [rdi+rax*8] ; vfmadd231ps zmm1, zmm0, zmm2', 'text-primary-container');
+            } else {
+              appendLog('INFO', `Dispatched instruction payload '${cmd}' to hyperstructure runtime.`, 'text-on-surface-variant');
+            }
+          }, 150);
+        });
+      }
+
+      if (benchBtn) {
+        benchBtn.addEventListener('click', function() {
+          appendLog('DISPATCH', 'Executing automated system benchmark batch: 342 assertion points...', 'text-primary-container');
+          setTimeout(() => {
+            appendLog('OK', 'All 342 tests passed in 4.09ms. Zero memory degradation observed.', 'text-primary-container');
+          }, 500);
+        });
+      }
+    })();
+  </script>
+</div></main></div></body></html>

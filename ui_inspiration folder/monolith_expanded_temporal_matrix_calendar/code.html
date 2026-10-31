@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_dashboard" name="shell-type"/>
+<title>MONOLITH // Matrix Chrono Hypr</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Chivo:ital,wght@0,400;0,700;0,800;0,900;1,700;1,800;1,900&amp;family=JetBrains+Mono:wght@400;500;600;700;800&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #0d0f12;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0f12;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #252830;
+    }
+    .grid-timeline-canvas {
+      display: grid;
+      grid-template-columns: 50px repeat(7, 1fr);
+    }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "lime-monolith": "#c5ff42",
+            "acid-lime": "#bcf538",
+            "surface-dim": "#0a0c0e",
+            "surface-lowest": "#0d0f12",
+            "surface-low": "#12151a",
+            "surface-card": "#161920",
+            "surface-border": "#232733",
+            "surface-border-subtle": "#1c202a",
+            "uni-purple": "#583f7a",
+            "uni-purple-light": "#a37acc",
+            "deep-indigo": "#232042",
+            "exam-crimson": "#7d1d2b",
+            "exam-border": "#e0314b",
+            "agentic-dark": "#192a18",
+            "agentic-border": "#4e8529",
+            "kernel-slate": "#1c2738",
+            "kernel-border": "#3b5880",
+            "health-teal": "#122a27",
+            "health-border": "#28665c"
+          },
+          fontFamily: {
+            "headline": ["Chivo", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"],
+            "space": ["Space Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface-lowest text-zinc-300 font-mono text-[11px] leading-relaxed antialiased selection:bg-lime-monolith selection:text-black flex flex-col h-screen overflow-hidden">
+<!-- TOP WAYBAR / HYPRLAND STATUS BAR -->
+<header class="h-8 w-full bg-[#0a0c0f] border-b border-surface-border flex items-center justify-between px-2 text-[10px] tracking-wide select-none z-50 shrink-0">
+<div class="flex items-center gap-2">
+<!-- Workspaces -->
+<div class="flex items-center bg-[#14171f] p-0.5 rounded border border-surface-border">
+<span class="px-1.5 py-0.5 bg-[#8b61c9] text-white font-bold text-[9px] rounded-sm">1:main</span>
+<span class="px-1.5 py-0.5 text-zinc-400 hover:text-zinc-200">2:uni</span>
+<span class="px-1.5 py-0.5 text-zinc-400 hover:text-zinc-200">3:code</span>
+<span class="px-1.5 py-0.5 text-zinc-400 hover:text-zinc-200">4:notes</span>
+</div>
+<!-- Command / Routine path -->
+<div class="hidden sm:flex items-center gap-1 bg-[#14171f] px-2 py-0.5 rounded border border-surface-border text-zinc-400">
+<span class="text-lime-monolith font-bold">λ</span>
+<span class="text-zinc-300">~/dotfiles/routine.sh</span>
+</div>
+<!-- Scrubber timestamp -->
+<div class="flex items-center gap-1 bg-[#14171f] px-2 py-0.5 rounded border border-surface-border text-zinc-300 font-medium">
+<span class="text-zinc-400">2025-05-18 Sun</span>
+<span class="text-white font-bold tabular-nums">09:42:15</span>
+</div>
+<!-- Completion pill -->
+<div class="flex items-center gap-1.5 bg-[#172514] border border-[#3b661d] text-lime-monolith px-2 py-0.5 rounded font-bold text-[9px]">
+<span class="w-1.5 h-1.5 rounded-full bg-lime-monolith animate-pulse"></span>
+<span>72% DAY COMPLETED</span>
+</div>
+</div>
+<!-- Center Breadcrumbs / Navigation -->
+<nav class="hidden lg:flex items-center gap-3 text-[10px] font-bold text-zinc-400">
+<a class="hover:text-white transition-colors" href="#">OVERVIEW</a>
+<a class="text-white border-b border-lime-monolith pb-0.5" href="#">ACADEMICS</a>
+<a class="hover:text-white transition-colors" href="#">AGENTIC</a>
+<a class="hover:text-white transition-colors" href="#">PROJECTS</a>
+<a class="hover:text-white transition-colors" href="#">CONFIG</a>
+</nav>
+<!-- Right System Telemetry & Status Badges -->
+<div class="flex items-center gap-2">
+<!-- CPU / RAM -->
+<div class="hidden md:flex items-center gap-2 bg-[#14171f] px-2 py-0.5 rounded border border-surface-border text-zinc-400 font-mono">
+<span>CPU <strong class="text-zinc-200">14%</strong></span>
+<span class="text-surface-border">|</span>
+<span>RAM <strong class="text-zinc-200">4.2G</strong></span>
+</div>
+<!-- Finals countdown badge -->
+<div class="flex items-center gap-1 bg-[#3a181d] border border-[#7d222e] text-[#ff7d8d] px-2 py-0.5 rounded font-bold text-[9px]">
+<span class="material-symbols-outlined text-[11px]">bolt</span>
+<span>FINALS: T-14d</span>
+</div>
+<!-- Linux / Network icons & user -->
+<div class="flex items-center gap-1.5 text-zinc-400 pl-1">
+<span class="material-symbols-outlined text-[14px] text-lime-monolith">wifi</span>
+<span class="material-symbols-outlined text-[14px]">volume_up</span>
+<span class="text-zinc-500 font-space text-[10px]">arch @ uni</span>
+</div>
+</div>
+</header>
+<!-- SUB-BAR & FILTER CONTROLS -->
+<div class="bg-[#0f1217] border-b border-surface-border px-3 py-1.5 flex flex-wrap items-center justify-between gap-y-2 select-none shrink-0 text-[10px]">
+<!-- Left: Views + Cycle + Command triggers -->
+<div class="flex flex-wrap items-center gap-2">
+<!-- View mode toggles -->
+<div class="flex items-center bg-[#151922] p-0.5 rounded border border-surface-border font-bold">
+<button class="px-2 py-0.5 text-zinc-400 hover:text-white">1: DAY</button>
+<button class="px-2 py-0.5 bg-[#8b61c9] text-white rounded-sm shadow">2: WEEK ACTIVE</button>
+<button class="px-2 py-0.5 text-zinc-400 hover:text-white">3: MONTH</button>
+<button class="px-2 py-0.5 text-zinc-400 hover:text-white">4: SEMESTER</button>
+</div>
+<!-- Cycle tag & file path -->
+<div class="flex items-center gap-1.5 bg-[#151922] px-2 py-1 rounded border border-surface-border">
+<span class="bg-[#242b3b] text-lime-monolith px-1 font-bold text-[9px] rounded">W21</span>
+<span class="font-bold text-white tracking-wider">MAY 18 — MAY 24, 2025</span>
+<span class="text-zinc-500 hidden xl:inline">| ~/.config/khal/academic.ics</span>
+</div>
+<!-- Command triggers -->
+<div class="flex items-center gap-1 text-zinc-400">
+<button class="px-1.5 py-0.5 bg-[#151922] hover:bg-[#202635] text-zinc-300 rounded border border-surface-border"><strong>[h]</strong> PREV</button>
+<button class="px-1.5 py-0.5 bg-[#151922] hover:bg-[#202635] text-lime-monolith rounded border border-surface-border font-bold"><strong>[t]</strong> TODAY</button>
+<button class="px-1.5 py-0.5 bg-[#151922] hover:bg-[#202635] text-zinc-300 rounded border border-surface-border"><strong>[l]</strong> NEXT</button>
+<button class="px-1.5 py-0.5 bg-[#151922] hover:bg-[#202635] text-[#71d99b] rounded border border-surface-border flex items-center gap-1">
+<span class="text-[11px]">⟳</span> CALDAV SYNC <span class="text-zinc-500">[r]</span>
+</button>
+<button class="px-2 py-0.5 bg-[#253245] hover:bg-lime-monolith hover:text-black text-lime-monolith font-bold rounded border border-surface-border flex items-center gap-1 transition-colors">
+<span>+ NEW BLOCK</span> <span class="opacity-70 text-[9px]">[n]</span>
+</button>
+</div>
+</div>
+<!-- Right: Telemetry & Vector Filters -->
+<div class="flex flex-wrap items-center gap-3">
+<!-- Telemetry stats -->
+<div class="hidden md:flex items-center gap-2 text-zinc-400 border-r border-surface-border pr-3">
+<span>TOTAL: <strong class="text-white">42.5h</strong></span>
+<span>DEEP WORK: <strong class="text-lime-monolith">28.0h (65%)</strong></span>
+<span class="text-[#71d99b]">● 0 CONFLICTS</span>
+<span>BUFFER: <strong class="text-zinc-300">14.0h</strong></span>
+</div>
+<!-- Vector filters -->
+<div class="flex items-center gap-2 text-[9px] font-medium">
+<span class="text-zinc-500">FILTERS:</span>
+<span class="px-1.5 py-0.5 rounded bg-[#181d29] text-zinc-300 flex items-center gap-1 border border-surface-border cursor-pointer hover:border-zinc-500">
+<span class="w-1.5 h-1.5 rounded-full bg-[#8b61c9]"></span> uni-cs421
+        </span>
+<span class="px-1.5 py-0.5 rounded bg-[#181d29] text-zinc-300 flex items-center gap-1 border border-surface-border cursor-pointer hover:border-zinc-500">
+<span class="w-1.5 h-1.5 rounded-full bg-lime-monolith"></span> agentic-ai
+        </span>
+<span class="px-1.5 py-0.5 rounded bg-[#181d29] text-zinc-300 flex items-center gap-1 border border-surface-border cursor-pointer hover:border-zinc-500">
+<span class="w-1.5 h-1.5 rounded-full bg-[#628bc9]"></span> personal-kernel
+        </span>
+<span class="px-1.5 py-0.5 rounded bg-[#181d29] text-zinc-300 flex items-center gap-1 border border-surface-border cursor-pointer hover:border-zinc-500">
+<span class="w-1.5 h-1.5 rounded-full bg-[#3ab795]"></span> routine-health
+        </span>
+<span class="px-1.5 py-0.5 rounded bg-[#181d29] text-zinc-300 flex items-center gap-1 border border-surface-border cursor-pointer hover:border-zinc-500">
+<span class="w-1.5 h-1.5 rounded-full bg-[#ff4a68]"></span> exams/deadlines
+        </span>
+</div>
+</div>
+</div>
+<!-- MAIN VIEWPORT: 2-COLUMN BSP-TILED WINDOW SPLIT -->
+<main class="flex-1 flex overflow-hidden bg-[#0d0f12] p-1 gap-1">
+<!-- LEFT COLUMN: SPATIOUS WEEK TIMELINE / TIME-GRID -->
+<section class="flex-1 flex flex-col bg-[#11141a] rounded border border-surface-border overflow-hidden min-w-0">
+<!-- Window Titlebar -->
+<div class="h-6 bg-[#161a22] border-b border-surface-border px-2 flex items-center justify-between text-[10px] select-none shrink-0">
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-[#ff5f56]"></span>
+<span class="w-2 h-2 rounded-full bg-[#ffbd2e]"></span>
+<span class="w-2 h-2 rounded-full bg-[#27c93f]"></span>
+</div>
+<span class="font-bold text-zinc-300 tracking-wider">matrix::week-view.hypr</span>
+</div>
+<div class="flex items-center gap-3 text-zinc-400">
+<span class="text-zinc-500">LAYOUT: <strong class="text-zinc-300">BSP_TILED</strong></span>
+<span class="flex items-center gap-1 text-lime-monolith font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-lime-monolith animate-pulse"></span>
+            LIVE SCRUBBER: 09:42:13
+          </span>
+</div>
+</div>
+<!-- PINNED HEADER ROW FOR DAYS & MILESTONES -->
+<div class="border-b border-surface-border bg-[#131720] shrink-0">
+<!-- Milestone Top Strip -->
+<div class="grid grid-cols-[50px_repeat(7,1fr)] text-[9px] border-b border-surface-border/50">
+<div class="p-1 border-r border-surface-border text-center text-zinc-600 font-bold uppercase">PINNED:</div>
+<!-- Sun Milestone -->
+<div class="p-1 px-1.5 border-r border-surface-border overflow-hidden text-ellipsis whitespace-nowrap bg-[#162214]/60">
+<span class="text-lime-monolith font-bold uppercase block text-[8px]">TODAY</span>
+<span class="text-zinc-200 font-medium">Sprint Kickoff</span>
+</div>
+<!-- Mon Milestone -->
+<div class="p-1 px-1.5 border-r border-surface-border overflow-hidden text-ellipsis whitespace-nowrap bg-[#30161a]/60">
+<span class="text-[#ff5c6c] font-bold uppercase block text-[8px]">CRITICAL</span>
+<span class="text-zinc-200 font-medium">CS421 PSet4 Due</span>
+</div>
+<!-- Tue Milestone -->
+<div class="p-1 px-1.5 border-r border-surface-border overflow-hidden text-ellipsis whitespace-nowrap bg-[#182333]/60">
+<span class="text-[#73a7f7] font-bold uppercase block text-[8px]">MILESTONE</span>
+<span class="text-zinc-200 font-medium">Rust DMA PR</span>
+</div>
+<!-- Wed Milestone -->
+<div class="p-1 px-1.5 border-r border-surface-border overflow-hidden text-ellipsis whitespace-nowrap bg-[#182218]/60">
+<span class="text-lime-monolith font-bold uppercase block text-[8px]">SEMINAR</span>
+<span class="text-zinc-200 font-medium">Agentic Guest</span>
+</div>
+<!-- Thu Milestone -->
+<div class="p-1 px-1.5 border-r border-surface-border overflow-hidden text-ellipsis whitespace-nowrap bg-[#381519]/70">
+<span class="text-[#ff4a68] font-bold uppercase block text-[8px]">EXAM</span>
+<span class="text-zinc-200 font-medium">MATH302 Midterm</span>
+</div>
+<!-- Fri Milestone -->
+<div class="p-1 px-1.5 border-r border-surface-border overflow-hidden text-ellipsis whitespace-nowrap bg-[#162624]/60">
+<span class="text-[#4ee6b6] font-bold uppercase block text-[8px]">RELEASE</span>
+<span class="text-zinc-200 font-medium">v0.9.4 Waybar</span>
+</div>
+<!-- Sat Milestone -->
+<div class="p-1 px-1.5 overflow-hidden text-ellipsis whitespace-nowrap bg-[#14231b]/60">
+<span class="text-[#51d99b] font-bold uppercase block text-[8px]">RECOVERY</span>
+<span class="text-zinc-200 font-medium">Trail 15km / Rest</span>
+</div>
+</div>
+<!-- Day Names & Dates -->
+<div class="grid grid-cols-[50px_repeat(7,1fr)] text-center">
+<div class="py-1 text-zinc-500 font-mono text-[9px] border-r border-surface-border flex items-center justify-center">UTC+2</div>
+<!-- Sun (Today) -->
+<div class="py-1 border-r border-surface-border bg-[#182613]/50">
+<div class="inline-block px-2 py-0.5 bg-[#1f3817] border border-lime-monolith/60 rounded text-lime-monolith font-bold text-[10px]">
+              SUN 18 <span class="text-[8px] tracking-widest font-black uppercase">TODAY</span>
+</div>
+</div>
+<!-- Mon -->
+<div class="py-1 border-r border-surface-border">
+<span class="font-bold text-zinc-300">MON 19</span>
+<span class="block text-[8px] text-zinc-500">Uni Full</span>
+</div>
+<!-- Tue -->
+<div class="py-1 border-r border-surface-border">
+<span class="font-bold text-zinc-300">TUE 20</span>
+<span class="block text-[8px] text-zinc-500">Lab + Deep</span>
+</div>
+<!-- Wed -->
+<div class="py-1 border-r border-surface-border">
+<span class="font-bold text-zinc-300">WED 21</span>
+<span class="block text-[8px] text-zinc-500">Agentic</span>
+</div>
+<!-- Thu -->
+<div class="py-1 border-r border-surface-border bg-[#221316]/30">
+<span class="font-bold text-[#ff7d8d]">THU 22</span>
+<span class="block text-[8px] text-[#ff7d8d]/80">Exams</span>
+</div>
+<!-- Fri -->
+<div class="py-1 border-r border-surface-border">
+<span class="font-bold text-zinc-300">FRI 23</span>
+<span class="block text-[8px] text-zinc-500">Git Sprint</span>
+</div>
+<!-- Sat -->
+<div class="py-1">
+<span class="font-bold text-zinc-300">SAT 24</span>
+<span class="block text-[8px] text-zinc-500">Buffers</span>
+</div>
+</div>
+</div>
+<!-- SCROLLABLE TIME GRID AREA (07:00 to 20:00) -->
+<div class="flex-1 overflow-y-auto relative bg-[#0e1117] select-none" id="grid-scroll">
+<!-- Live Scrubber Line (at 09:42 -> ~2.7 hours from 07:00, 56px per hr = ~152px top) -->
+<div class="absolute left-0 right-0 z-30 pointer-events-none flex items-center" style="top: 152px;">
+<div class="w-[50px] flex items-center justify-end pr-1">
+<span class="bg-lime-monolith text-black font-black text-[9px] px-1 py-0.5 rounded-sm shadow-[0_0_8px_rgba(197,255,66,0.6)]">09:42</span>
+</div>
+<div class="flex-1 h-[1.5px] bg-lime-monolith shadow-[0_0_6px_rgba(197,255,66,0.8)] relative">
+<span class="absolute -top-1 left-2 w-2 h-2 rounded-full bg-lime-monolith"></span>
+</div>
+</div>
+<!-- 14 Hourly Horizontal Grid Slots (07:00 - 20:00) -->
+<div class="relative min-w-[700px]">
+<!-- Background Horizontal Hour Lines -->
+<div class="flex flex-col">
+<!-- 07:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">07:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 08:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">08:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 09:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">09:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 10:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">10:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 11:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">11:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 12:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">12:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 13:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">13:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 14:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">14:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 15:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">15:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 16:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">16:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 17:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">17:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 18:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">18:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 19:00 -->
+<div class="h-14 border-b border-surface-border/40 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">19:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+<!-- 20:00 -->
+<div class="h-14 grid grid-cols-[50px_repeat(7,1fr)]">
+<span class="text-[9px] text-zinc-600 border-r border-surface-border/40 text-center pt-1 font-mono">20:00</span>
+<div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div class="border-r border-surface-border/20"></div><div></div>
+</div>
+</div>
+<!-- ABSOLUTELY POSITIONED CALENDAR EVENT BLOCKS (Calculated via Hour Height = 56px, Base = 07:00) -->
+<div class="absolute inset-0 left-[50px] grid grid-cols-7 pointer-events-auto">
+<!-- COLUMN 1: SUNDAY 18 (TODAY) -->
+<div class="relative border-r border-surface-border/20 h-full">
+<!-- Routine: Cold Brew 07:15 - 08:30 (top: ~14px, h: 70px) -->
+<div class="absolute left-1 right-1 top-[14px] h-[70px] bg-[#14231b]/90 border border-[#2b593a] rounded p-1 flex flex-col justify-between hover:border-lime-monolith transition-colors">
+<div>
+<span class="text-[8px] text-[#51d99b] uppercase font-bold tracking-tight block">ROUTINE 07:15-08:30</span>
+<span class="text-[9px] font-bold text-zinc-200 block truncate">Cold Brew &amp; Prep</span>
+</div>
+<span class="text-[8px] text-zinc-500 font-mono">~/bio/morning.sh</span>
+</div>
+<!-- LIVE ACTIVE EVENT: Agentic AI Lab 06: Tool-Use (09:00 - 11:30 = top: 112px, h: 140px) -->
+<div class="absolute left-1 right-1 top-[112px] h-[140px] bg-[#162714] border-2 border-lime-monolith rounded p-1.5 flex flex-col justify-between shadow-[0_0_12px_rgba(197,255,66,0.18)] z-10">
+<div>
+<div class="flex items-center justify-between">
+<span class="bg-lime-monolith text-black font-black text-[8px] px-1 py-0.2 rounded-sm uppercase tracking-wide">RUNNING</span>
+<span class="text-[8px] font-mono text-lime-monolith">09:00-11:30</span>
+</div>
+<span class="text-[10px] font-extrabold text-white mt-1 block leading-tight">Agentic AI Lab 06: Tool-Use</span>
+<p class="text-[9px] text-zinc-300 mt-0.5 line-clamp-2">Orchestration &amp; Multi-tool routing</p>
+</div>
+<div class="flex items-center justify-between text-[8px] pt-1 border-t border-[#315720]">
+<span class="bg-[#1f3b19] text-lime-monolith px-1 py-0.2 rounded font-mono">python</span>
+<span class="text-zinc-400 font-mono">agent_eval.py</span>
+</div>
+</div>
+<!-- Queued: Kernel DMA buffer 13:00 - 15:30 (top: 336px, h: 140px) -->
+<div class="absolute left-1 right-1 top-[336px] h-[140px] bg-[#161c27]/90 border border-[#2b3e5b] rounded p-1.5 flex flex-col justify-between hover:border-[#628bc9]">
+<div>
+<div class="flex items-center justify-between">
+<span class="text-[8px] text-[#73a7f7] font-bold">[*] QUEUED</span>
+<span class="text-[8px] text-zinc-500">13:00-15:30</span>
+</div>
+<span class="text-[10px] font-bold text-zinc-200 mt-1 block">Kernel DMA Sync</span>
+<p class="text-[8px] text-zinc-400 mt-0.5">Rust async ring buffer</p>
+</div>
+<span class="text-[8px] text-zinc-500">TAG: personal</span>
+</div>
+<!-- Zone 2 Cardio 17:00 - 18:30 (top: 560px, h: 84px) -->
+<div class="absolute left-1 right-1 top-[560px] h-[84px] bg-[#12231e]/90 border border-[#275c4c] rounded p-1.5 flex flex-col justify-between">
+<div>
+<span class="text-[8px] text-[#4ee6b6] font-bold block">BIO 17:00-18:30</span>
+<span class="text-[9px] font-bold text-zinc-200 block truncate">Zone 2 Cardio Walk</span>
+</div>
+<span class="text-[8px] text-zinc-500">Recovery HR &lt; 130</span>
+</div>
+</div>
+<!-- COLUMN 2: MONDAY 19 -->
+<div class="relative border-r border-surface-border/20 h-full">
+<!-- CS421 Paxos Consensus 08:30 - 10:30 (top: 84px, h: 112px) -->
+<div class="absolute left-1 right-1 top-[84px] h-[112px] bg-[#221735]/95 border border-[#6b479e] rounded p-1.5 flex flex-col justify-between hover:border-[#a37acc]">
+<div>
+<div class="flex items-center justify-between text-[8px]">
+<span class="text-[#c19bf5] font-bold">UNI: CS421</span>
+<span class="text-zinc-400">08:30-10:30</span>
+</div>
+<span class="text-[10px] font-bold text-white mt-1 block leading-tight">Lec: Paxos Consensus</span>
+<span class="text-[8px] text-zinc-400 block mt-0.5">Hall B-102 / Prof. Lehmann</span>
+</div>
+<span class="text-[8px] bg-[#3a1520] text-[#ff7d8d] px-1 py-0.5 rounded font-bold w-fit">PSet 4 Due 23:59</span>
+</div>
+<!-- Raft Leader Election Lab 11:30 - 13:30 (top: 252px, h: 112px) -->
+<div class="absolute left-1 right-1 top-[252px] h-[112px] bg-[#221735]/95 border border-[#6b479e] rounded p-1.5 flex flex-col justify-between hover:border-[#a37acc]">
+<div>
+<div class="flex items-center justify-between text-[8px]">
+<span class="text-[#c19bf5] font-bold">UNI: LAB</span>
+<span class="text-zinc-400">11:30-13:30</span>
+</div>
+<span class="text-[10px] font-bold text-white mt-1 block leading-tight">Raft Leader Election</span>
+<span class="text-[8px] text-zinc-400 block mt-0.5">Linux Lab Station 14</span>
+</div>
+<span class="text-[8px] text-[#71d99b] font-bold font-mono">GO TESTS PASS</span>
+</div>
+<!-- Brownian Motion Prep 15:00 - 17:30 (top: 448px, h: 140px) -->
+<div class="absolute left-1 right-1 top-[448px] h-[140px] bg-[#291720]/95 border border-[#7e3550] rounded p-1.5 flex flex-col justify-between hover:border-[#ff7d8d]">
+<div>
+<div class="flex items-center justify-between text-[8px]">
+<span class="text-[#ff92a6] font-bold">MATH302</span>
+<span class="text-zinc-400">15:00-17:30</span>
+</div>
+<span class="text-[10px] font-bold text-white mt-1 block leading-tight">Brownian Motion Drill</span>
+<span class="text-[8px] text-zinc-400 block mt-0.5">Room M-310</span>
+</div>
+<span class="text-[8px] text-zinc-400">Prep for Midterm THU</span>
+</div>
+</div>
+<!-- COLUMN 3: TUESDAY 20 -->
+<div class="relative border-r border-surface-border/20 h-full">
+<!-- Kernel Rust PCIe DMA 09:00 - 12:00 (top: 112px, h: 168px) -->
+<div class="absolute left-1 right-1 top-[112px] h-[168px] bg-[#151c27]/95 border border-[#3b5980] rounded p-1.5 flex flex-col justify-between hover:border-[#73a7f7]">
+<div>
+<div class="flex items-center justify-between text-[8px]">
+<span class="text-[#73a7f7] font-bold">DEEP WORK</span>
+<span class="text-zinc-400">09:00-12:00</span>
+</div>
+<span class="text-[10px] font-bold text-white mt-1 block leading-tight">Kernel Rust PCIe DMA</span>
+<p class="text-[8px] text-zinc-300 mt-1">PCIe DMA Mapping logic &amp; mmap tests</p>
+</div>
+<div class="text-[8px] text-zinc-400 font-mono border-t border-[#23354c] pt-1">
+<span>git checkout -b dma-v2</span>
+<span class="block text-lime-monolith font-bold mt-0.5">⏱ 3h 00m Block</span>
+</div>
+</div>
+<!-- Systems Paper Reading 14:00 - 16:00 (top: 392px, h: 112px) -->
+<div class="absolute left-1 right-1 top-[392px] h-[112px] bg-[#1a1f28]/95 border border-[#333d4e] rounded p-1.5 flex flex-col justify-between">
+<div>
+<span class="text-[8px] text-zinc-400 font-bold block">ENG201 14:00-16:00</span>
+<span class="text-[9px] font-bold text-zinc-200 mt-0.5 block">Systems Paper Colloq</span>
+<span class="text-[8px] text-zinc-400 mt-0.5 block">Seminar Room 4B</span>
+</div>
+<span class="text-[8px] text-zinc-500">Draft submitted</span>
+</div>
+</div>
+<!-- COLUMN 4: WEDNESDAY 21 -->
+<div class="relative border-r border-surface-border/20 h-full">
+<!-- Lec 07: Autonomous Tool Invocation 10:00 - 13:00 (top: 168px, h: 168px) -->
+<div class="absolute left-1 right-1 top-[168px] h-[168px] bg-[#162714]/90 border border-[#3b661d] rounded p-1.5 flex flex-col justify-between hover:border-lime-monolith">
+<div>
+<div class="flex items-center justify-between text-[8px]">
+<span class="text-lime-monolith font-bold">AGENTIC AI</span>
+<span class="text-zinc-400">10:00-13:00</span>
+</div>
+<span class="text-[10px] font-bold text-white mt-1 block leading-tight">Lec 07: Autonomous Tool Invocation</span>
+<p class="text-[8px] text-zinc-300 mt-1">Hierarchical Actor-Critic &amp; Tool Sandbox</p>
+</div>
+<div class="text-[8px] text-zinc-400 border-t border-[#2d4d16] pt-1">
+<span>LangGraph + DSPy Demo</span>
+</div>
+</div>
+<!-- Paxos Proof Recitation 15:30 - 17:30 (top: 476px, h: 112px) -->
+<div class="absolute left-1 right-1 top-[476px] h-[112px] bg-[#221735]/95 border border-[#6b479e] rounded p-1.5 flex flex-col justify-between">
+<div>
+<span class="text-[8px] text-[#c19bf5] font-bold block">CS421 REC 15:30-17:30</span>
+<span class="text-[9px] font-bold text-zinc-200 mt-0.5 block">Paxos Proof Clinic</span>
+<span class="text-[8px] text-zinc-400 mt-0.5 block">Library Collab Room 2</span>
+</div>
+<span class="text-[8px] text-lime-monolith">4h Focus Block</span>
+</div>
+</div>
+<!-- COLUMN 5: THURSDAY 22 (EXAM PEAK DAY) -->
+<div class="relative border-r border-surface-border/20 h-full bg-[#1b0e12]/20">
+<!-- CRITICAL CRIMSON: MATH302 Midterm Exam 09:00 - 12:00 (top: 112px, h: 168px) -->
+<div class="absolute left-1 right-1 top-[112px] h-[168px] bg-[#3a131a] border-2 border-exam-border rounded p-1.5 flex flex-col justify-between shadow-[0_0_14px_rgba(224,49,75,0.35)] z-20">
+<div>
+<div class="flex items-center justify-between">
+<span class="bg-[#ff3b56] text-white font-black text-[8px] px-1 py-0.2 rounded-sm uppercase tracking-wide">EXAM HALL</span>
+<span class="text-[8px] font-mono text-[#ff8093]">09:00-12:00</span>
+</div>
+<span class="text-[11px] font-black text-white mt-1.5 block leading-tight tracking-tight">MATH302 Midterm</span>
+<p class="text-[9px] text-zinc-200 mt-1 font-medium">Auditorium Main / Seat #42</p>
+</div>
+<div class="pt-1 border-t border-[#661e2b] flex items-center justify-between text-[8px]">
+<span class="text-[#ff9bb0] font-bold">WEIGHT: 35% TOTAL</span>
+<span class="text-white">T-4d 02h</span>
+</div>
+</div>
+</div>
+<!-- COLUMN 6: FRIDAY 23 -->
+<div class="relative border-r border-surface-border/20 h-full">
+<!-- Memory Architecture Drill 08:30 - 11:30 (top: 84px, h: 168px) -->
+<div class="absolute left-1 right-1 top-[84px] h-[168px] bg-[#162714]/90 border border-[#3b661d] rounded p-1.5 flex flex-col justify-between hover:border-lime-monolith">
+<div>
+<div class="flex items-center justify-between text-[8px]">
+<span class="text-lime-monolith font-bold">AGENTIC AI</span>
+<span class="text-zinc-400">08:30-11:30</span>
+</div>
+<span class="text-[10px] font-bold text-white mt-1 block leading-tight">Memory Architecture</span>
+<p class="text-[8px] text-zinc-300 mt-1">ChromaDB + Vector recall benchmark</p>
+</div>
+<span class="text-[8px] text-lime-monolith">Lab Assignment 3</span>
+</div>
+<!-- Waybar & Hyprland Build 13:00 - 16:30 (top: 336px, h: 196px) -->
+<div class="absolute left-1 right-1 top-[336px] h-[196px] bg-[#1a2333]/90 border border-[#374c6d] rounded p-1.5 flex flex-col justify-between hover:border-[#73a7f7]">
+<div>
+<div class="flex items-center justify-between text-[8px]">
+<span class="text-[#73a7f7] font-bold">PROJECTS</span>
+<span class="text-zinc-400">13:00-16:30</span>
+</div>
+<span class="text-[10px] font-bold text-white mt-1 block leading-tight">Waybar C++ &amp; Hyprland 0.9.4 Build</span>
+<p class="text-[8px] text-zinc-400 mt-1">EWW widgets &amp; socket protocol fixes</p>
+</div>
+<div class="text-[8px] text-zinc-400 border-t border-[#293952] pt-1">
+<span>AUR package update</span>
+</div>
+</div>
+</div>
+<!-- COLUMN 7: SATURDAY 24 -->
+<div class="relative h-full">
+<!-- Trail Hike & Bio-Recharge 10:00 - 14:00 (top: 168px, h: 224px) -->
+<div class="absolute left-1 right-1 top-[168px] h-[224px] bg-[#122822]/90 border border-[#236355] rounded p-2 flex flex-col justify-between hover:border-[#4ee6b6]">
+<div>
+<div class="flex items-center justify-between text-[8px]">
+<span class="text-[#4ee6b6] font-bold">BIO RECHARGE</span>
+<span class="text-zinc-400">10:00-14:00</span>
+</div>
+<span class="text-[11px] font-bold text-white mt-1.5 block leading-tight">Trail Hike &amp; Bio-Recharge</span>
+<p class="text-[9px] text-zinc-300 mt-1">Pine Ridge 15km</p>
+</div>
+<div class="text-[8px] text-zinc-400 border-t border-[#1a443a] pt-1">
+<span class="bg-[#1b3d34] text-[#4ee6b6] px-1 py-0.5 rounded font-mono">Airplane Mode</span>
+</div>
+</div>
+<!-- Retrospective 16:00 - 18:30 (top: 504px, h: 140px) -->
+<div class="absolute left-1 right-1 top-[504px] h-[140px] bg-[#1a1f29]/90 border border-[#2f3949] rounded p-1.5 flex flex-col justify-between">
+<div>
+<span class="text-[8px] text-zinc-400 font-bold block">RETRO 16:00-18:30</span>
+<span class="text-[9px] font-bold text-zinc-200 mt-0.5 block">W22 Planning Sprint</span>
+<span class="text-[8px] text-zinc-400 mt-0.5 block">sync-calendar.sh &amp; kanban</span>
+</div>
+<span class="text-[8px] text-lime-monolith">System Sync</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- RIGHT COLUMN: DEDICATED INSPECTOR & METRICS PANEL (WIDTH ~340px) -->
+<aside class="w-80 lg:w-[360px] flex flex-col gap-1 shrink-0 overflow-y-auto select-none">
+<!-- WINDOW 1: # selected_block.json [ACTIVE FOCUS] -->
+<div class="bg-[#11141a] rounded border border-surface-border overflow-hidden shrink-0">
+<!-- Titlebar -->
+<div class="h-6 bg-[#161a22] border-b border-surface-border px-2 flex items-center justify-between text-[10px]">
+<div class="flex items-center gap-1.5">
+<span class="text-lime-monolith font-mono font-bold">#</span>
+<span class="font-bold text-zinc-200">selected_block.json</span>
+</div>
+<span class="px-1.5 py-0.2 bg-[#2a3821] text-lime-monolith border border-lime-monolith/50 text-[9px] font-bold rounded">ACTIVE FOCUS</span>
+</div>
+<!-- Content -->
+<div class="p-2.5 flex flex-col gap-2">
+<!-- Active Headline with icon -->
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5 text-[9px] font-bold text-lime-monolith">
+<span class="w-1.5 h-1.5 rounded-full bg-lime-monolith animate-pulse"></span>
+<span>LIVE LAB SESSION</span>
+</div>
+<h3 class="font-headline font-black text-white text-[13px] leading-tight mt-0.5">
+                Agentic AI Lab 06: Tool-Use
+              </h3>
+<p class="text-[10px] text-zinc-400 font-mono mt-0.5">Slot: SUN 09:00 - 11:30 (Remaining: 1h 48m)</p>
+</div>
+<div class="w-7 h-7 bg-[#1c2e17] border border-[#406d28] rounded flex items-center justify-center text-lime-monolith">
+<span class="material-symbols-outlined text-[16px]">terminal</span>
+</div>
+</div>
+<!-- Metadata Fields Grid -->
+<div class="grid grid-cols-2 gap-1.5 text-[9px] font-mono bg-[#0c0e13] p-2 rounded border border-surface-border">
+<div>
+<span class="text-zinc-500 uppercase block text-[8px]">REPO LINK</span>
+<span class="text-zinc-200 font-semibold truncate block">~/src/agentic-course</span>
+</div>
+<div>
+<span class="text-zinc-500 uppercase block text-[8px]">NOTES FILE</span>
+<span class="text-zinc-200 font-semibold truncate block">~/notes/tool_use.md</span>
+</div>
+<div>
+<span class="text-zinc-500 uppercase block text-[8px]">CRON NOTIFIER</span>
+<span class="text-lime-monolith block truncate">notify-send (T-10m)</span>
+</div>
+<div>
+<span class="text-zinc-500 uppercase block text-[8px]">POMODORO ROUND</span>
+<span class="text-white block font-bold">2 of 4 (50m Focus)</span>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="flex items-center gap-1.5 pt-0.5">
+<button class="flex-1 py-1.5 bg-lime-monolith hover:bg-[#b5f030] text-black font-bold text-[10px] rounded flex items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[13px]">code</span>
+<span>LAUNCH LAB ENV</span>
+</button>
+<button class="px-2 py-1.5 bg-[#171b24] hover:bg-[#202532] text-zinc-300 font-mono text-[9px] rounded border border-surface-border flex items-center gap-1">
+<span>≒</span> NEOVIM
+            </button>
+<button class="px-2 py-1.5 bg-[#171b24] hover:bg-[#202532] text-zinc-400 font-mono text-[9px] rounded border border-surface-border flex items-center gap-1">
+<span>◷</span> DEFER
+            </button>
+</div>
+</div>
+</div>
+<!-- WINDOW 2: ☵ Cognitive Load Matrix [LOAD: OPTIMAL (78%)] -->
+<div class="bg-[#11141a] rounded border border-surface-border overflow-hidden shrink-0">
+<!-- Titlebar -->
+<div class="h-6 bg-[#161a22] border-b border-surface-border px-2 flex items-center justify-between text-[10px]">
+<div class="flex items-center gap-1.5">
+<span class="text-[#8b61c9]">☵</span>
+<span class="font-bold text-zinc-200">Cognitive Load Matrix</span>
+</div>
+<span class="text-lime-monolith font-bold text-[9px]">LOAD: OPTIMAL (78%)</span>
+</div>
+<div class="p-2.5 flex flex-col gap-2.5">
+<!-- Vector Distribution bars -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between text-[9px]">
+<span class="text-zinc-400">DISTRIBUTION BY VECTOR</span>
+<span class="text-zinc-500 font-mono">42.5 hrs Total</span>
+</div>
+<!-- University & Labs (40%) -->
+<div>
+<div class="flex justify-between text-[9px] mb-0.5">
+<span class="text-zinc-300 flex items-center gap-1 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-[#8b61c9]"></span> University &amp; Labs
+                </span>
+<span class="font-mono text-zinc-400">17.0h (40%)</span>
+</div>
+<div class="w-full h-1.5 bg-[#1c202a] rounded overflow-hidden">
+<div class="h-full bg-[#8b61c9] rounded" style="width: 40%;"></div>
+</div>
+</div>
+<!-- Agentic AI & Code Sprints (35%) -->
+<div>
+<div class="flex justify-between text-[9px] mb-0.5">
+<span class="text-zinc-300 flex items-center gap-1 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-lime-monolith"></span> Agentic AI &amp; Code Sprints
+                </span>
+<span class="font-mono text-lime-monolith font-bold">15.0h (35%)</span>
+</div>
+<div class="w-full h-1.5 bg-[#1c202a] rounded overflow-hidden">
+<div class="h-full bg-lime-monolith rounded" style="width: 35%;"></div>
+</div>
+</div>
+<!-- Bio, Health & Routines (25%) -->
+<div>
+<div class="flex justify-between text-[9px] mb-0.5">
+<span class="text-zinc-300 flex items-center gap-1 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-[#3ab795]"></span> Bio, Health &amp; Routines
+                </span>
+<span class="font-mono text-zinc-400">10.5h (25%)</span>
+</div>
+<div class="w-full h-1.5 bg-[#1c202a] rounded overflow-hidden">
+<div class="h-full bg-[#3ab795] rounded" style="width: 25%;"></div>
+</div>
+</div>
+</div>
+<!-- Daily energy consumption bar capsules -->
+<div class="pt-1.5 border-t border-surface-border">
+<div class="flex justify-between text-[9px] text-zinc-400 mb-1">
+<span>DAILY ENERGY CONSUMPTION</span>
+<span class="text-[#ff5c6c] font-bold">PEAK: THU 9.5h</span>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center font-mono">
+<!-- S -->
+<div class="bg-[#172514] border border-[#3b661d] rounded py-1">
+<span class="block text-[8px] text-lime-monolith font-bold">S</span>
+<span class="block text-[10px] text-white font-bold">5h</span>
+</div>
+<!-- M -->
+<div class="bg-[#22182e] border border-[#6b479e] rounded py-1">
+<span class="block text-[8px] text-[#c19bf5] font-bold">M</span>
+<span class="block text-[10px] text-white font-bold">8h</span>
+</div>
+<!-- T -->
+<div class="bg-[#1a2333] border border-[#374c6d] rounded py-1">
+<span class="block text-[8px] text-[#73a7f7] font-bold">T</span>
+<span class="block text-[10px] text-white font-bold">6h</span>
+</div>
+<!-- W -->
+<div class="bg-[#162714] border border-[#3b661d] rounded py-1">
+<span class="block text-[8px] text-lime-monolith font-bold">W</span>
+<span class="block text-[10px] text-white font-bold">7h</span>
+</div>
+<!-- T (CRITICAL) -->
+<div class="bg-[#3a131a] border border-exam-border rounded py-1">
+<span class="block text-[8px] text-[#ff7d8d] font-bold">T</span>
+<span class="block text-[10px] text-white font-black">10h</span>
+</div>
+<!-- F -->
+<div class="bg-[#22182e] border border-[#6b479e] rounded py-1">
+<span class="block text-[8px] text-[#c19bf5] font-bold">F</span>
+<span class="block text-[10px] text-white font-bold">7h</span>
+</div>
+<!-- S -->
+<div class="bg-[#141b24] border border-surface-border rounded py-1">
+<span class="block text-[8px] text-zinc-500 font-bold">S</span>
+<span class="block text-[10px] text-zinc-300 font-bold">3h</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- WINDOW 3: ⏰ Cron Queue & Deadlines [3 CRITICAL] -->
+<div class="bg-[#11141a] rounded border border-surface-border overflow-hidden shrink-0">
+<!-- Titlebar -->
+<div class="h-6 bg-[#161a22] border-b border-surface-border px-2 flex items-center justify-between text-[10px]">
+<div class="flex items-center gap-1.5">
+<span>⏰</span>
+<span class="font-bold text-zinc-200">Cron Queue &amp; Deadlines</span>
+</div>
+<span class="px-1.5 py-0.2 bg-[#3a1419] text-[#ff7d8d] border border-[#7d222e] text-[9px] font-bold rounded">3 CRITICAL</span>
+</div>
+<div class="p-2 flex flex-col gap-1.5">
+<!-- Deadline 1 -->
+<div class="bg-[#151922] border-l-2 border-[#ff4a68] p-1.5 rounded-r border border-surface-border flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded bg-[#331820] text-[#ff5c6c] flex items-center justify-center font-bold text-[10px]">!</span>
+<div>
+<span class="font-bold text-zinc-200 block text-[10px]">CS421 PSet 4 Paxos</span>
+<span class="text-[8px] text-zinc-500">Uni Canvas Auto-Submit</span>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[#ff5c6c] font-black text-[10px] block">T-38h 15m</span>
+<span class="text-[8px] text-zinc-500">MON 23:59</span>
+</div>
+</div>
+<!-- Deadline 2 -->
+<div class="bg-[#151922] border-l-2 border-exam-border p-1.5 rounded-r border border-surface-border flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded bg-[#3a131a] text-exam-border flex items-center justify-center font-bold text-[10px]">✦</span>
+<div>
+<span class="font-bold text-zinc-200 block text-[10px]">MATH302 Midterm Exam</span>
+<span class="text-[8px] text-zinc-500">Auditorium Main Seat 42</span>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[#ff7d8d] font-black text-[10px] block">T-4d 02h</span>
+<span class="text-[8px] text-zinc-500">THU 09:00</span>
+</div>
+</div>
+<!-- Deadline 3 -->
+<div class="bg-[#151922] border-l-2 border-lime-monolith p-1.5 rounded-r border border-surface-border flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded bg-[#1c2e17] text-lime-monolith flex items-center justify-center font-bold text-[10px]">⚑</span>
+<div>
+<span class="font-bold text-zinc-200 block text-[10px]">Agentic Multi-Agent PR</span>
+<span class="text-[8px] text-zinc-500">GitHub Course Repo</span>
+</div>
+</div>
+<div class="text-right">
+<span class="text-lime-monolith font-black text-[10px] block">T-6d 14h</span>
+<span class="text-[8px] text-zinc-500">SAT 23:59</span>
+</div>
+</div>
+</div>
+</div>
+<!-- WINDOW 4: ⌨ HYPR / KHAL KEYBINDINGS [MODE: NORMAL] -->
+<div class="bg-[#11141a] rounded border border-surface-border overflow-hidden shrink-0">
+<!-- Titlebar -->
+<div class="h-6 bg-[#161a22] border-b border-surface-border px-2 flex items-center justify-between text-[10px]">
+<div class="flex items-center gap-1.5">
+<span>⌨</span>
+<span class="font-bold text-zinc-200 uppercase tracking-wider text-[9px]">HYPR / KHAL KEYBINDINGS</span>
+</div>
+<span class="text-zinc-400 font-mono text-[9px]">MODE: NORMAL</span>
+</div>
+<div class="p-2 text-[9px] font-mono grid grid-cols-2 gap-x-2 gap-y-1">
+<div class="flex justify-between py-0.5 border-b border-surface-border/50">
+<span class="text-lime-monolith font-bold">[n]</span>
+<span class="text-zinc-400">new block</span>
+</div>
+<div class="flex justify-between py-0.5 border-b border-surface-border/50">
+<span class="text-lime-monolith font-bold">[e]</span>
+<span class="text-zinc-400">edit yaml</span>
+</div>
+<div class="flex justify-between py-0.5 border-b border-surface-border/50">
+<span class="text-lime-monolith font-bold">[d]</span>
+<span class="text-zinc-400">delete slot</span>
+</div>
+<div class="flex justify-between py-0.5 border-b border-surface-border/50">
+<span class="text-lime-monolith font-bold">[Space]</span>
+<span class="text-zinc-400">inspect node</span>
+</div>
+<div class="flex justify-between py-0.5">
+<span class="text-lime-monolith font-bold">[h / l]</span>
+<span class="text-zinc-400">&lt; / &gt; week</span>
+</div>
+<div class="flex justify-between py-0.5">
+<span class="text-lime-monolith font-bold">[:sync]</span>
+<span class="text-zinc-400">force caldav</span>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- FOOTER STATUS LINE -->
+<footer class="h-6 w-full bg-[#0a0c0f] border-t border-surface-border px-3 flex items-center justify-between text-[9px] font-mono select-none shrink-0 text-zinc-400">
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 text-zinc-300">
+<span class="text-lime-monolith font-bold">λ</span>
+<span>calcurse: 14 pending blocks / 3 sync sources</span>
+</div>
+<span class="text-surface-border">|</span>
+<div class="flex items-center gap-1">
+<span class="text-zinc-500">NEXT EVENT:</span>
+<span class="text-white font-bold">CS421 PSet4 Submissions (T-14h 17m)</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span>zoom: <strong class="text-zinc-200">1h/56px</strong></span>
+<span class="text-surface-border">|</span>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-lime-monolith"></span>
+<span class="text-lime-monolith font-bold tracking-wider">WAYLAND</span>
+</div>
+</div>
+</footer>
+</body></html>

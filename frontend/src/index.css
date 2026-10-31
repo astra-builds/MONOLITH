@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --color-lime-monolith: #c5ff42;
+  --color-acid-lime: #bcf538;
+  --color-surface-dim: #0a0c0e;
+  --color-surface-lowest: #0d0f12;
+  --color-surface-low: #12151a;
+  --color-surface-card: #161920;
+  --color-surface-border: #232733;
+  --color-surface-border-subtle: #1c202a;
+  --color-uni-purple: #8b61c9;
+  --color-uni-purple-light: #a37acc;
+  --color-deep-indigo: #232042;
+  --color-exam-crimson: #ff4a68;
+  --color-exam-border: #e0314b;
+  --color-agentic-dark: #192a18;
+  --color-agentic-border: #4e8529;
+  --color-kernel-slate: #1c2738;
+  --color-kernel-border: #3b5880;
+  --color-health-teal: #122a27;
+  --color-health-border: #28665c;
+
+  --font-headline: "Chivo", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-space: "Space Mono", monospace;
+}
+
+:root {
+  --bg: #0a0c0f;
+  --fg: #e5e2e1;
+  --accent: #c5ff42;
+  --muted: #8d937b;
+  --border: #232733;
+  --panel: #11141a;
+}
+
+body {
+  background-color: #0a0c0f;
+  color: #d4d4d8;
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar for dotfiles aesthetic */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0f12;
+}
+::-webkit-scrollbar-thumb {
+  background: #252830;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3f4d;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.headline {
+  font-family: 'Chivo', sans-serif;
+}
+
+.space {
+  font-family: 'Space Mono', monospace;
+}
+
+/* Material symbol sizing */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+  vertical-align: middle;
+}
