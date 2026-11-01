@@ -50,3 +50,5 @@ Backup by copying that file. Export JSON via `GET /export`.
 ```bash
 cd backend && .venv/bin/pytest -q
 ```
+```
+>>>>>>> origin/main
