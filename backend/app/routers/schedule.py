@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from .. import db
 from ..models import BlockUpdate
 from ..scheduler import schedule as run_schedule, parse_dt
@@ -29,8 +29,11 @@ def _gen(preview=True, apply=False):
         db.delete_future_flexible_blocks(datetime.now().isoformat())
         # delete all future non-locked? We'll just clear scheduled flexible already handled.
         # insert new flexible blocks (locked ones from preserved? preserved locked already in db; but new_blocks includes locked fixed intervals too -> would duplicate)
-        # To avoid duplicates: only insert blocks that are not already in preserved locked.
-        existing_ids = {(b["start_dt"], b["title"]) for b in preserved if b.get("locked")}
+        # To avoid duplicates: only insert blocks that are not already present
+        # among preserved rows.  Preserved covers locked, completed, skipped and
+        # past blocks — not just locked — so every regen/apply re-emitting them
+        # as locked (scheduler.py) no longer duplicates them (B2).
+        existing_ids = {(b["start_dt"], b["title"]) for b in preserved}
         for nb in new_blocks:
             if nb.get("locked"):
                 # skip if already present
@@ -72,7 +75,9 @@ def delete_block(bid: int):
 
 @router.post("/blocks/{bid}/move")
 def move_block(bid: int, start_dt: str, end_dt: str):
-    r = db.update_block(bid, {"start_dt": start_dt, "end_dt": end_dt})
+    # A manually moved block must be locked so the next regen doesn't silently
+    # delete/move it (instructions.txt:228; R2).
+    r = db.update_block(bid, {"start_dt": start_dt, "end_dt": end_dt, "locked": True})
     if not r: raise HTTPException(404)
     return r
 
@@ -84,7 +89,9 @@ def reschedule_missed():
     """Find past scheduled (non-locked) blocks, mark them missed,
     restore their duration to the parent task, then regenerate the schedule.
     """
-    now_iso = datetime.now(timezone.utc).isoformat()
+    # Compare naive-local datetimes end-to-end (block end_dt is stored naive
+    # local); a UTC-aware "now" mis-marks everything for negative UTC offsets.
+    now_iso = datetime.now().replace(microsecond=0).isoformat()
     all_blocks = db.list_blocks()
 
     missed_blocks: list[dict] = []

@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
+from datetime import datetime
 from .. import db
 from ..models import TaskIn, TaskUpdate
+from ..scheduler import parse_dt
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -49,8 +51,15 @@ def complete_task(tid: int):
 def skip_task(tid: int):
     t = db.get_task(tid)
     if not t: raise HTTPException(404)
-    # mark missed scheduled blocks skipped
+    # Mark scheduled blocks skipped and REFUND their minutes back to the
+    # task so the time is honestly rebookable instead of silently re-emitted
+    # as a ghost on the next regen (G4).
     for b in db.list_blocks():
-        if b["task_id"]==tid and b["status"]=="scheduled":
-            db.update_block(b["id"], {"status":"skipped"})
+        if b["task_id"] == tid and b["status"] == "scheduled":
+            start = parse_dt(b["start_dt"]); end = parse_dt(b["end_dt"])
+            block_minutes = int((end - start).total_seconds() / 60)
+            db.update_block(b["id"], {"status": "skipped"})
+            t = db.get_task(tid)
+            new_remaining = (t.get("remaining_minutes") or 0) + block_minutes
+            db.update_task(tid, {"remaining_minutes": new_remaining})
     return db.get_task(tid)

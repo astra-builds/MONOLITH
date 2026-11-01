@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 
 from .config import DB_PATH, DEFAULT_SETTINGS
@@ -227,6 +228,13 @@ def delete_task(tid):
     with connect() as conn:
         conn.execute("DELETE FROM tasks WHERE id=?", (tid,))
 
+
+def delete_project_tasks(pid):
+    """Remove all tasks (and their schedule blocks via ON DELETE CASCADE)
+    for a project, so a course can be regenerated idempotently (G3)."""
+    with connect() as conn:
+        conn.execute("DELETE FROM tasks WHERE project_id=?", (pid,))
+
 def list_commitments(tag=None):
     q = "SELECT * FROM commitments"
     params = []
@@ -275,6 +283,13 @@ def update_commitment(cid, data):
     fields.append("updated_at=?"); vals.append(ts); vals.append(cid)
     with connect() as conn:
         conn.execute(f"UPDATE commitments SET {','.join(fields)} WHERE id=?", vals)
+        # Editing a commitment must not leave stale locked blocks at the old
+        # time — drop future locked blocks for this commitment so the next
+        # regeneration rebuilds them at the new time (G5).
+        conn.execute(
+            "DELETE FROM schedule_blocks WHERE commitment_id=? AND locked=1 AND start_dt >= ?",
+            (cid, datetime.now().replace(microsecond=0).isoformat()),
+        )
     return get_commitment(cid)
 
 def delete_commitment(cid):
@@ -339,6 +354,15 @@ def export_all():
         for t in tables:
             rows = conn.execute(f"SELECT * FROM {t}").fetchall()
             out[t]=[dict(r) for r in rows]
+        # Never embed AI API key material in an exported snapshot (instructions.txt:265).
+        for row in out.get("settings", []):
+            try:
+                data = json.loads(row.get("data", "{}"))
+            except Exception:
+                data = {}
+            if data.get("ai_api_key"):
+                data["ai_api_key"] = "********"
+            row["data"] = json.dumps(data)
         return out
 
 

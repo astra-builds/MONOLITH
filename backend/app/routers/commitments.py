@@ -18,6 +18,10 @@ def update_commitment(cid: int, c: CommitmentUpdate):
     data = {k:v for k,v in c.model_dump().items() if v is not None}
     r = db.update_commitment(cid, data)
     if not r: raise HTTPException(404)
+    # Regenerate so stale future blocks for this commitment are rebuilt at the
+    # new time and flexible work is re-laid around them (G5).
+    from ..routers.schedule import regenerate
+    regenerate()
     return r
 
 @router.delete("/{cid}")

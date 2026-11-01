@@ -6,7 +6,11 @@ router = APIRouter(prefix="/settings", tags=["settings"])
 
 @router.get("")
 def get_settings():
-    return db.get_settings()
+    data = db.get_settings()
+    # Never leak the AI API key to the client (instructions.txt:265).
+    key = data.get("ai_api_key", "")
+    data["ai_api_key"] = "********" if key else ""
+    return data
 
 @router.patch("")
 def update_settings(s: SettingsUpdate):

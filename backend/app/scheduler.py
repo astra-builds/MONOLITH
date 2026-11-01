@@ -401,7 +401,9 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
     locked_intervals = []
     for b in existing_blocks:
         b_start = parse_dt(b["start_dt"])
-        if b.get("locked") or b.get("status") in ("completed",) or b_start.date() < today:
+        # Locked, completed and skipped blocks are immovable records; past
+        # blocks are preserved too so apply/regenerations don't resurrect them.
+        if b.get("locked") or b.get("status") in ("completed", "skipped") or (b_start and b_start.date() < today):
             locked_intervals.append({
                 "start": b_start,
                 "end": parse_dt(b["end_dt"]),
@@ -452,19 +454,16 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
     # ------------------------------------------------------------------
     placed = []  # list of interval dicts
 
-    # Track the latest end time of any placed session per day for break
-    # enforcement.  Keyed by date → latest end datetime on that date.
+    # Track the latest end time of any *placed* session per day for break
+    # enforcement (Rule 9).  Keyed by date → latest end datetime on that date.
+    # NOTE: deliberately NOT seeded from blocked intervals here — that pushed
+    # the cursor past morning gaps before the first block of the day (G1).
     day_last_end = {}
 
     def _update_day_last_end(d, end_dt):
         """Update the latest session end time for *d*."""
         if d not in day_last_end or end_dt > day_last_end[d]:
             day_last_end[d] = end_dt
-
-    # Initialise day_last_end from existing blocked intervals so breaks are
-    # respected after locked blocks too.
-    for iv in all_blocked:
-        _update_day_last_end(iv["start"].date(), iv["end"])
 
     # ------------------------------------------------------------------
     # Conflict & capacity helpers
@@ -525,56 +524,84 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
                     scan_date += timedelta(days=1)
                     continue
 
-                # Build candidate window for this day
+                def free_intervals(d):
+                    """Free (start, end) intervals on day *d* within the working
+                    window, after subtracting every blocked / already-placed
+                    interval.  This makes gaps before the first block of the day
+                    (and between blocks) reachable instead of being skipped
+                    behind a single ``day_last_end`` pointer (G1)."""
+                    day_start = datetime(d.year, d.month, d.day, wh_s_h, wh_s_m)
+                    day_end = datetime(d.year, d.month, d.day, wh_e_h, wh_e_m)
+                    ws = max(day_start, datetime(d.year, d.month, d.day, ps_h, ps_m))
+                    we = min(day_end, datetime(d.year, d.month, d.day, pe_h, pe_m))
+                    if we <= ws:
+                        return []
+                    blocked = []
+                    for iv in all_blocked + placed:
+                        s = max(iv["start"], ws)
+                        e = min(iv["end"], we)
+                        if e > s:
+                            blocked.append((s, e))
+                    blocked.sort()
+                    free = []
+                    cursor = ws
+                    for s, e in blocked:
+                        if s > cursor:
+                            free.append((cursor, s))
+                        cursor = max(cursor, e)
+                    if cursor < we:
+                        free.append((cursor, we))
+                    return free
+
                 day_wh_start = datetime(scan_date.year, scan_date.month, scan_date.day, wh_s_h, wh_s_m)
                 day_wh_end = datetime(scan_date.year, scan_date.month, scan_date.day, wh_e_h, wh_e_m)
                 pref_day_start = datetime(scan_date.year, scan_date.month, scan_date.day, ps_h, ps_m)
                 pref_day_end = datetime(scan_date.year, scan_date.month, scan_date.day, pe_h, pe_m)
-
-                cand_start = max(day_wh_start, pref_day_start)
                 cand_limit = min(day_wh_end, pref_day_end)
-
-                # If earliest_dt is a datetime on this same day, respect it
-                if isinstance(earliest_dt, datetime) and earliest_dt.date() == scan_date:
-                    cand_start = max(cand_start, earliest_dt)
-
-                # Rule 9: enforce break after last session on this day
-                if scan_date in day_last_end:
-                    earliest_after_break = day_last_end[scan_date] + timedelta(minutes=min_break)
-                    cand_start = max(cand_start, earliest_after_break)
-
                 # Clamp by deadline if deadline is on this day
                 if deadline_dt and deadline_dt.date() == scan_date:
                     cand_limit = min(cand_limit, deadline_dt)
 
                 latest_start = cand_limit - timedelta(minutes=session_minutes)
-                if latest_start < cand_start:
+                if latest_start < day_wh_start:
+                    # Day cannot fit a session at all
                     scan_date += timedelta(days=1)
                     continue
 
-                # Scan in 5-minute increments for a free slot
-                cur_t = cand_start
-                while cur_t <= latest_start:
-                    s = cur_t
-                    e = s + timedelta(minutes=session_minutes)
-                    # Rule 3: must finish before deadline
-                    if deadline_dt and e > deadline_dt:
-                        break
-                    hit = conflicts(s, e)
-                    if not hit and daily_ok(scan_date, session_minutes):
-                        return s, e, scan_date
-                    # Advance past the conflict end to avoid wasting iterations
-                    if hit:
-                        # Jump past the latest conflicting block end
-                        conflict_end = max(
-                            iv["end"] for iv in all_blocked + placed
-                            if s < iv["end"] and e > iv["start"]
-                        )
-                        cur_t = conflict_end
-                        # Re-enforce break gap after the conflict
-                        cur_t = max(cur_t, conflict_end + timedelta(minutes=min_break))
-                    else:
-                        cur_t += timedelta(minutes=5)
+                for fs, fe in free_intervals(scan_date):
+                    slot_start = fs
+                    # If earliest_dt is a datetime on this same day, respect it
+                    if isinstance(earliest_dt, datetime) and earliest_dt.date() == scan_date:
+                        slot_start = max(slot_start, earliest_dt)
+                    # Rule 9: break after last placed session on this day
+                    if scan_date in day_last_end:
+                        slot_start = max(slot_start, day_last_end[scan_date] + timedelta(minutes=min_break))
+                    fe_clamped = min(fe, cand_limit)
+                    ls = fe_clamped - timedelta(minutes=session_minutes)
+                    if slot_start > ls:
+                        continue
+
+                    # Scan in 5-minute increments for a free slot
+                    cur_t = slot_start
+                    while cur_t <= ls:
+                        s = cur_t
+                        e = s + timedelta(minutes=session_minutes)
+                        # Rule 3: must finish before deadline
+                        if deadline_dt and e > deadline_dt:
+                            break
+                        hit = conflicts(s, e)
+                        if not hit and daily_ok(scan_date, session_minutes):
+                            return s, e, scan_date
+                        # Advance past the conflict end to avoid wasting iterations
+                        if hit:
+                            conflict_end = max(
+                                iv["end"] for iv in all_blocked + placed
+                                if s < iv["end"] and e > iv["start"]
+                            )
+                            cur_t = conflict_end
+                            cur_t = max(cur_t, conflict_end + timedelta(minutes=min_break))
+                        else:
+                            cur_t += timedelta(minutes=5)
 
                 scan_date += timedelta(days=1)
 
@@ -613,8 +640,17 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
         for dep_id in (t.get("dependencies") or []):
             dep_task = next((x for x in tasks if x["id"] == dep_id), None)
             if dep_id in task_last_end:
-                # Can start after prerequisite's last session ENDS (datetime)
-                earliest_dt = max(earliest_dt, task_last_end[dep_id])
+                # Can start after prerequisite's last session ENDS (datetime).
+                # Rule 12: a non-splittable prerequisite spreads work to the next
+                # working day so chained single-session tasks don't pack onto
+                # the same day (one block per preferred day).
+                dep_end = task_last_end[dep_id]
+                earliest_dt = max(earliest_dt, dep_end)
+                if dep_task and not dep_task.get("splittable", True):
+                    earliest_dt = max(
+                        earliest_dt,
+                        datetime(dep_end.year, dep_end.month, dep_end.day, wh_s_h, wh_s_m) + timedelta(days=1),
+                    )
             elif dep_task and dep_task.get("status") == "done":
                 # Already completed — no constraint
                 pass
