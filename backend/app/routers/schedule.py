@@ -32,13 +32,12 @@ def _gen(preview=True, apply=False):
         # To avoid duplicates: only insert blocks that are not already present
         # among preserved rows.  Preserved covers locked, completed, skipped and
         # past blocks — not just locked — so every regen/apply re-emitting them
-        # as locked (scheduler.py) no longer duplicates them (B2).
+        # as locked is now deduplicated (B2).
         existing_ids = {(b["start_dt"], b["title"]) for b in preserved}
         for nb in new_blocks:
-            if nb.get("locked"):
-                # skip if already present
-                if (nb["start_dt"], nb["title"]) in existing_ids:
-                    continue
+            # skip if already present (dedupe against all preserved rows)
+            if (nb["start_dt"], nb["title"]) in existing_ids:
+                continue
             db.create_block(nb)
         # update task remaining? leave.
     return {"blocks": new_blocks, "unscheduled": unscheduled, "preserved": [b["id"] for b in preserved]}
@@ -61,7 +60,7 @@ def regenerate():
 
 @router.patch("/blocks/{bid}")
 def update_block(bid: int, u: BlockUpdate):
-    data = {k:v for k,v in u.model_dump().items() if v is not None}
+    data = u.model_dump(exclude_unset=True)
     if "start_dt" in data or "end_dt" in data:
         data["locked"] = True
     r = db.update_block(bid, data)

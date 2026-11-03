@@ -1,9 +1,10 @@
-const BASE = "http://127.0.0.1:8000";
+const BASE = "/api";
 async function req(path: string, opts: RequestInit = {}) {
   const r = await fetch(BASE + path, { ...opts, headers: { "Content-Type": "application/json", ...(opts.headers||{}) } });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
+
 export const api = {
   settings: { get: () => req("/settings"), update: (d:any) => req("/settings", { method:"PATCH", body: JSON.stringify(d) }) },
   projects: {
@@ -43,7 +44,12 @@ export const api = {
   ai: {
     extract:(text:string)=>req("/ai/extract",{method:"POST",body:JSON.stringify({text})}),
     apply:(p:any)=>req("/ai/apply",{method:"POST",body:JSON.stringify(p)}),
-    chat:(text:string)=>req("/ai/chat",{method:"POST",body:JSON.stringify({text})}),
+    plan:(text:string)=>req("/ai/plan",{method:"POST",body:JSON.stringify({text})}),
+    preview:(id:number)=>req(`/ai/proposals/${id}/preview`,{method:"POST"}),
+    approve:(id:number)=>req(`/ai/proposals/${id}/approve`,{method:"POST"}),
+    reject:(id:number)=>req(`/ai/proposals/${id}/reject`,{method:"POST"}),
+    provider:()=>req("/ai/provider"),
+    message:(conversationId:string,text:string,confirm=false)=>req(`/ai/conversations/${encodeURIComponent(conversationId)}/messages`,{method:"POST",body:JSON.stringify({conversation_id:conversationId,text,confirm})}),
   },
   demo: {
     seed:()=>req("/demo/seed",{method:"POST"}),

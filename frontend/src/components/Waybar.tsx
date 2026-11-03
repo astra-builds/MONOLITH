@@ -145,8 +145,9 @@ export default function Waybar({
           </button>
         )}
 
-        {/* Arch & Network telemetry status */}
+        {/* Arch & Network telemetry status (decorative) */}
         <div className="hidden sm:flex items-center gap-2 bg-[#14171f] px-2 py-0.5 rounded border border-[#232733] text-zinc-400 font-mono text-[9px]">
+          <span className="opacity-50">DECORATIVE</span>
           <span>CPU <strong className="text-zinc-200">12%</strong></span>
           <span className="text-[#232733]">|</span>
           <span>RAM <strong className="text-zinc-200">4.2G</strong></span>

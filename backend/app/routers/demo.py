@@ -3,7 +3,7 @@
 Provides quick seed and reset operations for development and testing.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from .. import db
 from ..models import ImportRequest
 
@@ -156,6 +156,27 @@ def import_data(payload: ImportRequest):
 
     Clears all existing data, then inserts settings, projects, tasks,
     commitments, and schedule_blocks in FK-safe order.
+
+    Validates required fields before wiping data; returns HTTP 400 on
+    invalid payload without mutating the DB (R3).
     """
-    counts = db.import_all(payload.model_dump())
+    data = payload.model_dump()
+    # --- Validate before any mutation ---
+    for p in data.get("projects", []):
+        if not p.get("name"):
+            raise HTTPException(status_code=400, detail="Project missing required field: name")
+    for t in data.get("tasks", []):
+        if not t.get("title"):
+            raise HTTPException(status_code=400, detail="Task missing required field: title")
+    for c in data.get("commitments", []):
+        if not c.get("title"):
+            raise HTTPException(status_code=400, detail="Commitment missing required field: title")
+        if not c.get("start_time") or not c.get("end_time"):
+            raise HTTPException(status_code=400, detail="Commitment missing required field: start_time/end_time")
+    for b in data.get("schedule_blocks", []):
+        if not b.get("title"):
+            raise HTTPException(status_code=400, detail="Schedule block missing required field: title")
+        if not b.get("start_dt") or not b.get("end_dt"):
+            raise HTTPException(status_code=400, detail="Schedule block missing required field: start_dt/end_dt")
+    counts = db.import_all(data)
     return {"ok": True, "imported": counts}

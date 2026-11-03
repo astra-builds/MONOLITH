@@ -76,6 +76,61 @@ CREATE TABLE IF NOT EXISTS schedule_blocks (
     FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY(commitment_id) REFERENCES commitments(id) ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS milestones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    deadline TEXT,
+    sequence INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'todo',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS availability_rules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    weekday INTEGER NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
+    available INTEGER DEFAULT 1,
+    source TEXT DEFAULT 'user',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS planning_proposals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id TEXT,
+    status TEXT NOT NULL DEFAULT 'draft',
+    source TEXT NOT NULL DEFAULT 'offline',
+    request_text TEXT NOT NULL,
+    structured_plan_json TEXT NOT NULL,
+    schedule_preview_json TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    approved_at TEXT
+);
+CREATE TABLE IF NOT EXISTS ai_operations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    proposal_id INTEGER,
+    operation_type TEXT NOT NULL,
+    target_type TEXT,
+    target_id INTEGER,
+    arguments_json TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'pending',
+    result_json TEXT,
+    error_message TEXT,
+    idempotency_key TEXT UNIQUE,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(proposal_id) REFERENCES planning_proposals(id) ON DELETE SET NULL
+);
+CREATE TABLE IF NOT EXISTS ai_conversations (
+    id TEXT PRIMARY KEY,
+    messages_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 @contextmanager
@@ -95,6 +150,11 @@ def init_db():
         row = conn.execute("SELECT id FROM settings WHERE id=1").fetchone()
         if not row:
             conn.execute("INSERT INTO settings(id,data) VALUES(1,?)", (json.dumps(DEFAULT_SETTINGS),))
+
+def _json_column(value, default):
+    if value in (None, ""):
+        return default
+    return json.loads(value)
 
 def get_settings():
     with connect() as conn:
@@ -235,6 +295,297 @@ def delete_project_tasks(pid):
     with connect() as conn:
         conn.execute("DELETE FROM tasks WHERE project_id=?", (pid,))
 
+# Canonical planning-domain helpers. These records are intentionally separate
+# from the AI provider so proposals can be validated and previewed before any
+# existing project/task/calendar data is changed.
+def list_milestones(project_id=None):
+    q = "SELECT * FROM milestones"
+    params = []
+    if project_id is not None:
+        q += " WHERE project_id=?"
+        params.append(project_id)
+    q += " ORDER BY project_id, sequence, id"
+    with connect() as conn:
+        return [dict(r) for r in conn.execute(q, params).fetchall()]
+
+def get_milestone(mid):
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM milestones WHERE id=?", (mid,)).fetchone()
+        return dict(row) if row else None
+
+def create_milestone(data):
+    ts = now_iso()
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO milestones(project_id,title,description,deadline,sequence,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",
+            (data["project_id"], data["title"], data.get("description", ""),
+             data.get("deadline"), data.get("sequence", 0), data.get("status", "todo"), ts, ts),
+        )
+        mid = cur.lastrowid
+    return get_milestone(mid)
+
+def update_milestone(mid, data):
+    fields = []
+    values = []
+    for key in ["project_id", "title", "description", "deadline", "sequence", "status"]:
+        if key in data:
+            fields.append(f"{key}=?")
+            values.append(data[key])
+    if not fields:
+        return get_milestone(mid)
+    fields.append("updated_at=?")
+    values.extend([now_iso(), mid])
+    with connect() as conn:
+        conn.execute(f"UPDATE milestones SET {','.join(fields)} WHERE id=?", values)
+    return get_milestone(mid)
+
+def delete_milestone(mid):
+    with connect() as conn:
+        conn.execute("DELETE FROM milestones WHERE id=?", (mid,))
+
+def list_availability_rules():
+    with connect() as conn:
+        return [dict(r) for r in conn.execute(
+            "SELECT * FROM availability_rules ORDER BY weekday, start_time, id"
+        ).fetchall()]
+
+def create_availability_rule(data):
+    ts = now_iso()
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO availability_rules(weekday,start_time,end_time,available,source,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
+            (data["weekday"], data["start_time"], data["end_time"],
+             1 if data.get("available", True) else 0, data.get("source", "user"), ts, ts),
+        )
+        rid = cur.lastrowid
+    with connect() as conn:
+        return dict(conn.execute("SELECT * FROM availability_rules WHERE id=?", (rid,)).fetchone())
+
+def delete_availability_rule(rid):
+    with connect() as conn:
+        conn.execute("DELETE FROM availability_rules WHERE id=?", (rid,))
+
+def create_planning_proposal(data):
+    ts = now_iso()
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO planning_proposals(conversation_id,status,source,request_text,structured_plan_json,schedule_preview_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",
+            (data.get("conversation_id"), data.get("status", "draft"), data.get("source", "offline"),
+             data["request_text"], json.dumps(data.get("structured_plan", {})),
+             json.dumps(data["schedule_preview"]) if data.get("schedule_preview") is not None else None,
+             ts, ts),
+        )
+        pid = cur.lastrowid
+    return get_planning_proposal(pid)
+
+def get_planning_proposal(pid):
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM planning_proposals WHERE id=?", (pid,)).fetchone()
+        if not row:
+            return None
+        result = dict(row)
+        result["structured_plan"] = _json_column(result.pop("structured_plan_json"), {})
+        result["schedule_preview"] = _json_column(result.pop("schedule_preview_json"), None)
+        return result
+
+def update_planning_proposal(pid, data):
+    fields = []
+    values = []
+    for key in ["conversation_id", "status", "source", "request_text", "approved_at"]:
+        if key in data:
+            fields.append(f"{key}=?")
+            values.append(data[key])
+    if "structured_plan" in data:
+        fields.append("structured_plan_json=?")
+        values.append(json.dumps(data["structured_plan"]))
+    if "schedule_preview" in data:
+        fields.append("schedule_preview_json=?")
+        values.append(json.dumps(data["schedule_preview"]))
+    if not fields:
+        return get_planning_proposal(pid)
+    fields.append("updated_at=?")
+    values.extend([now_iso(), pid])
+    with connect() as conn:
+        conn.execute(f"UPDATE planning_proposals SET {','.join(fields)} WHERE id=?", values)
+    return get_planning_proposal(pid)
+
+def create_ai_operation(data):
+    ts = now_iso()
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO ai_operations(proposal_id,operation_type,target_type,target_id,arguments_json,status,result_json,error_message,idempotency_key,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+            (data.get("proposal_id"), data["operation_type"], data.get("target_type"), data.get("target_id"),
+             json.dumps(data.get("arguments", {})), data.get("status", "pending"),
+             json.dumps(data["result"]) if data.get("result") is not None else None,
+             data.get("error_message"), data.get("idempotency_key"), ts, ts),
+        )
+        oid = cur.lastrowid
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM ai_operations WHERE id=?", (oid,)).fetchone()
+        result = dict(row)
+        result["arguments"] = _json_column(result.pop("arguments_json"), {})
+        result["result"] = _json_column(result.pop("result_json"), None)
+        return result
+
+def get_ai_operation_by_key(key):
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM ai_operations WHERE idempotency_key=?", (key,)).fetchone()
+        if not row:
+            return None
+        result = dict(row)
+        result["arguments"] = _json_column(result.pop("arguments_json"), {})
+        result["result"] = _json_column(result.pop("result_json"), None)
+        return result
+
+def get_conversation(conversation_id):
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM ai_conversations WHERE id=?", (conversation_id,)).fetchone()
+        if not row:
+            return {"id": conversation_id, "messages": []}
+        result = dict(row)
+        result["messages"] = _json_column(result.pop("messages_json"), [])
+        return result
+
+def save_conversation(conversation_id, messages):
+    ts = now_iso()
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO ai_conversations(id,messages_json,created_at,updated_at) VALUES(?,?,?,?) "
+            "ON CONFLICT(id) DO UPDATE SET messages_json=excluded.messages_json, updated_at=excluded.updated_at",
+            (conversation_id, json.dumps(messages), ts, ts),
+        )
+    return get_conversation(conversation_id)
+
+def apply_planning_proposal_transaction(proposal_id, intent, preview_blocks):
+    """Apply a validated plan and its schedule in one SQLite transaction.
+
+    Preview-only negative IDs are translated to real IDs here. Existing fixed,
+    completed, skipped, and past blocks remain immutable and are never deleted.
+    """
+    ts = now_iso()
+    project_map = {}
+    task_map = {}
+    commitment_map = {}
+    created = {"projects": [], "milestones": [], "tasks": [], "commitments": [], "blocks": []}
+
+    with connect() as conn:
+        row = conn.execute("SELECT status FROM planning_proposals WHERE id=?", (proposal_id,)).fetchone()
+        if not row or row["status"] not in ("draft", "previewed"):
+            raise ValueError("Planning proposal is no longer applicable")
+
+        existing_projects = {
+            row["name"].casefold(): dict(row)
+            for row in conn.execute("SELECT * FROM projects").fetchall()
+        }
+        for project in intent.get("projects", []):
+            name = project["name"]
+            existing = existing_projects.get(name.casefold())
+            if existing:
+                project_map[name.casefold()] = existing["id"]
+                continue
+            cur = conn.execute(
+                "INSERT INTO projects(name,description,kind,total_sessions,session_minutes,target_deadline,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                (name, project.get("description", ""), project.get("kind", "project"),
+                 project.get("total_sessions", 0), project.get("session_minutes", 60),
+                 project.get("target_deadline"), ts, ts),
+            )
+            project_map[name.casefold()] = cur.lastrowid
+            created["projects"].append({"id": cur.lastrowid, "name": name})
+
+        for project in intent.get("projects", []):
+            project_id = project_map[project["name"].casefold()]
+            for milestone in project.get("milestones", []):
+                cur = conn.execute(
+                    "INSERT INTO milestones(project_id,title,description,deadline,sequence,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                    (project_id, milestone["title"], milestone.get("description", ""), milestone.get("deadline"),
+                     milestone.get("sequence", 0), "todo", ts, ts),
+                )
+                created["milestones"].append({"id": cur.lastrowid, "project_id": project_id, "title": milestone["title"]})
+
+        raw_tasks = []
+        for project in intent.get("projects", []):
+            raw_tasks.extend([{**task, "project_name": project["name"]} for task in project.get("tasks", [])])
+        raw_tasks.extend(intent.get("tasks", []))
+        previous_task_id = None
+        for task in raw_tasks:
+            project_id = project_map.get((task.get("project_name") or "").casefold())
+            dependencies = []
+            for dependency in task.get("dependencies", []):
+                if dependency == "__PREV__" and previous_task_id is not None:
+                    dependencies.append(previous_task_id)
+                elif isinstance(dependency, int):
+                    dependencies.append(dependency)
+                elif isinstance(dependency, str) and dependency.casefold() in task_map:
+                    dependencies.append(task_map[dependency.casefold()])
+            cur = conn.execute(
+                "INSERT INTO tasks(project_id,title,description,estimated_minutes,remaining_minutes,deadline,priority,preferred_days,preferred_start,preferred_end,min_session_minutes,max_session_minutes,splittable,flexible,dependencies,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (project_id, task["title"], task.get("description", ""), task.get("estimated_minutes", 60),
+                 task.get("estimated_minutes", 60), task.get("deadline"), task.get("priority", 3),
+                 json.dumps(task.get("preferred_days", [])), task.get("preferred_start"), task.get("preferred_end"),
+                 task.get("min_session_minutes", 25), task.get("max_session_minutes", 90),
+                 1 if task.get("splittable", True) else 0, 1 if task.get("flexible", True) else 0,
+                 json.dumps(dependencies), "todo", ts, ts),
+            )
+            task_map[task["title"].casefold()] = cur.lastrowid
+            previous_task_id = cur.lastrowid
+            created["tasks"].append({"id": cur.lastrowid, "title": task["title"], "project_id": project_id})
+
+        for commitment in intent.get("commitments", []):
+            cur = conn.execute(
+                "INSERT INTO commitments(title,kind,tag,recurrence,days_of_week,start_time,end_time,start_date,end_date,one_time_date,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                (commitment["title"], commitment.get("kind", "fixed"), commitment.get("tag", "personal"),
+                 commitment.get("recurrence", "weekly"), json.dumps(commitment.get("days_of_week", [])),
+                 commitment["start_time"], commitment["end_time"], commitment.get("start_date"),
+                 commitment.get("end_date"), commitment.get("one_time_date"), ts, ts),
+            )
+            commitment_map[commitment.get("title", "").casefold()] = cur.lastrowid
+            created["commitments"].append({"id": cur.lastrowid, "title": commitment["title"]})
+
+        now_local = datetime.now().replace(microsecond=0).isoformat()
+        preserved_rows = conn.execute("SELECT * FROM schedule_blocks").fetchall()
+        preserved = []
+        for old in preserved_rows:
+            old_dict = dict(old)
+            start = old_dict["start_dt"]
+            if old_dict["locked"] or old_dict["status"] in ("completed", "skipped") or start < now_local[:10]:
+                preserved.append(old_dict)
+        conn.execute(
+            "DELETE FROM schedule_blocks WHERE locked=0 AND status='scheduled' AND start_dt >= ?",
+            (now_local,),
+        )
+        existing_keys = {(b["start_dt"], b["end_dt"], b["title"]) for b in preserved}
+        for block in preview_blocks:
+            task_id = block.get("task_id")
+            commitment_id = block.get("commitment_id")
+            if task_id is not None and task_id < 0:
+                # Preview task IDs are assigned in insertion order; resolve by title.
+                task_id = task_map.get(block["title"].casefold())
+            if commitment_id is not None and commitment_id < 0:
+                commitment_id = commitment_map.get(block["title"].casefold())
+            if task_id is None and commitment_id is None:
+                continue
+            key = (block["start_dt"], block["end_dt"], block["title"])
+            if key in existing_keys:
+                continue
+            conn.execute(
+                "INSERT INTO schedule_blocks(task_id,commitment_id,title,tag,start_dt,end_dt,status,locked,reason,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                (task_id, commitment_id, block["title"], block.get("tag", "task"), block["start_dt"],
+                 block["end_dt"], block.get("status", "scheduled"), 1 if block.get("locked") else 0,
+                 block.get("reason", ""), ts, ts),
+            )
+            created["blocks"].append({"title": block["title"], "start_dt": block["start_dt"], "end_dt": block["end_dt"]})
+
+        conn.execute(
+            "UPDATE planning_proposals SET status='approved', approved_at=?, updated_at=? WHERE id=?",
+            (ts, ts, proposal_id),
+        )
+        conn.execute(
+            "INSERT INTO ai_operations(proposal_id,operation_type,target_type,target_id,arguments_json,status,result_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+            (proposal_id, "approve_proposal", "planning_proposal", proposal_id, json.dumps({"proposal_id": proposal_id}),
+             "success", json.dumps(created), ts, ts),
+        )
+    return created
+
 def list_commitments(tag=None):
     q = "SELECT * FROM commitments"
     params = []
@@ -349,7 +700,7 @@ def delete_future_flexible_blocks(cutoff_iso):
 
 def export_all():
     with connect() as conn:
-        tables = ["settings","projects","tasks","commitments","schedule_blocks"]
+        tables = ["settings","projects","milestones","tasks","commitments","availability_rules","schedule_blocks"]
         out={}
         for t in tables:
             rows = conn.execute(f"SELECT * FROM {t}").fetchall()
@@ -369,12 +720,13 @@ def export_all():
 def clear_all_data():
     """Delete all rows from every data table (order respects FK constraints)."""
     with connect() as conn:
-        for table in ["schedule_blocks", "tasks", "projects", "commitments", "settings"]:
+        for table in ["ai_operations", "ai_conversations", "schedule_blocks", "tasks", "milestones", "projects", "commitments", "availability_rules", "planning_proposals", "settings"]:
             conn.execute(f"DELETE FROM {table}")
 
 
 def reset_db():
     """Clear all data and reinitialize settings to defaults."""
+    init_db()  # ensure tables exist on a fresh DB
     clear_all_data()
     with connect() as conn:
         conn.execute(
@@ -421,6 +773,17 @@ def import_all(payload: dict) -> dict:
             )
         counts["projects"] = len(payload.get("projects", []))
 
+        # --- milestones ---
+        for m in payload.get("milestones", []):
+            ts = m.get("created_at", now_iso())
+            conn.execute(
+                "INSERT INTO milestones(id,project_id,title,description,deadline,sequence,status,created_at,updated_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?)",
+                (m.get("id"), m.get("project_id"), m["title"], m.get("description", ""),
+                 m.get("deadline"), m.get("sequence", 0), m.get("status", "todo"), ts, m.get("updated_at", ts)),
+            )
+        counts["milestones"] = len(payload.get("milestones", []))
+
         # --- tasks ---
         for t in payload.get("tasks", []):
             ts = t.get("created_at", now_iso())
@@ -464,6 +827,17 @@ def import_all(payload: dict) -> dict:
                  c.get("one_time_date"), ts, c.get("updated_at", ts)),
             )
         counts["commitments"] = len(payload.get("commitments", []))
+
+        # --- availability_rules ---
+        for r in payload.get("availability_rules", []):
+            ts = r.get("created_at", now_iso())
+            conn.execute(
+                "INSERT INTO availability_rules(id,weekday,start_time,end_time,available,source,created_at,updated_at) "
+                "VALUES(?,?,?,?,?,?,?,?)",
+                (r.get("id"), r.get("weekday"), r["start_time"], r["end_time"],
+                 1 if r.get("available", True) else 0, r.get("source", "user"), ts, r.get("updated_at", ts)),
+            )
+        counts["availability_rules"] = len(payload.get("availability_rules", []))
 
         # --- schedule_blocks ---
         for b in payload.get("schedule_blocks", []):

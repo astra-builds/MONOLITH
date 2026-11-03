@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
 
 class ProjectIn(BaseModel):
     name: str
@@ -98,11 +98,17 @@ class SettingsUpdate(BaseModel):
     ai_provider: Optional[str] = None
     ai_model: Optional[str] = None
     ai_api_key: Optional[str] = None
+    ai_autonomy: Optional[Literal["suggestion", "assisted", "full"]] = None
 
 class AIPlanRequest(BaseModel):
     text: str
     provider: Optional[str] = None
     model: Optional[str] = None
+
+class AIConversationMessage(BaseModel):
+    conversation_id: str = "default"
+    text: str
+    confirm: bool = False
 
 class CourseGenerateRequest(BaseModel):
     project_id: Optional[int] = None
@@ -120,6 +126,8 @@ class ImportRequest(BaseModel):
     """Request body for importing data from an export JSON payload."""
     settings: Optional[List[dict]] = []
     projects: Optional[List[dict]] = []
+    milestones: Optional[List[dict]] = []
     tasks: Optional[List[dict]] = []
     commitments: Optional[List[dict]] = []
+    availability_rules: Optional[List[dict]] = []
     schedule_blocks: Optional[List[dict]] = []

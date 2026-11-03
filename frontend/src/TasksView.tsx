@@ -6,6 +6,7 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
   const [projects, setProjects] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const [form, setForm] = useState<any>({
     title: "",
@@ -20,6 +21,8 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
     splittable: true,
     flexible: true,
     dependencies: [] as number[],
+    preferred_start: "",
+    preferred_end: "",
   });
 
   const load = async () => {
@@ -63,9 +66,57 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
       splittable: true,
       flexible: true,
       dependencies: [],
+      preferred_start: "",
+      preferred_end: "",
     });
     load();
     onChange();
+  };
+
+  const startEdit = (t: any) => {
+    setEditingId(t.id);
+    setForm({
+      title: t.title,
+      description: t.description || "",
+      project_id: t.project_id || "",
+      estimated_minutes: t.estimated_minutes || 60,
+      deadline: t.deadline || "",
+      priority: t.priority || 3,
+      preferred_days: t.preferred_days || [],
+      min_session_minutes: t.min_session_minutes || 25,
+      max_session_minutes: t.max_session_minutes || 90,
+      splittable: t.splittable !== false,
+      flexible: t.flexible !== false,
+      dependencies: t.dependencies || [],
+      preferred_start: t.preferred_start || "",
+      preferred_end: t.preferred_end || "",
+    });
+    setShowForm(true);
+  };
+
+  const saveEdit = async () => {
+    if (!form.title.trim()) return;
+    if (!editingId) return;
+    // Forbid self-dependency
+    const deps = (form.dependencies || []).filter((d: number) => d !== editingId);
+    try {
+      await api.tasks.update(editingId, {
+        ...form,
+        dependencies: deps,
+        project_id: form.project_id ? Number(form.project_id) : null,
+        deadline: form.deadline || null,
+        estimated_minutes: Number(form.estimated_minutes),
+        min_session_minutes: Number(form.min_session_minutes),
+        max_session_minutes: Number(form.max_session_minutes),
+        priority: Number(form.priority),
+      });
+      setShowForm(false);
+      setEditingId(null);
+      load();
+      onChange();
+    } catch (e: any) {
+      console.error(e);
+    }
   };
 
   const complete = async (id: number) => {
@@ -197,6 +248,27 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
+                <span className="text-[9px] text-zinc-400 block mb-0.5">PREFERRED START</span>
+                <input
+                  type="time"
+                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  value={form.preferred_start}
+                  onChange={(e) => setForm({ ...form, preferred_start: e.target.value })}
+                />
+              </div>
+              <div>
+                <span className="text-[9px] text-zinc-400 block mb-0.5">PREFERRED END</span>
+                <input
+                  type="time"
+                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  value={form.preferred_end}
+                  onChange={(e) => setForm({ ...form, preferred_end: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
                 <span className="text-[9px] text-zinc-400 block mb-0.5">PRIORITY (1=HIGH, 5=LOW)</span>
                 <select
                   className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
@@ -251,28 +323,35 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    dependencies: e.target.value ? [Number(e.target.value)] : [],
+                    dependencies: e.target.value && Number(e.target.value) !== editingId ? [Number(e.target.value)] : [],
                   })
                 }
               >
                 <option value="">No Prerequisite (Can start anytime)</option>
-                {tasks.map((other) => (
-                  <option key={other.id} value={other.id}>
-                    Depends on #{other.id}: {other.title}
-                  </option>
-                ))}
+                {tasks.map((other) => {
+                  // Forbid self-dependency when editing
+                  if (editingId && other.id === editingId) return null;
+                  return (
+                    <option key={other.id} value={other.id}>
+                      Depends on #{other.id}: {other.title}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
             <div className="flex gap-2 pt-2 border-t border-[#232733]">
               <button
-                onClick={create}
+                onClick={editingId ? saveEdit : create}
                 className="flex-1 py-1.5 bg-[#c5ff42] text-black font-bold text-xs rounded hover:bg-[#b5f030]"
               >
-                CREATE TASK
+                {editingId ? "SAVE CHANGES" : "CREATE TASK"}
               </button>
               <button
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingId(null);
+                }}
                 className="px-3 py-1.5 bg-[#1c202a] text-zinc-400 text-xs rounded"
               >
                 CANCEL
@@ -320,7 +399,11 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                         className={`px-1.5 py-0.5 rounded font-bold uppercase text-[8px] ${
                           done
                             ? "bg-[#14231b] text-[#c5ff42] border border-[#3b661d]"
-                            : "bg-[#161c27] text-zinc-300 border border-[#232733]"
+                            : t.status === "overdue"
+                              ? "bg-[#3a131a] text-[#ff7d8d] border border-[#7d222e]"
+                              : t.status === "waiting"
+                                ? "bg-[#2e2115] text-[#f59e0b] border border-[#7d222e]"
+                                : "bg-[#161c27] text-zinc-300 border border-[#232733]"
                         }`}
                       >
                         {t.status}
@@ -350,6 +433,22 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                           className="px-2 py-0.5 bg-[#172514] text-[#c5ff42] border border-[#3b661d] rounded text-[9px] font-bold"
                         >
                           DONE
+                        </button>
+                      )}
+                      {!done && editingId !== t.id && (
+                        <button
+                          onClick={() => startEdit(t)}
+                          className="px-2 py-0.5 bg-[#18202c] text-[#73a7f7] border border-[#3b5880] rounded text-[9px] font-bold"
+                        >
+                          EDIT
+                        </button>
+                      )}
+                      {editingId === t.id && (
+                        <button
+                          onClick={saveEdit}
+                          className="px-2 py-0.5 bg-[#c5ff42] text-black border border-[#c5ff42] rounded text-[9px] font-bold"
+                        >
+                          SAVE
                         </button>
                       )}
                       <button

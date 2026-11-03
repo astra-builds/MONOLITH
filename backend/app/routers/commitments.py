@@ -15,7 +15,7 @@ def create_commitment(c: CommitmentIn):
 
 @router.patch("/{cid}")
 def update_commitment(cid: int, c: CommitmentUpdate):
-    data = {k:v for k,v in c.model_dump().items() if v is not None}
+    data = c.model_dump(exclude_unset=True)
     r = db.update_commitment(cid, data)
     if not r: raise HTTPException(404)
     # Regenerate so stale future blocks for this commitment are rebuilt at the

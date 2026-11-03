@@ -1,279 +1,70 @@
 import { useState } from "react";
 import { api } from "./api";
 
-interface Proposal {
-  summary?: string;
-  clarifications?: string[];
-  projects?: Array<{
-    name: string;
-    kind?: string;
-    total_sessions?: number;
-    session_minutes?: number;
-    target_deadline?: string;
-  }>;
-  tasks?: Array<{
-    title: string;
-    estimated_minutes?: number;
-    deadline?: string;
-    priority?: number;
-    preferred_days?: number[];
-  }>;
-  commitments?: Array<{
-    title: string;
-    tag?: string;
-    recurrence?: string;
-    days_of_week?: number[];
-    start_time?: string;
-    end_time?: string;
-  }>;
-}
+type PlanResponse = {
+  proposal_id: number;
+  source: string;
+  proposal: { request_text: string; intent: {
+    summary?: string; clarifications?: string[]; assumptions?: string[];
+    projects?: Array<{ name: string; kind?: string; total_sessions?: number; session_minutes?: number }>;
+    tasks?: Array<{ title: string; estimated_minutes?: number; deadline?: string | null }>;
+    commitments?: Array<{ title: string; days_of_week?: number[]; start_time?: string; end_time?: string }>;
+  }};
+};
 
 export default function CommandBar({ onApplied }: { onApplied: () => void }) {
   const [text, setText] = useState("");
-  const [proposal, setProposal] = useState<Proposal | null>(null);
-  const [sourceBadge, setSourceBadge] = useState<string>("");
-  const [previewSchedule, setPreviewSchedule] = useState<any | null>(null);
+  const [plan, setPlan] = useState<PlanResponse | null>(null);
+  const [preview, setPreview] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState("");
-  const [clarificationAnswer, setClarificationAnswer] = useState("");
+  const [message, setMessage] = useState("");
+  const [clarification, setClarification] = useState("");
 
-  const submit = async () => {
-    if (!text.trim()) return;
-    setLoading(true);
-    setMsg("");
-    setProposal(null);
-    setPreviewSchedule(null);
-
+  const submit = async (request = text) => {
+    if (!request.trim()) return;
+    setLoading(true); setMessage(""); setPreview(null);
     try {
-      const res = await api.ai.extract(text);
-      if (res && res.proposal) {
-        setProposal(res.proposal);
-        setSourceBadge(res.source === "ai" ? "AI SYNTHESIS" : "OFFLINE INTERPRETER");
-        setMsg(res.message || "");
-      } else {
-        setMsg("Could not parse request. Try: 'course AI 10 sessions 2h sat' or 'class CS101 wed 10:00-12:00'.");
-      }
-    } catch (e: any) {
-      setMsg(e.message);
-    }
-    setLoading(false);
+      const result = await api.ai.plan(request);
+      setPlan(result);
+      setMessage(result.proposal.intent.clarifications?.length ? "Clarification needed before approval" : `${result.source} planner · review before applying`);
+    } catch (error: any) { setMessage(error.message || "Planning failed"); }
+    finally { setLoading(false); }
+  };
+  const refine = () => { const next = `${text}. Clarification: ${clarification}`; setText(next); setClarification(""); void submit(next); };
+  const makePreview = async () => {
+    if (!plan) return; setLoading(true);
+    try { setPreview(await api.ai.preview(plan.proposal_id)); }
+    catch (error: any) { setMessage(error.message || "Preview failed"); }
+    finally { setLoading(false); }
+  };
+  const approve = async () => {
+    if (!plan) return; setLoading(true);
+    try { await api.ai.approve(plan.proposal_id); setPlan(null); setPreview(null); setText(""); setMessage("Plan approved and applied atomically"); onApplied(); }
+    catch (error: any) { setMessage(error.message || "Approval failed"); }
+    finally { setLoading(false); }
+  };
+  const reject = async () => {
+    if (!plan) return; setLoading(true);
+    try { await api.ai.reject(plan.proposal_id); setPlan(null); setPreview(null); setMessage("Proposal rejected"); }
+    catch (error: any) { setMessage(error.message || "Could not reject proposal"); }
+    finally { setLoading(false); }
   };
 
-  const handlePreview = async () => {
-    setLoading(true);
-    try {
-      const prev = await api.schedule.preview();
-      setPreviewSchedule(prev);
-    } catch (e: any) {
-      setMsg("Preview error: " + e.message);
-    }
-    setLoading(false);
-  };
-
-  const apply = async () => {
-    if (!proposal) return;
-    setLoading(true);
-    try {
-      await api.ai.apply(proposal);
-      await api.schedule.apply();
-      setProposal(null);
-      setPreviewSchedule(null);
-      setText("");
-      setMsg("✓ Applied changes and updated schedule.");
-      onApplied();
-    } catch (e: any) {
-      setMsg("Failed to apply: " + e.message);
-    }
-    setLoading(false);
-  };
-
-  const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-  return (
-    <div className="border-b border-[#232733] px-3 py-2 bg-[#11141a] font-mono select-none">
-      <div className="flex gap-2 items-center">
-        <div className="flex items-center gap-1 text-[#c5ff42] font-black text-xs px-2 py-1.5 bg-[#0d0f12] border border-[#232733] rounded">
-          <span>λ:plan</span>
-        </div>
-        <input
-          className="flex-1 bg-[#0d0f12] border border-[#232733] px-3 py-1.5 text-xs text-white rounded outline-none focus:border-[#c5ff42] transition-colors"
-          placeholder="Describe goals, courses, or classes (e.g. 'course ML 10 sessions 2h sat' or 'class CS101 wed 10:00-12:00')"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") submit();
-          }}
-        />
-        <button
-          onClick={submit}
-          disabled={loading}
-          className="px-4 py-1.5 bg-[#c5ff42] hover:bg-[#b5f030] text-black font-bold text-xs rounded transition-colors"
-        >
-          {loading ? "PARSING..." : "INTERPRET"}
-        </button>
-      </div>
-
-      {msg && (
-        <div className="text-[10px] text-zinc-400 mt-1.5 flex items-center gap-1.5">
-          <span className="text-[#c5ff42]">✦</span>
-          <span>{msg}</span>
-        </div>
-      )}
-
-      {/* Structured Proposal Review Cards */}
-      {proposal && (
-        <div className="mt-2.5 border border-[#232733] p-3 bg-[#0d0f12] rounded space-y-2.5 shadow-2xl">
-          <div className="flex items-center justify-between border-b border-[#232733] pb-1.5">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#c5ff42] animate-pulse"></span>
-              <span className="font-bold text-white text-xs">
-                PROPOSED SCHEDULE PLAN: {proposal.summary}
-              </span>
-              {sourceBadge && (
-                <span
-                  className={`px-1.5 py-0.2 rounded font-bold text-[8px] uppercase border ${
-                    sourceBadge.includes("AI")
-                      ? "bg-[#221735] text-[#c19bf5] border-[#8b61c9]"
-                      : "bg-[#162714] text-[#c5ff42] border-[#4e8529]"
-                  }`}
-                >
-                  {sourceBadge}
-                </span>
-              )}
-            </div>
-            <span className="text-[9px] text-zinc-500 font-mono">
-              REVIEW BEFORE APPLYING
-            </span>
-          </div>
-
-          {/* Clarification questions */}
-          {proposal.clarifications && proposal.clarifications.length > 0 && (
-            <div className="bg-[#241a15] border border-[#7a481e] p-2 rounded text-[10px] space-y-1.5">
-              <span className="text-[#f59e0b] font-bold block">
-                CLARIFICATION REQUIRED:
-              </span>
-              <ul className="list-disc pl-4 text-zinc-300">
-                {proposal.clarifications.map((q, idx) => (
-                  <li key={idx}>{q}</li>
-                ))}
-              </ul>
-              <div className="flex gap-2 pt-1">
-                <input
-                  className="flex-1 bg-[#14100c] border border-[#7a481e] px-2 py-1 text-xs text-white rounded outline-none"
-                  placeholder="Type your clarification answer..."
-                  value={clarificationAnswer}
-                  onChange={(e) => setClarificationAnswer(e.target.value)}
-                />
-                <button
-                  onClick={() => {
-                    setText((prev) => `${prev}. Note: ${clarificationAnswer}`);
-                    setClarificationAnswer("");
-                    submit();
-                  }}
-                  className="px-2 py-1 bg-[#f59e0b] text-black font-bold text-[10px] rounded"
-                >
-                  REFINE PROPOSAL
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Structured Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[10px]">
-            {/* Projects / Courses */}
-            {proposal.projects && proposal.projects.length > 0 && (
-              <div className="bg-[#14171f] p-2 rounded border border-[#232733] space-y-1">
-                <span className="text-zinc-500 font-bold block text-[8px] uppercase">
-                  PROJECTS & COURSES ({proposal.projects.length})
-                </span>
-                {proposal.projects.map((p, i) => (
-                  <div key={i} className="text-zinc-200">
-                    <span className="font-bold text-white">{p.name}</span>
-                    <span className="text-zinc-500 block text-[9px]">
-                      {p.kind} · {p.total_sessions} sessions × {p.session_minutes}m
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Commitments */}
-            {proposal.commitments && proposal.commitments.length > 0 && (
-              <div className="bg-[#14171f] p-2 rounded border border-[#232733] space-y-1">
-                <span className="text-zinc-500 font-bold block text-[8px] uppercase">
-                  FIXED COMMITMENTS ({proposal.commitments.length})
-                </span>
-                {proposal.commitments.map((c, i) => (
-                  <div key={i} className="text-zinc-200">
-                    <span className="font-bold text-white">{c.title}</span>
-                    <span className="text-zinc-500 block text-[9px]">
-                      {c.tag} · {(c.days_of_week || []).map((d) => dayNames[d]).join(", ")} ·{" "}
-                      {c.start_time}–{c.end_time}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Tasks */}
-            {proposal.tasks && proposal.tasks.length > 0 && (
-              <div className="bg-[#14171f] p-2 rounded border border-[#232733] space-y-1">
-                <span className="text-zinc-500 font-bold block text-[8px] uppercase">
-                  TASKS ({proposal.tasks.length})
-                </span>
-                <div className="max-h-24 overflow-y-auto space-y-0.5">
-                  {proposal.tasks.map((t, i) => (
-                    <div key={i} className="truncate text-zinc-300">
-                      • {t.title} ({t.estimated_minutes}m)
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Schedule Diff Preview (if requested) */}
-          {previewSchedule && (
-            <div className="bg-[#141b24] p-2 rounded border border-[#3b5880] text-[10px] space-y-1">
-              <span className="text-[#73a7f7] font-bold block text-[9px] uppercase">
-                CALENDAR PREVIEW DIFF
-              </span>
-              <div className="flex gap-4 text-zinc-300 font-mono">
-                <span>Created: {previewSchedule.diff?.created?.length || 0}</span>
-                <span>Unchanged: {previewSchedule.diff?.unchanged?.length || 0}</span>
-                <span>Conflicts: {previewSchedule.unscheduled?.length || 0}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="flex gap-2 pt-1 border-t border-[#232733]">
-            <button
-              onClick={apply}
-              disabled={loading}
-              className="px-4 py-1.5 bg-[#c5ff42] hover:bg-[#b5f030] text-black font-bold text-xs rounded transition-colors flex items-center gap-1.5"
-            >
-              <span>✓ APPLY & RECALCULATE</span>
-            </button>
-            <button
-              onClick={handlePreview}
-              disabled={loading}
-              className="px-3 py-1.5 bg-[#18202c] hover:bg-[#222e3e] text-[#73a7f7] border border-[#3b5880] text-xs rounded font-bold"
-            >
-              PREVIEW ON CALENDAR
-            </button>
-            <button
-              onClick={() => {
-                setProposal(null);
-                setPreviewSchedule(null);
-              }}
-              className="px-3 py-1.5 bg-[#1c202a] text-zinc-400 hover:text-white text-xs rounded border border-[#232733]"
-            >
-              DISCARD
-            </button>
-          </div>
-        </div>
-      )}
+  const intent = plan?.proposal.intent;
+  return <div className="border-b border-[#232733] px-3 py-2 bg-[#11141a] font-mono select-none">
+    <div className="flex gap-2 items-center">
+      <span className="text-[#c5ff42] font-black text-xs px-2 py-1.5 bg-[#0d0f12] border border-[#232733] rounded">λ:plan</span>
+      <input className="flex-1 bg-[#0d0f12] border border-[#232733] px-3 py-1.5 text-xs text-white rounded outline-none focus:border-[#c5ff42]" placeholder="Describe goals, courses, classes, deadlines, or follow-up changes" value={text} onChange={(event) => setText(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void submit(); }} />
+      <button onClick={() => void submit()} disabled={loading} className="px-4 py-1.5 bg-[#c5ff42] text-black font-bold text-xs rounded">{loading ? "WORKING..." : "PLAN"}</button>
     </div>
-  );
+    {message && <div className="text-[10px] text-zinc-400 mt-1.5">✦ {message}</div>}
+    {intent && <div className="mt-2.5 border border-[#232733] p-3 bg-[#0d0f12] rounded space-y-2.5">
+      <div className="flex justify-between border-b border-[#232733] pb-1.5"><span className="font-bold text-white text-xs">{intent.summary || "PROPOSED PLAN"}</span><span className="text-[9px] text-zinc-500 uppercase">{plan?.source} · REVIEW</span></div>
+      {(intent.clarifications?.length ?? 0) > 0 && <div className="bg-[#241a15] border border-[#7a481e] p-2 rounded text-[10px]"><span className="text-[#f59e0b] font-bold block">CLARIFICATION REQUIRED</span><ul className="list-disc pl-4 text-zinc-300">{intent.clarifications?.map((item) => <li key={item}>{item}</li>)}</ul><div className="flex gap-2 mt-2"><input className="flex-1 bg-[#14100c] border border-[#7a481e] px-2 py-1 text-xs text-white rounded" value={clarification} onChange={(event) => setClarification(event.target.value)} /><button onClick={refine} className="px-2 py-1 bg-[#f59e0b] text-black font-bold text-[10px] rounded">REFINE</button></div></div>}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[10px]"><div className="bg-[#14171f] p-2 rounded border border-[#232733] text-zinc-300">PROJECTS: {intent.projects?.length ?? 0}</div><div className="bg-[#14171f] p-2 rounded border border-[#232733] text-zinc-300">TASKS: {intent.tasks?.length ?? 0}</div><div className="bg-[#14171f] p-2 rounded border border-[#232733] text-zinc-300">COMMITMENTS: {intent.commitments?.length ?? 0}</div></div>
+      {intent.tasks?.length ? <div className="max-h-24 overflow-y-auto text-[10px] text-zinc-300">{intent.tasks.map((task) => <div key={task.title}>• {task.title} · {task.estimated_minutes ?? 60}m</div>)}</div> : null}
+      {preview && <div className="bg-[#141b24] p-2 rounded border border-[#3b5880] text-[10px] text-zinc-300"><div className="text-[#73a7f7] font-bold">DETERMINISTIC SCHEDULE PREVIEW</div><div className="flex gap-4 mt-1"><span>Created: {preview.preview?.diff?.created?.length ?? 0}</span><span>Moved: {preview.preview?.diff?.moved?.length ?? 0}</span><span>Conflicts: {preview.preview?.unscheduled?.length ?? 0}</span></div>{preview.preview?.unscheduled?.map((item: any) => <div key={`${item.task_id}-${item.title}`} className="text-red-300 mt-1">{item.title}: {item.reason}</div>)}</div>}
+      <div className="flex gap-2 pt-1 border-t border-[#232733]"><button onClick={() => void makePreview()} disabled={loading} className="px-3 py-1.5 bg-[#18202c] text-[#73a7f7] border border-[#3b5880] text-xs rounded font-bold">PREVIEW SCHEDULE</button><button onClick={() => void approve()} disabled={loading || Boolean(intent.clarifications?.length)} className="px-4 py-1.5 bg-[#c5ff42] text-black font-bold text-xs rounded">APPROVE & APPLY</button><button onClick={() => void reject()} disabled={loading} className="px-3 py-1.5 bg-[#1c202a] text-zinc-400 text-xs rounded border border-[#232733]">REJECT</button></div>
+    </div>}
+  </div>;
 }

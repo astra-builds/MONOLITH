@@ -1,6 +1,12 @@
 import json
 from typing import Optional
 
+class ProviderError(RuntimeError):
+    def __init__(self, message, *, kind="provider_error", retryable=False):
+        super().__init__(message)
+        self.kind = kind
+        self.retryable = retryable
+
 EXTRACTION_PROMPT = """You are a planning assistant. Extract structured planning information from the user's natural language request.
 Return ONLY valid JSON with this shape:
 {
@@ -26,6 +32,8 @@ class AIProvider:
         self.model = model
     def is_configured(self):
         return bool(self.api_key)
+    def capabilities(self):
+        return {"structured_output": False, "tool_calling": False, "streaming": False}
     def extract(self, text: str) -> dict:
         raise NotImplementedError
     def chat(self, text: str) -> str:

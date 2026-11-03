@@ -68,6 +68,15 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
 
   const save = async () => {
     if (!form.title.trim()) return;
+    // Weekly needs at least one day; one-time needs a date
+    if (form.recurrence === "weekly" && (!form.days_of_week || form.days_of_week.length === 0)) {
+      alert("Weekly commitments need at least one day of the week.");
+      return;
+    }
+    if (form.recurrence === "once" && !form.one_time_date) {
+      alert("One-time commitments need a date.");
+      return;
+    }
     try {
       if (editingId) {
         await api.commitments.update(editingId, form);
@@ -94,7 +103,9 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
   };
 
   const remove = async (id: number) => {
-    if (!confirm("Delete this recurring commitment?")) return;
+    const c = commitments.find((x) => x.id === id);
+    const isOneTime = c && c.recurrence !== "weekly";
+    if (!confirm(isOneTime ? "Delete this one-time commitment?" : "Delete this recurring commitment?")) return;
     try {
       await api.commitments.delete(id);
       load();
@@ -213,6 +224,20 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
                 </select>
               </div>
 
+              <div>
+                <label className="text-[10px] text-zinc-400 block mb-1">KIND</label>
+                <select
+                  className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none"
+                  value={form.kind}
+                  onChange={(e) => setForm({ ...form, kind: e.target.value })}
+                >
+                  <option value="fixed">Fixed</option>
+                  <option value="routine">Routine</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[10px] text-zinc-400 block mb-1">RECURRENCE</label>
                 <select

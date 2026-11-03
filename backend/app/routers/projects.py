@@ -37,7 +37,7 @@ def get_project(pid: int):
 
 @router.patch("/{pid}")
 def update_project(pid: int, p: ProjectUpdate):
-    data = {k:v for k,v in p.model_dump().items() if v is not None}
+    data = p.model_dump(exclude_unset=True)
     r = db.update_project(pid, data)
     if not r: raise HTTPException(404)
     return r
@@ -56,12 +56,23 @@ def generate_sessions(pid: int, req: CourseGenerateRequest):
     blocks (e.g. "Session 01.1", "Session 01.2").  Otherwise each session maps
     to a single task block.
 
+    If ``start_date`` is given, it is used as the anchor for the first task's
+    start date.  Otherwise the current date is used.
+
     Every task depends on the previous one so the scheduler places them in
     sequential order.
+
+    The endpoint is idempotent: prior tasks+blocks for this project are deleted
+    before generating new ones.
     """
     project = db.get_project(pid)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+
+    # Idempotent re-run: delete prior tasks and blocks for this project
+    db.delete_project_tasks(pid)
+    with db.connect() as conn:
+        conn.execute("DELETE FROM schedule_blocks WHERE task_id IN (SELECT id FROM tasks WHERE project_id=?)", (pid,))
 
     if req.half:
         block_count = req.total_sessions * 2
@@ -111,7 +122,8 @@ def generate_sessions(pid: int, req: CourseGenerateRequest):
         "session_minutes": req.session_minutes,
     })
 
-    estimated_weeks = math.ceil(block_count / (1 if req.frequency == "weekly" else 1))
+    sessions_per_week = 1 if req.frequency == "weekly" else 1
+    estimated_weeks = math.ceil(block_count / sessions_per_week)
 
     return {
         "project_id": pid,

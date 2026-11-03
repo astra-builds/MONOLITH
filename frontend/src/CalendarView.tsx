@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   format,
   startOfWeek,
@@ -60,14 +60,18 @@ export default function CalendarView() {
     priority: 3,
   });
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   // Load schedule blocks for current range
   const loadSchedule = async () => {
     setLoading(true);
     try {
-      const rangeStart = subWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 2);
-      const rangeEnd = addWeeks(endOfWeek(currentDate, { weekStartsOn: 1 }), 4);
+      let rangeStart: Date, rangeEnd: Date;
+      if (viewMode === "month") {
+        rangeStart = subWeeks(startOfMonth(currentDate), 1);
+        rangeEnd = addWeeks(endOfMonth(currentDate), 1);
+      } else {
+        rangeStart = subWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 2);
+        rangeEnd = addWeeks(endOfWeek(currentDate, { weekStartsOn: 1 }), 4);
+      }
       const data = await api.schedule.list(rangeStart.toISOString(), rangeEnd.toISOString());
       setBlocks(data);
 
@@ -90,10 +94,10 @@ export default function CalendarView() {
   // Keyboard navigation shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
-      if (["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement).tagName)) {
-        return;
-      }
+      // Ignore when typing in an input/button/checkbox
+      const tag = (e.target as HTMLElement).tagName;
+      if (["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(tag)) return;
+      if (e.target instanceof HTMLInputElement && e.target.type === "checkbox") return;
       if (e.key === "t") {
         setCurrentDate(new Date());
       } else if (e.key === "h") {
@@ -107,7 +111,7 @@ export default function CalendarView() {
       } else if (e.key === "3") {
         setViewMode("month");
       } else if (e.key === "r") {
-        regenerate();
+        regeneratePreview();
       } else if (e.key === "n") {
         setShowNewModal(true);
       }
@@ -135,6 +139,19 @@ export default function CalendarView() {
       setStatusMsg("Schedule recalculated.");
     } catch (err: any) {
       setStatusMsg("Regen failed: " + err.message);
+    }
+    setLoading(false);
+  };
+
+  const regeneratePreview = async () => {
+    setLoading(true);
+    setStatusMsg("Previewing schedule changes...");
+    try {
+      await api.schedule.preview();
+      await loadSchedule();
+      setStatusMsg("Preview regenerated (not applied).");
+    } catch (err: any) {
+      setStatusMsg("Preview failed: " + err.message);
     }
     setLoading(false);
   };
@@ -366,10 +383,10 @@ export default function CalendarView() {
               <strong>[l]</strong> NEXT
             </button>
             <button
-              onClick={regenerate}
+              onClick={regeneratePreview}
               disabled={loading}
               className="px-1.5 py-0.5 bg-[#151922] hover:bg-[#202635] text-[#71d99b] rounded border border-[#232733] flex items-center gap-1"
-              title="Regenerate Schedule [r]"
+              title="Regenerate Preview [r]"
             >
               <span>⟳</span> REGEN <span className="text-zinc-500">[r]</span>
             </button>
@@ -482,7 +499,7 @@ export default function CalendarView() {
               </div>
 
               {/* Scrollable Timeline Grid */}
-              <div ref={scrollRef} className="flex-1 overflow-y-auto relative bg-[#0e1117]">
+              <div className="flex-1 overflow-y-auto relative bg-[#0e1117]">
                 {/* Live Scrubber Line (current week only) */}
                 {isCurrentWeek && scrubberTop >= 0 && scrubberTop <= TOTAL_HOURS * HOUR_HEIGHT && (
                   <div
@@ -664,13 +681,17 @@ export default function CalendarView() {
 
           {/* ==================== MONTH VIEW ==================== */}
           {viewMode === "month" && (
-            <div className="flex-1 grid grid-cols-7 grid-rows-6 gap-px bg-[#232733] overflow-y-auto p-px">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
-                <div key={i} className="bg-[#131720] text-center py-1 text-[10px] font-bold text-zinc-400">
-                  {d}
-                </div>
-              ))}
-              {monthDays.map((d, i) => {
+            <div className="flex-1 flex flex-col gap-px bg-[#232733] overflow-y-auto p-px">
+              {/* Weekday header row outside the 6-row grid flow */}
+              <div className="grid grid-cols-7 gap-px bg-[#131720]">
+                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
+                  <div key={i} className="bg-[#131720] text-center py-1 text-[10px] font-bold text-zinc-400">
+                    {d}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 grid-rows-6 gap-px bg-[#232733] overflow-y-auto p-px">
+                {monthDays.map((d, i) => {
                 const dayKey = format(d, "yyyy-MM-dd");
                 const dayBlocks = visibleBlocks.filter((b) => b.start_dt.slice(0, 10) === dayKey);
                 const active = isToday(d);
@@ -713,6 +734,7 @@ export default function CalendarView() {
                   </div>
                 );
               })}
+            </div>
             </div>
           )}
         </section>

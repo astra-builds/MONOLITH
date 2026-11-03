@@ -25,7 +25,7 @@ def get_task(tid: int):
 
 @router.patch("/{tid}")
 def update_task(tid: int, t: TaskUpdate):
-    data = {k:v for k,v in t.model_dump().items() if v is not None}
+    data = t.model_dump(exclude_unset=True)
     r = db.update_task(tid, data)
     if not r: raise HTTPException(404)
     return r

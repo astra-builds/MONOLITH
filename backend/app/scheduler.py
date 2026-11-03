@@ -62,9 +62,9 @@ def fmt_dt(d):
 
 
 def parse_time(s):
-    """Parse 'HH:MM' into ``(hour, minute)`` ints."""
-    h, m = s.split(":")
-    return int(h), int(m)
+    """Parse 'HH:MM' or 'HH:MM:SS' into ``(hour, minute)`` ints."""
+    parts = s.split(":")
+    return int(parts[0]), int(parts[1])
 
 
 # ---------------------------------------------------------------------------
@@ -718,9 +718,8 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
             _update_day_last_end(day, e)
             last_end = e
 
-            # Rule 12 — advance earliest to next day to spread work, unless
-            # the task is not splittable (single session anyway).
-            if t.get("splittable", True) and si < len(sessions) - 1:
+            # Rule 12 — advance earliest to next day to spread work.
+            if si < len(sessions) - 1:
                 cur_earliest = datetime(day.year, day.month, day.day, wh_s_h, wh_s_m) + timedelta(days=1)
             else:
                 # Same day is fine, break gap handled by find_slot

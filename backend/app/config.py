@@ -4,7 +4,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
-DB_PATH = DATA_DIR / "monolith.db"
+DB_PATH = Path(os.environ.get("MONOLITH_DB", DATA_DIR / "monolith.db"))
 
 DEFAULT_SETTINGS = {
     "timezone": "UTC",
@@ -17,4 +17,5 @@ DEFAULT_SETTINGS = {
     "ai_provider": "none",
     "ai_model": "",
     "ai_api_key": "",
+    "ai_autonomy": "assisted",
 }

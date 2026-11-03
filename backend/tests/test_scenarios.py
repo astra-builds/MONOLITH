@@ -56,14 +56,19 @@ def test_scenario_a_course_scheduling():
     assert len(task_blocks) == 20
 
     # Verify each is on Saturday and strictly ordered in time
+    saturdays = set()
     for i in range(len(task_blocks)):
         b = task_blocks[i]
         start_dt = datetime.fromisoformat(b["start_dt"])
         assert start_dt.weekday() == 5, f"Block {b['title']} scheduled on weekday {start_dt.weekday()}, expected 5 (Sat)"
+        saturdays.add(start_dt.date())
         if i > 0:
             prev_b = task_blocks[i - 1]
             prev_start = datetime.fromisoformat(prev_b["start_dt"])
             assert start_dt > prev_start, f"Block {b['title']} not chronologically after {prev_b['title']}"
+
+    # Exactly one block per distinct Saturday (cadence check — Scenario A requirement)
+    assert len(saturdays) == 20, f"Expected 20 distinct Saturdays, got {len(saturdays)}"
 
     # Verify completion date calculation
     last_task = tasks[-1]
@@ -361,4 +366,200 @@ def test_offline_natural_language_parser():
     t2 = applied_data["tasks"][1]
     t1 = applied_data["tasks"][0]
     assert t2["dependencies"] == [t1["id"]]
+
+
+# ---------------- Regression tests (Phase 4 Step 4.3) ----------------
+
+def test_apply_no_duplication():
+    """B2: Completing a block then applying twice must not duplicate blocks."""
+    db.reset_db()
+    p = db.create_project({"name": "Course", "kind": "course"})
+    t = db.create_task({
+        "project_id": p["id"],
+        "title": "Session 1",
+        "estimated_minutes": 60,
+        "remaining_minutes": 60,
+        "splittable": False,
+        "preferred_days": [5],
+        "status": "todo",
+    })
+    # Generate schedule
+    client.post("/schedule/apply")
+    blocks_after_first = db.list_blocks()
+    task_blocks = [b for b in blocks_after_first if b.get("task_id") == t["id"]]
+    assert len(task_blocks) == 1
+
+    # Complete the task (marks its blocks completed)
+    client.post(f"/tasks/{t['id']}/complete")
+
+    # Apply twice
+    client.post("/schedule/apply")
+    client.post("/schedule/apply")
+
+    blocks_after = db.list_blocks()
+    task_blocks_after = [b for b in blocks_after if b.get("task_id") == t["id"]]
+    assert len(task_blocks_after) == 1, f"Expected 1 block, got {len(task_blocks_after)}: {task_blocks_after}"
+
+
+def test_pre_commitment_gap_usage():
+    """G1: A free gap before a commitment can be filled."""
+    db.reset_db()
+    # A commitment at 10:00-11:00 on Monday; a task should fill 09:00-10:00
+    settings = {
+        "working_days": [0, 1, 2, 3, 4, 5],
+        "working_start": "09:00",
+        "working_end": "18:00",
+        "max_daily_minutes": 480,
+        "min_break_minutes": 15,
+    }
+    commitments = [{
+        "id": 1, "title": "Class", "tag": "university",
+        "recurrence": "weekly", "days_of_week": [0],
+        "start_time": "10:00", "end_time": "11:00",
+    }]
+    tasks = [{
+        "id": 1, "title": "Pre-class review",
+        "remaining_minutes": 60, "priority": 1,
+        "preferred_days": [0], "deadline": None,
+        "dependencies": [], "status": "todo",
+        "splittable": False, "flexible": True,
+        "min_session_minutes": 60, "max_session_minutes": 60,
+    }]
+    # Find next Monday
+    today = date.today()
+    days_ahead = (0 - today.weekday()) % 7
+    target_monday = today + timedelta(days=days_ahead)
+    blocks, unscheduled = schedule(
+        tasks, commitments, settings, [], horizon_days=days_ahead + 1,
+    )
+    task_blocks = [b for b in blocks if b.get("task_id") == 1]
+    assert len(unscheduled) == 0, f"Task should be schedulable: {unscheduled}"
+    assert len(task_blocks) == 1
+    start = datetime.fromisoformat(task_blocks[0]["start_dt"])
+    assert start.date() == target_monday
+    assert start.hour == 9 and start.minute == 0, f"Expected 09:00, got {start.time()}"
+
+
+def test_utc5_missed_marking():
+    """R5/UTC: reschedule-missed compares naive-local, not UTC-aware now."""
+    db.reset_db()
+    p = db.create_project({"name": "Test", "kind": "course"})
+    t = db.create_task({
+        "project_id": p["id"],
+        "title": "Study Session",
+        "estimated_minutes": 60,
+        "remaining_minutes": 0,
+        "splittable": False,
+    })
+    # A block ending 3 hours ago (naive local)
+    past_start = (datetime.now() - timedelta(hours=3)).isoformat()
+    past_end = (datetime.now() - timedelta(hours=2)).isoformat()
+    db.create_block({
+        "task_id": t["id"], "title": "Study Session",
+        "start_dt": past_start, "end_dt": past_end,
+        "status": "scheduled", "locked": False,
+    })
+    res = client.post("/schedule/reschedule-missed")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["missed_count"] == 1
+    updated_t = db.get_task(t["id"])
+    assert updated_t["remaining_minutes"] == 60
+
+
+def test_patch_null_clearing():
+    """R1: PATCH with explicit null should clear deadline/target dates."""
+    db.reset_db()
+    # Create task with a deadline
+    t = db.create_task({
+        "title": "Task with deadline",
+        "estimated_minutes": 60,
+        "remaining_minutes": 60,
+        "deadline": "2026-12-31",
+        "status": "todo",
+    })
+    assert t["deadline"] == "2026-12-31"
+    # Clear the deadline via PATCH null
+    res = client.patch(f"/tasks/{t['id']}", json={"deadline": None})
+    assert res.status_code == 200
+    assert res.json()["deadline"] is None
+
+
+def test_import_400_on_bad_payload():
+    """R3: import_all with bad payload returns 400, not 500, and doesn't wipe first."""
+    db.reset_db()
+    # Seed something first
+    db.create_project({"name": "Existing", "kind": "project"})
+    assert len(db.list_projects()) == 1
+    # Bad payload: missing required title in project
+    bad = {"projects": [{"name": None}]}
+    res = client.post("/import", json=bad)
+    assert res.status_code == 400, f"Expected 400, got {res.status_code}: {res.text}"
+    # Data should still be there (not wiped before validation)
+    assert len(db.list_projects()) == 1
+
+
+def test_skip_refund():
+    """G4: Skip refunds block minutes back to the task."""
+    db.reset_db()
+    p = db.create_project({"name": "Course", "kind": "course"})
+    t = db.create_task({
+        "project_id": p["id"],
+        "title": "Session 1",
+        "estimated_minutes": 60,
+        "remaining_minutes": 60,
+        "splittable": False,
+        "preferred_days": [5],
+        "status": "todo",
+    })
+    client.post("/schedule/apply")
+    task = db.get_task(t["id"])
+    # Block created but remaining_minutes unchanged by scheduler
+    assert task["remaining_minutes"] == 60
+    # Skip the task → refund block minutes back
+    client.post(f"/tasks/{t['id']}/skip")
+    task = db.get_task(t["id"])
+    assert task["remaining_minutes"] == 120, f"Expected refund to 120 min, got {task['remaining_minutes']}"
+
+
+def test_move_locks_block():
+    """R2: /move sets locked=True so next regen preserves it."""
+    db.reset_db()
+    p = db.create_project({"name": "Course", "kind": "course"})
+    t = db.create_task({
+        "project_id": p["id"],
+        "title": "Session 1",
+        "estimated_minutes": 60,
+        "remaining_minutes": 60,
+        "splittable": False,
+        "preferred_days": [5],
+        "status": "todo",
+    })
+    client.post("/schedule/apply")
+    blocks = db.list_blocks()
+    task_block = next(b for b in blocks if b.get("task_id") == t["id"])
+    assert task_block["locked"] == 0
+
+    # Move it
+    new_start = "2026-11-07T14:00:00"
+    new_end = "2026-11-07T15:00:00"
+    res = client.post(
+        f"/schedule/blocks/{task_block['id']}/move",
+        params={"start_dt": new_start, "end_dt": new_end},
+    )
+    assert res.status_code == 200
+    updated = res.json()
+    assert updated["locked"] == 1
+    assert updated["start_dt"] == new_start
+
+
+def test_offline_parser_clarifications_list():
+    """G7b: Offline parser returns clarifications as a consumable list."""
+    db.reset_db()
+    res = client.post("/ai/extract", json={"text": "course AI"})
+    assert res.status_code == 200
+    data = res.json()
+    assert "proposal" in data
+    assert "clarifications" in data["proposal"]
+    assert isinstance(data["proposal"]["clarifications"], list)
 
