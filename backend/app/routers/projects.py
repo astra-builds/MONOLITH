@@ -94,13 +94,21 @@ def generate_sessions(pid: int, req: CourseGenerateRequest):
 
         deps: list[int] = [prev_task_id] if prev_task_id is not None else []
 
+        # Anchor the first session to start_date. Drop the per-task deadline
+        # stamp; apply the project deadline only to the last session.
+        task_deadline = None
+        if i == 0 and req.start_date:
+            task_deadline = req.start_date
+        elif i == block_count - 1 and req.deadline:
+            task_deadline = req.deadline
+
         task_data = {
             "project_id": pid,
             "title": title,
             "description": "",
             "estimated_minutes": block_minutes,
             "remaining_minutes": block_minutes,
-            "deadline": req.deadline,
+            "deadline": task_deadline,
             "priority": 3,
             "preferred_days": [req.day_of_week],
             "preferred_start": None,
@@ -122,7 +130,8 @@ def generate_sessions(pid: int, req: CourseGenerateRequest):
         "session_minutes": req.session_minutes,
     })
 
-    sessions_per_week = 1 if req.frequency == "weekly" else 1
+    # When splitting into half-sessions, two blocks land per week.
+    sessions_per_week = 2 if req.half else 1
     estimated_weeks = math.ceil(block_count / sessions_per_week)
 
     return {

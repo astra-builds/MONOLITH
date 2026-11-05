@@ -363,21 +363,21 @@ export default function CalendarView() {
           <div className="flex items-center gap-1 text-zinc-400">
             <button
               onClick={() => navigate(-1)}
-              className="px-1.5 py-0.5 bg-[#151922] hover:bg-[#202635] text-zinc-300 rounded border border-[#232733]"
+              className="px-2 py-1 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 rounded border border-[#232733]"
               title="Previous [h]"
             >
               <strong>[h]</strong> PREV
             </button>
             <button
               onClick={() => setCurrentDate(new Date())}
-              className="px-1.5 py-0.5 bg-[#151922] hover:bg-[#202635] text-[#c5ff42] rounded border border-[#232733] font-bold"
+              className="px-2 py-1 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-[#c5ff42] rounded border border-[#232733] font-bold"
               title="Today [t]"
             >
               <strong>[t]</strong> TODAY
             </button>
             <button
               onClick={() => navigate(1)}
-              className="px-1.5 py-0.5 bg-[#151922] hover:bg-[#202635] text-zinc-300 rounded border border-[#232733]"
+              className="px-2 py-1 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 rounded border border-[#232733]"
               title="Next [l]"
             >
               <strong>[l]</strong> NEXT
@@ -385,14 +385,14 @@ export default function CalendarView() {
             <button
               onClick={regeneratePreview}
               disabled={loading}
-              className="px-1.5 py-0.5 bg-[#151922] hover:bg-[#202635] text-[#71d99b] rounded border border-[#232733] flex items-center gap-1"
+              className="px-2 py-1 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-[#71d99b] rounded border border-[#232733] flex items-center gap-1"
               title="Regenerate Preview [r]"
             >
               <span>⟳</span> REGEN <span className="text-zinc-500">[r]</span>
             </button>
             <button
               onClick={() => setShowNewModal(true)}
-              className="px-2 py-0.5 bg-[#253245] hover:bg-[#c5ff42] hover:text-black text-[#c5ff42] font-bold rounded border border-[#232733] flex items-center gap-1 transition-colors"
+              className="px-2 py-1 btn-focus btn-active bg-[#253245] hover:bg-[#c5ff42] hover:text-black text-[#c5ff42] font-bold rounded border border-[#232733] flex items-center gap-1 transition-colors"
               title="Add New Block [n]"
             >
               <span>+ NEW BLOCK</span> <span className="opacity-70 text-[9px]">[n]</span>
@@ -560,9 +560,18 @@ export default function CalendarView() {
                             return (
                               <div
                                 key={b.id}
+                                tabIndex={0}
+                                role="button"
+                                aria-label={b.title}
                                 onClick={() => setSelectedBlock(b)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    setSelectedBlock(b);
+                                  }
+                                }}
                                 style={{ top: `${topPx}px`, height: `${heightPx}px` }}
-                                className={`absolute left-0.5 right-0.5 rounded p-1 flex flex-col justify-between cursor-pointer border transition-all ${getBlockStyle(
+                                className={`absolute left-0.5 right-0.5 rounded p-1 flex flex-col justify-between cursor-pointer border transition-all chip-focus ${getBlockStyle(
                                   b
                                 )}`}
                                 title={`${b.title} (${format(start, "HH:mm")} - ${format(
@@ -634,8 +643,17 @@ export default function CalendarView() {
                     return (
                       <div
                         key={b.id}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={b.title}
                         onClick={() => setSelectedBlock(b)}
-                        className={`p-2.5 rounded border cursor-pointer flex items-center justify-between ${getBlockStyle(
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedBlock(b);
+                          }
+                        }}
+                        className={`p-2.5 rounded border cursor-pointer flex items-center justify-between chip-focus ${getBlockStyle(
                           b
                         )}`}
                       >
@@ -698,11 +716,21 @@ export default function CalendarView() {
                 return (
                   <div
                     key={i}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Day ${format(d, "EEEE d MMMM")}`}
                     onClick={() => {
                       setCurrentDate(d);
                       setViewMode("day");
                     }}
-                    className={`bg-[#0e1117] p-1 flex flex-col justify-between cursor-pointer hover:bg-[#161a22] transition-colors ${
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setCurrentDate(d);
+                        setViewMode("day");
+                      }
+                    }}
+                    className={`bg-[#0e1117] p-1 flex flex-col justify-between cursor-pointer hover:bg-[#161a22] transition-colors chip-focus ${
                       active ? "ring-1 ring-[#c5ff42] bg-[#141d14]" : ""
                     }`}
                   >
@@ -785,25 +813,25 @@ export default function CalendarView() {
                   <div className="grid grid-cols-2 gap-1.5 pt-1">
                     <button
                       onClick={() => markComplete(selectedBlock)}
-                      className="py-1 bg-[#172514] hover:bg-[#20361c] text-[#c5ff42] border border-[#3b661d] font-bold text-[9px] rounded"
+                      className="py-1.5 px-2 btn-focus btn-active bg-[#172514] hover:bg-[#20361c] text-[#c5ff42] border border-[#3b661d] font-bold text-[9px] rounded"
                     >
                       ✓ COMPLETE
                     </button>
                     <button
                       onClick={() => markSkip(selectedBlock)}
-                      className="py-1 bg-[#1c1c24] hover:bg-[#282835] text-zinc-300 border border-[#232733] text-[9px] rounded"
+                      className="py-1.5 px-2 btn-focus btn-active bg-[#1c1c24] hover:bg-[#282835] text-zinc-300 border border-[#232733] text-[9px] rounded"
                     >
                       ↷ SKIP
                     </button>
                     <button
                       onClick={() => moveBlockDays(selectedBlock, 1)}
-                      className="py-1 bg-[#151922] hover:bg-[#202635] text-zinc-300 border border-[#232733] text-[9px] rounded"
+                      className="py-1.5 px-2 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 border border-[#232733] text-[9px] rounded"
                     >
                       ◷ +1 DAY
                     </button>
                     <button
                       onClick={() => moveBlockDays(selectedBlock, -1)}
-                      className="py-1 bg-[#151922] hover:bg-[#202635] text-zinc-300 border border-[#232733] text-[9px] rounded"
+                      className="py-1.5 px-2 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 border border-[#232733] text-[9px] rounded"
                     >
                       ◶ -1 DAY
                     </button>
@@ -813,13 +841,13 @@ export default function CalendarView() {
                           .updateBlock(selectedBlock.id, { locked: !selectedBlock.locked })
                           .then(() => loadSchedule())
                       }
-                      className="py-1 bg-[#151922] hover:bg-[#202635] text-zinc-300 border border-[#232733] text-[9px] rounded"
+                      className="py-1.5 px-2 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 border border-[#232733] text-[9px] rounded"
                     >
                       {selectedBlock.locked ? "🔓 UNLOCK" : "🔒 LOCK TIME"}
                     </button>
                     <button
                       onClick={() => deleteBlock(selectedBlock)}
-                      className="py-1 bg-[#261418] hover:bg-[#381a20] text-[#ff7d8d] border border-[#7d222e] text-[9px] rounded"
+                      className="py-1.5 px-2 btn-focus btn-active bg-[#261418] hover:bg-[#381a20] text-[#ff7d8d] border border-[#7d222e] text-[9px] rounded"
                     >
                       ✕ DELETE
                     </button>

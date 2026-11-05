@@ -54,7 +54,7 @@ export default function Waybar({
               <button
                 key={ws.id}
                 onClick={() => onViewChange(ws.id)}
-                className={`px-1.5 py-0.5 font-bold text-[9px] rounded-sm transition-colors ${
+                className={`px-2 py-1 btn-focus btn-active font-bold text-[9px] rounded-sm transition-colors ${
                   active
                     ? "bg-[#8b61c9] text-white shadow"
                     : "text-zinc-400 hover:text-zinc-200"

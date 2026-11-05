@@ -22,7 +22,19 @@ def seed_demo_data():
 
     **Scenario B** — *Fixed commitments*: four weekly time-blocks representing
     typical university and personal obligations.
+
+    Idempotent: if the demo project already exists, seeding is skipped.
     """
+    # Idempotent re-run: skip if the demo project already exists (R4).
+    existing = [p for p in db.list_projects() if p["name"].casefold() == "agentic ai course"]
+    if existing:
+        return {
+            "ok": True,
+            "message": "Demo data already seeded; skipping.",
+            "project": existing[0],
+            "tasks_created": 0,
+            "commitments_created": 0,
+        }
 
     # ------------------------------------------------------------------
     # Scenario A: Course project
@@ -178,5 +190,39 @@ def import_data(payload: ImportRequest):
             raise HTTPException(status_code=400, detail="Schedule block missing required field: title")
         if not b.get("start_dt") or not b.get("end_dt"):
             raise HTTPException(status_code=400, detail="Schedule block missing required field: start_dt/end_dt")
-    counts = db.import_all(data)
+
+    # --- Pre-validate FK ids / required keys within the payload before wipe ---
+    # (R3): never 500 after reset_db — reject dangling references up front so
+    # the existing data is never destroyed by an invalid import.
+    project_ids = {p.get("id") for p in data.get("projects", []) if p.get("id") is not None}
+    task_ids = {t.get("id") for t in data.get("tasks", []) if t.get("id") is not None}
+    commitment_ids = {c.get("id") for c in data.get("commitments", []) if c.get("id") is not None}
+    for m in data.get("milestones", []):
+        if m.get("project_id") is not None and m["project_id"] not in project_ids:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Milestone {m.get('title')} references unknown project {m['project_id']}",
+            )
+    for t in data.get("tasks", []):
+        if t.get("project_id") is not None and t["project_id"] not in project_ids:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Task {t.get('title')} references unknown project {t['project_id']}",
+            )
+    for b in data.get("schedule_blocks", []):
+        if b.get("task_id") is not None and b["task_id"] not in task_ids:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Block {b.get('title')} references unknown task {b['task_id']}",
+            )
+        if b.get("commitment_id") is not None and b["commitment_id"] not in commitment_ids:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Block {b.get('title')} references unknown commitment {b['commitment_id']}",
+            )
+
+    try:
+        counts = db.import_all(data)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Import failed: {exc}") from exc
     return {"ok": True, "imported": counts}

@@ -50,5 +50,19 @@ Backup by copying that file. Export JSON via `GET /export`.
 ```bash
 cd backend && .venv/bin/pytest -q
 ```
+
+## Development phases
+
+Remaining work is tracked in `action_plan.txt`, organized by phase:
+
+- **Phase 0** — Secret + safety hygiene (API key masking, CORS).
+- **Phase 1** — Scheduler correctness (dedupe, gap filling, skip refunds, clock hygiene).
+- **Phase 2** — Courses / generator / commitments API (idempotent seed, import validation, migration shim).
+- **Phase 3** — Frontend bug fixes (refine loop, error banner, TasksView inputs, preview rename).
+- **Phase 4** — Reliability (this section): temp-DB test fixture, strengthened scenarios, regression tests.
+
+Run the backend suite (30 tests, temp DB — never mutates `backend/data/monolith.db`):
+
+```bash
+cd backend && .venv/bin/pytest -q
 ```
->>>>>>> origin/main

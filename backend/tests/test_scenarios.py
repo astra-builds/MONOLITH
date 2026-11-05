@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, json, tempfile, sqlite3
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import pytest
@@ -562,4 +562,88 @@ def test_offline_parser_clarifications_list():
     assert "proposal" in data
     assert "clarifications" in data["proposal"]
     assert isinstance(data["proposal"]["clarifications"], list)
+
+
+# ---------------- Phase 4 regression tests ----------------
+
+def test_regression_b1_non_splittable_separate_days():
+    """B1: a non-splittable task with a dependency advances to the next working day."""
+    settings = {
+        "working_days": [0, 1, 2, 3, 4],
+        "working_start": "09:00",
+        "working_end": "18:00",
+        "max_daily_minutes": 480,
+        "min_break_minutes": 15,
+    }
+    task = {
+        "remaining_minutes": 60, "priority": 3, "preferred_days": [],
+        "deadline": None, "dependencies": [], "status": "todo",
+        "splittable": False, "flexible": True,
+        "min_session_minutes": 60, "max_session_minutes": 60,
+        "preferred_start": None, "preferred_end": None, "project_id": None,
+    }
+    tasks = [
+        {**task, "id": 1, "title": "A", "dependencies": []},
+        {**task, "id": 2, "title": "B", "dependencies": [1]},
+    ]
+    blocks, unsched = schedule(tasks, [], settings, [], horizon_days=14)
+    assert unsched == [], unsched
+    a = next(b for b in blocks if b.get("task_id") == 1)
+    b = next(b for b in blocks if b.get("task_id") == 2)
+    a_start = datetime.fromisoformat(a["start_dt"])
+    b_start = datetime.fromisoformat(b["start_dt"])
+    assert a_start.date() != b_start.date(), "dependent non-splittable task must move to next working day"
+    assert b_start.weekday() in settings["working_days"]
+
+
+def test_regression_b3_no_key_leak():
+    """B3: /settings and /export never return ai_api_key plaintext."""
+    db.reset_db()
+    db.save_settings({**db.get_settings(), "ai_api_key": "sk-test-secret-12345"})
+    s = client.get("/settings").json()
+    assert s["ai_api_key"] == "********", s.get("ai_api_key")
+    e = client.get("/export").json()
+    data = json.loads(e["settings"][0]["data"])
+    assert data["ai_api_key"] == "********", data.get("ai_api_key")
+
+    # Unset key -> empty string, never plaintext.
+    db.save_settings({**db.get_settings(), "ai_api_key": ""})
+    s2 = client.get("/settings").json()
+    assert s2["ai_api_key"] == ""
+
+
+def test_regression_r4_seed_idempotent():
+    """R4: /demo/seed is idempotent — skip seeds whose project already exists."""
+    db.reset_db()
+    r1 = client.post("/demo/seed")
+    assert r1.status_code == 200
+    assert len(db.list_projects()) == 1
+    assert len(db.list_tasks()) == 20
+
+    r2 = client.post("/demo/seed")
+    assert r2.status_code == 200
+    assert r2.json()["tasks_created"] == 0
+    assert len(db.list_projects()) == 1
+    assert len(db.list_tasks()) == 20  # no duplicates
+
+
+def test_regression_r5_migration_shim():
+    """R5: _ensure_columns adds missing columns to an existing table without wiping."""
+    fd, path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    try:
+        conn = sqlite3.connect(path)
+        conn.row_factory = sqlite3.Row
+        # Simulate an older schema: tasks table missing several columns.
+        conn.execute("CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL)")
+        conn.commit()
+        db._ensure_columns(conn)
+        cols = {row["name"] for row in conn.execute("PRAGMA table_info(tasks)")}
+        assert "id" in cols
+        assert "preferred_end" in cols
+        assert "remaining_minutes" in cols
+        assert "deadline" in cols
+        conn.close()
+    finally:
+        os.unlink(path)
 

@@ -31,7 +31,7 @@ export default function FooterBar({
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="hidden sm:inline text-zinc-500">[t] today · [h/l] nav · [1-3] views</span>
+        <span className="hidden sm:inline text-zinc-500">[t] today · [h/l] nav · [1-5] views</span>
         <span className="text-[#232733] hidden sm:inline">|</span>
         <span>zoom: <strong className="text-zinc-200">1h/56px</strong></span>
         <span className="text-[#232733]">|</span>

@@ -13,11 +13,11 @@ app.add_middleware(
         "http://localhost:5174",
         "http://127.0.0.1:5174",
     ],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# CORS: explicit pinned origins only; no credentials (local API, no cookie auth).
 @app.on_event("startup")
 def startup():
     db.init_db()

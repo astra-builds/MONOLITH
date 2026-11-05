@@ -19,7 +19,12 @@ def _gen(preview=True, apply=False):
     today = date.today()
     for b in existing:
         sd = parse_dt(b["start_dt"])
-        if b.get("locked") or b.get("status") in ("completed","skipped") or (sd and sd.date() < today):
+        # Preserve locked / completed / skipped blocks and anything in the past.
+        if b.get("locked") or b.get("status") in ("completed", "skipped") or (sd and sd.date() < today):
+            preserved.append(b)
+        # Preserve today's scheduled (in-progress) blocks immutably for the
+        # remainder of the day — neither deleted nor double-booked (R5).
+        elif sd and sd.date() == today and b.get("status") == "scheduled":
             preserved.append(b)
     # remove flexible future blocks if applying
     new_blocks, unscheduled = run_schedule(tasks, commitments, settings, preserved, projects, horizon_days=180)

@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-[#080b0d]" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>λ:Routine // AI Obsidian Workstation</title>
+<!-- Tailwind CSS CDN with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Fonts: JetBrains Mono and Fira Code for authentic cyber-workstation feel -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Custom Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace', 'ui-monospace'],
+          },
+          colors: {
+            obsidian: {
+              950: '#06090a',
+              900: '#090d0f',
+              850: '#0d1215',
+              800: '#12181c',
+              750: '#182025',
+              700: '#202a30',
+              600: '#2f3e46',
+            },
+            cyber: {
+              green: '#22c55e',
+              neon: '#39ff14',
+              cyan: '#06b6d4',
+              purple: '#a855f7',
+              amber: '#f59e0b',
+              red: '#ef4444'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom Styles for Scrollbars, Grid Lines, and HUD Effects -->
+<style data-purpose="custom-hud-styles">
+    /* Subtle custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d0f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f2937;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #374151;
+    }
+
+    /* Subdued grid background */
+    .cyber-grid {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+
+    /* Hourly calendar row guidelines */
+    .cal-hour-row {
+      height: 58px;
+    }
+  </style>
+</head>
+<body class="h-full text-slate-300 font-mono select-none antialiased flex flex-col bg-[#080b0d] overflow-hidden">
+<!-- BEGIN: TopApplicationBar -->
+<header class="h-10 bg-obsidian-950 border-b border-obsidian-750 flex items-center justify-between px-3 text-xs tracking-wider shrink-0 z-40 select-none">
+<!-- Window indicators & Workspace Breadcrumb -->
+<div class="flex items-center space-x-3">
+<!-- Hyprland / Terminal Window Controls -->
+<div class="flex items-center space-x-1.5 pr-2 border-r border-obsidian-700/60">
+<span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 hover:opacity-100 transition inline-block"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 hover:opacity-100 transition inline-block"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 hover:opacity-100 transition inline-block"></span>
+</div>
+<!-- App Tabs -->
+<nav class="flex items-center space-x-1">
+<button class="px-2.5 py-1 rounded bg-obsidian-800 text-cyber-neon border border-cyber-neon/40 font-semibold shadow-[0_0_10px_rgba(57,255,20,0.15)] flex items-center gap-1.5">
+<span class="text-[10px] text-emerald-400 opacity-80">1:</span>cal
+        </button>
+<button class="px-2.5 py-1 rounded hover:bg-obsidian-800 text-slate-400 hover:text-slate-200 transition">
+<span class="text-[10px] text-slate-500">2:</span>projects
+        </button>
+<button class="px-2.5 py-1 rounded hover:bg-obsidian-800 text-slate-400 hover:text-slate-200 transition">
+<span class="text-[10px] text-slate-500">3:</span>tasks
+        </button>
+<button class="px-2.5 py-1 rounded hover:bg-obsidian-800 text-slate-400 hover:text-slate-200 transition">
+<span class="text-[10px] text-slate-500">4:</span>routines
+        </button>
+<button class="px-2.5 py-1 rounded hover:bg-obsidian-800 text-slate-400 hover:text-slate-200 transition">
+<span class="text-[10px] text-slate-500">5:</span>config
+        </button>
+</nav>
+<!-- Active File Path Target -->
+<div class="hidden lg:flex items-center gap-1 text-[11px] text-slate-400 bg-obsidian-900 px-2 py-0.5 rounded border border-obsidian-750">
+<span class="text-cyber-green font-bold">λ</span>
+<span class="text-slate-300">~/dotfiles/routine.sh</span>
+</div>
+</div>
+<!-- Live Telemetry & Timestamp -->
+<div class="flex items-center space-x-3 text-[11px]">
+<!-- System Date/Time Display -->
+<div class="flex items-center gap-2 bg-obsidian-900 border border-obsidian-750 px-2.5 py-0.5 rounded font-medium">
+<span class="text-slate-400">2026-11-05</span>
+<span class="text-cyber-cyan font-semibold">Thu 19:54:00</span>
+<span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] bg-emerald-950/80 text-emerald-400 border border-emerald-700/50">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span> 68% DAY DONE
+        </span>
+</div>
+<!-- Quick Command Mode / Seed Demo -->
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 bg-obsidian-850 hover:bg-obsidian-750 border border-obsidian-700 rounded text-slate-300 hover:text-white transition flex items-center gap-1 text-[10px]">
+<span class="text-cyber-purple font-bold">⌘K</span> PLANNER
+        </button>
+<button class="px-2 py-1 bg-obsidian-850 hover:bg-obsidian-750 border border-obsidian-700 rounded text-cyan-400 hover:text-cyan-300 transition text-[10px]">
+          SEED DEMO
+        </button>
+</div>
+<!-- Live Resource Monitor Status -->
+<div class="hidden xl:flex items-center gap-2 text-slate-400 text-[10px] pl-2 border-l border-obsidian-750">
+<span>CPU <strong class="text-emerald-400 font-semibold">12%</strong></span>
+<span>RAM <strong class="text-cyan-400 font-semibold">4.2G</strong></span>
+<span class="flex items-center gap-1 text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-cyber-green"></span> monolith@local
+        </span>
+</div>
+</div>
+</header>
+<!-- END: TopApplicationBar -->
+<!-- BEGIN: AICommandBar -->
+<section class="bg-obsidian-900 border-b border-obsidian-750 px-4 py-2.5 shrink-0 z-30 shadow-md">
+<div class="max-w-full flex flex-col gap-1.5">
+<!-- Input Field and Action Button -->
+<div class="flex items-center gap-2.5">
+<div class="relative flex-1 flex items-center">
+<span class="absolute left-3.5 text-cyber-neon font-black text-sm tracking-wider flex items-center gap-1 pointer-events-none">
+<span>λ:plan</span>
+</span>
+<input class="w-full h-10 pl-24 pr-24 bg-obsidian-950 border border-obsidian-700 hover:border-obsidian-600 focus:border-cyber-green focus:ring-1 focus:ring-cyber-green text-sm text-slate-200 placeholder-slate-500 rounded font-mono transition outline-none" placeholder="Describe goals, courses, classes, deadlines, or follow-up changes..." type="text" value="Optimize Thursday schedule: allocate 2h deep work for AI Prompting, reschedule lab if conflict arises"/>
+<div class="absolute right-3 flex items-center gap-1.5 text-[11px] text-slate-500">
+<kbd class="px-1.5 py-0.5 bg-obsidian-800 rounded border border-obsidian-700 text-slate-400 text-[10px]">Return</kbd>
+</div>
+</div>
+<!-- Distinct Tactile Execution Button -->
+<button class="h-10 px-6 bg-cyber-neon hover:bg-emerald-400 active:translate-y-0.5 text-obsidian-950 font-bold text-xs uppercase tracking-wider rounded border border-emerald-300 shadow-[0_0_15px_rgba(57,255,20,0.3)] transition flex items-center gap-1.5 shrink-0">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20">
+<path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"></path>
+</svg>
+<span>PLAN</span>
+</button>
+</div>
+<!-- Execution Status & Meta Info -->
+<div class="flex items-center justify-between text-[11px] px-1">
+<div class="flex items-center gap-2 text-slate-400">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-cyber-green"></span>
+<span class="text-slate-300">Plan approved and applied atomically</span>
+<span class="text-slate-500 font-mono text-[10px]">hash: e7a9c31 · 4 constraints satisfied</span>
+</div>
+<div class="flex items-center gap-3 text-slate-400 text-[11px]">
+<span>Prompt Tokens: <span class="text-slate-300">142</span></span>
+<span>Latency: <span class="text-cyber-green">240ms</span></span>
+<span class="text-slate-500">|</span>
+<button class="hover:text-cyber-cyan transition underline underline-offset-2">Inspect Graph Diff</button>
+</div>
+</div>
+</div>
+</section>
+<!-- END: AICommandBar -->
+<!-- BEGIN: TimelineControlsBar -->
+<section class="h-12 bg-obsidian-850 border-b border-obsidian-750 px-3 flex items-center justify-between gap-3 shrink-0 z-20">
+<!-- View Switcher & Date Navigation -->
+<div class="flex items-center gap-2">
+<!-- 1:Day / 2:Week / 3:Month Toggle -->
+<div class="flex items-center bg-obsidian-950 p-0.5 rounded border border-obsidian-750">
+<button class="px-2.5 py-1 text-xs text-slate-400 hover:text-slate-200 rounded transition font-medium">1: DAY</button>
+<button class="px-3 py-1 text-xs bg-obsidian-750 text-cyber-neon rounded font-semibold border border-cyber-neon/30 shadow-sm flex items-center gap-1">
+<span>2: WEEK</span>
+</button>
+<button class="px-2.5 py-1 text-xs text-slate-400 hover:text-slate-200 rounded transition font-medium">3: MONTH</button>
+</div>
+<!-- Active Range Badge -->
+<div class="flex items-center gap-2 bg-obsidian-900 border border-obsidian-700/80 px-2.5 py-1 rounded text-xs">
+<span class="px-1.5 py-0.2 bg-obsidian-800 text-cyber-cyan text-[10px] rounded font-bold border border-cyber-cyan/30">W45</span>
+<span class="font-bold text-slate-200 tracking-tight">Nov 2 — Nov 8, 2026</span>
+</div>
+<!-- Tactile Navigation Controls -->
+<div class="flex items-center gap-1">
+<button class="h-8 px-2.5 bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 hover:text-white border border-obsidian-700 rounded text-xs flex items-center gap-1 transition" title="Previous Week [h]">
+<span class="text-[10px] text-slate-500 font-bold">[h]</span> PREV
+        </button>
+<button class="h-8 px-3 bg-cyber-green/10 hover:bg-cyber-green/20 text-cyber-green hover:text-cyber-neon border border-cyber-green/40 rounded text-xs font-semibold flex items-center gap-1 transition" title="Jump to Today [t]">
+<span class="text-[10px] text-cyber-green/80 font-bold">[t]</span> TODAY
+        </button>
+<button class="h-8 px-2.5 bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 hover:text-white border border-obsidian-700 rounded text-xs flex items-center gap-1 transition" title="Next Week [l]">
+<span class="text-[10px] text-slate-500 font-bold">[l]</span> NEXT
+        </button>
+</div>
+<!-- Action: Regenerate Schedule -->
+<button class="h-8 px-2.5 bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 hover:text-white border border-obsidian-700 rounded text-xs flex items-center gap-1.5 transition">
+<span class="text-cyber-cyan text-[10px] font-bold">@ REGEN</span>
+<span class="text-[10px] text-slate-500">[r]</span>
+</button>
+<!-- Primary Action: New Block -->
+<button class="h-8 px-3.5 bg-emerald-600 hover:bg-emerald-500 text-obsidian-950 font-bold text-xs rounded border border-emerald-400 flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.25)] transition">
+<span>+ NEW BLOCK</span>
+<span class="text-[10px] bg-obsidian-950/30 px-1 rounded text-obsidian-950 font-mono">[n]</span>
+</button>
+</div>
+<!-- Right Side: Stats & Category Filters -->
+<div class="flex items-center gap-3">
+<!-- Mini Load Telemetry -->
+<div class="hidden 2xl:flex items-center gap-3 text-xs bg-obsidian-900/90 px-3 py-1 rounded border border-obsidian-750">
+<span class="text-slate-400">TOTAL: <strong class="text-slate-200">16.0h</strong></span>
+<span class="text-slate-500">|</span>
+<span class="text-slate-400">DEEP WORK: <strong class="text-cyber-cyan">8.5h (53%)</strong></span>
+<span class="text-slate-500">|</span>
+<span class="text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 0 CONFLICTS</span>
+</div>
+<!-- Category Filter Pills -->
+<div class="flex items-center gap-1 bg-obsidian-950 p-0.5 rounded border border-obsidian-750 text-xs">
+<span class="text-[10px] text-slate-500 px-1 font-semibold uppercase">FILTER:</span>
+<button class="px-2 py-0.5 bg-obsidian-750 text-cyber-neon font-bold rounded text-[11px] border border-cyber-neon/30">ALL</button>
+<button class="px-2 py-0.5 text-slate-400 hover:text-slate-200 rounded text-[11px] transition">UNIVERSITY</button>
+<button class="px-2 py-0.5 text-slate-400 hover:text-slate-200 rounded text-[11px] transition">COURSE</button>
+<button class="px-2 py-0.5 text-slate-400 hover:text-slate-200 rounded text-[11px] transition">PROJECT</button>
+<button class="px-2 py-0.5 text-slate-400 hover:text-slate-200 rounded text-[11px] transition">PERSONAL</button>
+</div>
+</div>
+</section>
+<!-- END: TimelineControlsBar -->
+<!-- BEGIN: MainContentSplit (Calendar + Inspector Sidebar) -->
+<main class="flex-1 flex overflow-hidden">
+<!-- LEFT: Calendar View Grid -->
+<div class="flex-1 flex flex-col bg-obsidian-950 overflow-hidden border-r border-obsidian-750">
+<!-- Sub-header: Grid title, Hyprland window tag, & Scrubber status -->
+<div class="h-7 bg-obsidian-900 border-b border-obsidian-750 px-3 flex items-center justify-between text-[11px] shrink-0 text-slate-400">
+<div class="flex items-center gap-2">
+<span class="flex items-center gap-1 text-slate-500 font-bold">
+<span class="text-rose-500">●</span>
+<span class="text-amber-500">●</span>
+<span class="text-emerald-500">●</span>
+</span>
+<span class="text-cyber-green font-semibold">matrix::week-view.hypr</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-slate-500">LAYOUT: <span class="text-slate-300 font-semibold">BSP_TILED</span></span>
+<span class="flex items-center gap-1.5 text-cyber-neon font-semibold">
+<span class="w-2 h-2 rounded-full bg-cyber-neon animate-ping inline-block"></span>
+            LIVE SCRUBBER ACTIVE
+          </span>
+</div>
+</div>
+<!-- Days of Week Header Row -->
+<div class="grid grid-cols-[64px_repeat(7,1fr)] bg-obsidian-900/90 border-b border-obsidian-750 text-xs shrink-0 select-none">
+<!-- UTC Time indicator corner -->
+<div class="py-2 text-center text-slate-500 font-semibold border-r border-obsidian-750/70 text-[11px] flex items-center justify-center">
+          UTC
+        </div>
+<!-- Mon 2 -->
+<div class="py-2 px-2 text-center border-r border-obsidian-750/70 flex flex-col items-center">
+<span class="font-bold text-slate-300">MON 2</span>
+<span class="text-[10px] text-slate-500 font-mono">4.0h / 8h</span>
+</div>
+<!-- Tue 3 -->
+<div class="py-2 px-2 text-center border-r border-obsidian-750/70 flex flex-col items-center">
+<span class="font-bold text-slate-300">TUE 3</span>
+<span class="text-[10px] text-slate-500 font-mono">4.0h / 8h</span>
+</div>
+<!-- Wed 4 -->
+<div class="py-2 px-2 text-center border-r border-obsidian-750/70 flex flex-col items-center">
+<span class="font-bold text-slate-300">WED 4</span>
+<span class="text-[10px] text-slate-500 font-mono">3.0h / 8h</span>
+</div>
+<!-- Thu 5 (TODAY - HIGHLIGHTED) -->
+<div class="py-2 px-2 text-center border-r border-cyber-green/40 bg-cyber-green/5 flex flex-col items-center relative">
+<div class="flex items-center gap-1">
+<span class="font-extrabold text-cyber-neon">THU 5</span>
+<span class="px-1.5 py-0.2 rounded text-[9px] bg-cyber-green text-obsidian-950 font-black">TODAY</span>
+</div>
+<span class="text-[10px] text-cyber-neon/80 font-mono font-semibold">5.0h / 8h</span>
+<!-- Active day bottom glow underline -->
+<div class="absolute bottom-0 inset-x-0 h-0.5 bg-cyber-neon shadow-[0_0_8px_#39ff14]"></div>
+</div>
+<!-- Fri 6 -->
+<div class="py-2 px-2 text-center border-r border-obsidian-750/70 flex flex-col items-center">
+<span class="font-bold text-slate-300">FRI 6</span>
+<span class="text-[10px] text-slate-500 font-mono">3.0h / 8h</span>
+</div>
+<!-- Sat 7 -->
+<div class="py-2 px-2 text-center border-r border-obsidian-750/70 flex flex-col items-center bg-obsidian-950/40">
+<span class="font-bold text-slate-400">SAT 7</span>
+<span class="text-[10px] text-slate-600 font-mono">0.0h / 8h</span>
+</div>
+<!-- Sun 8 -->
+<div class="py-2 px-2 text-center flex flex-col items-center bg-obsidian-950/40">
+<span class="font-bold text-slate-400">SUN 8</span>
+<span class="text-[10px] text-slate-600 font-mono">0.0h / 8h</span>
+</div>
+</div>
+<!-- Scrollable Grid Body (Timetable with Nodes) -->
+<div class="flex-1 overflow-y-auto relative cyber-grid">
+<!-- Relative canvas wrapper: 16 hours (07:00 to 22:00) * 58px = 928px total height -->
+<div class="min-w-[900px] h-[928px] relative grid grid-cols-[64px_repeat(7,1fr)]">
+<!-- Column 0: Time labels -->
+<div class="border-r border-obsidian-750/80 bg-obsidian-900/40 select-none text-[11px] font-mono text-slate-500">
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">07:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">08:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">09:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">10:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">11:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">12:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">13:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">14:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">15:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">16:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">17:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">18:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">19:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">20:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">21:00</div>
+<div class="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">22:00</div>
+</div>
+<!-- Column 1: Mon 2 -->
+<div class="relative border-r border-obsidian-800/80">
+<!-- Background horizontal hour markers -->
+<div class="absolute inset-0 pointer-events-none">
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+</div>
+<!-- Block: CS402 (09:00 - 10:30) -> top: 2*58 = 116px, height: 1.5*58 = 87px -->
+<div class="absolute inset-x-1.5 top-[116px] h-[87px] bg-cyber-purple/15 hover:bg-cyber-purple/25 border-l-4 border-l-cyber-purple border border-cyber-purple/40 rounded p-2 text-xs flex flex-col justify-between cursor-pointer transition hover:scale-[1.01] hover:shadow-[0_0_12px_rgba(168,85,247,0.3)] z-10">
+<div>
+<div class="flex items-center justify-between text-[10px] text-cyber-purple font-bold">
+<span>CS402</span>
+<span>09:00 - 10:30</span>
+</div>
+<div class="font-bold text-slate-200 text-[11px] truncate">Distributed Systems</div>
+</div>
+<div class="text-[10px] text-slate-400 flex items-center justify-between">
+<span>Hall 4-B</span>
+<span class="text-cyber-purple">LEC</span>
+</div>
+</div>
+<!-- Block: Kernel Dotfiles (14:00 - 16:30) -> top: 7*58 = 406px, height: 2.5*58 = 145px -->
+<div class="absolute inset-x-1.5 top-[406px] h-[145px] bg-cyan-950/40 hover:bg-cyan-900/40 border-l-4 border-l-cyber-cyan border border-cyber-cyan/40 rounded p-2 text-xs flex flex-col justify-between cursor-pointer transition hover:scale-[1.01] hover:shadow-[0_0_12px_rgba(6,182,212,0.3)] z-10">
+<div>
+<div class="flex items-center justify-between text-[10px] text-cyber-cyan font-bold">
+<span>PROJECT</span>
+<span>14:00 - 16:30</span>
+</div>
+<div class="font-bold text-slate-200 text-xs">Kernel Dotfiles Automation</div>
+<div class="text-[10px] text-slate-400 mt-1">Refactor Neovim LSP + Hypr bindings</div>
+</div>
+<div class="flex items-center gap-1.5 text-[10px] text-cyan-300">
+<span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan"></span>
+<span>Deep Focus (2.5h)</span>
+</div>
+</div>
+</div>
+<!-- Column 2: Tue 3 -->
+<div class="relative border-r border-obsidian-800/80">
+<div class="absolute inset-0 pointer-events-none">
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+</div>
+<!-- Block: Algorithms PS (10:00 - 12:30) -> top: 3*58 = 174px, height: 2.5*58 = 145px -->
+<div class="absolute inset-x-1.5 top-[174px] h-[145px] bg-cyber-purple/15 hover:bg-cyber-purple/25 border-l-4 border-l-cyber-purple border border-cyber-purple/40 rounded p-2 text-xs flex flex-col justify-between cursor-pointer transition hover:scale-[1.01] hover:shadow-[0_0_12px_rgba(168,85,247,0.3)] z-10">
+<div>
+<div class="flex items-center justify-between text-[10px] text-cyber-purple font-bold">
+<span>CS312</span>
+<span>10:00 - 12:30</span>
+</div>
+<div class="font-bold text-slate-200 text-xs">Algorithms Problem Set</div>
+<div class="text-[10px] text-slate-400 mt-1">Graph Algorithms, Dynamic Programming</div>
+</div>
+<span class="text-[10px] text-purple-300">Assignment due Fri 23:59</span>
+</div>
+<!-- Block: Gym Routine (17:00 - 18:30) -> top: 10*58 = 580px, height: 1.5*58 = 87px -->
+<div class="absolute inset-x-1.5 top-[580px] h-[87px] bg-amber-950/30 hover:bg-amber-900/40 border-l-4 border-l-amber-500 border border-amber-500/40 rounded p-2 text-xs flex flex-col justify-between cursor-pointer transition hover:scale-[1.01] z-10">
+<div>
+<div class="flex items-center justify-between text-[10px] text-amber-400 font-bold">
+<span>FITNESS</span>
+<span>17:00 - 18:30</span>
+</div>
+<div class="font-bold text-slate-200 text-[11px]">Gym: Hypertrophy Upper</div>
+</div>
+<span class="text-[10px] text-slate-400">RPE 8 · 6 exercises</span>
+</div>
+</div>
+<!-- Column 3: Wed 4 -->
+<div class="relative border-r border-obsidian-800/80">
+<div class="absolute inset-0 pointer-events-none">
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+</div>
+<!-- Block: Distributed Systems Lab (09:00 - 12:00) -> top: 2*58 = 116px, height: 3*58 = 174px -->
+<div class="absolute inset-x-1.5 top-[116px] h-[174px] bg-cyber-purple/20 hover:bg-cyber-purple/30 border-l-4 border-l-cyber-purple border border-cyber-purple/50 rounded p-2 text-xs flex flex-col justify-between cursor-pointer transition hover:scale-[1.01] z-10">
+<div>
+<div class="flex items-center justify-between text-[10px] text-cyber-purple font-bold">
+<span>CS402 LAB</span>
+<span>09:00 - 12:00</span>
+</div>
+<div class="font-bold text-slate-100 text-xs mt-0.5">Raft Consensus Cluster</div>
+<div class="text-[10px] text-slate-400 mt-1">Leader election test harnesses in Go</div>
+</div>
+<div class="flex items-center justify-between text-[10px]">
+<span class="text-cyber-green font-semibold">Node Pair #4</span>
+<span class="text-slate-400">Lab Eng-302</span>
+</div>
+</div>
+</div>
+<!-- Column 4: Thu 5 (TODAY - HIGHLIGHTED COLUMN) -->
+<div class="relative border-r border-cyber-green/30 bg-cyber-green/[0.02]">
+<div class="absolute inset-0 pointer-events-none">
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+</div>
+<!-- Block: AI Literacy & Prompt Engineering (11:00 - 13:00) -> top: 4*58 = 232px, height: 2*58 = 116px -->
+<!-- ACTIVE / SELECTED NODE MATCHING REFERENCE SPEC -->
+<div class="absolute inset-x-1.5 top-[232px] h-[116px] bg-cyber-green/15 hover:bg-cyber-green/25 border-l-4 border-l-cyber-neon border-2 border-cyber-green rounded p-2 text-xs flex flex-col justify-between cursor-pointer transition shadow-[0_0_20px_rgba(57,255,20,0.25)] z-20">
+<div>
+<div class="flex items-center justify-between text-[10px] text-cyber-neon font-black">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-cyber-neon animate-pulse"></span>
+                    AI-804
+                  </span>
+<span>11:00 - 13:00</span>
+</div>
+<div class="font-black text-slate-100 text-xs mt-0.5 tracking-tight">AI Literacy &amp; Prompt Engineering</div>
+<div class="text-[10px] text-emerald-300/80 mt-0.5">Evaluating chain-of-thought heuristics</div>
+</div>
+<div class="flex items-center justify-between text-[10px] pt-1 border-t border-emerald-900/60">
+<span class="text-cyber-neon font-bold">SELECTED TARGET</span>
+<span class="text-slate-300">Auditorium C</span>
+</div>
+</div>
+<!-- Block: Scratchpad Dispatcher (14:00 - 16:30) -> top: 7*58 = 406px, height: 2.5*58 = 145px -->
+<div class="absolute inset-x-1.5 top-[406px] h-[145px] bg-cyan-950/40 hover:bg-cyan-900/40 border-l-4 border-l-cyber-cyan border border-cyber-cyan/40 rounded p-2 text-xs flex flex-col justify-between cursor-pointer transition hover:scale-[1.01] z-10">
+<div>
+<div class="flex items-center justify-between text-[10px] text-cyber-cyan font-bold">
+<span>DEV WORK</span>
+<span>14:00 - 16:30</span>
+</div>
+<div class="font-bold text-slate-200 text-xs">Scratchpad Dispatcher</div>
+<div class="text-[10px] text-slate-400 mt-1">Rust SQLite Daemon IPC connector</div>
+</div>
+<span class="text-[10px] text-cyan-300">Target: PR #42 merged</span>
+</div>
+<!-- Block: Zone 2 Cardio (17:30 - 18:30) -> top: 10.5*58 = 609px, height: 1*58 = 58px -->
+<div class="absolute inset-x-1.5 top-[609px] h-[58px] bg-amber-950/30 hover:bg-amber-900/40 border-l-4 border-l-amber-500 border border-amber-500/40 rounded px-2 py-1 text-xs flex flex-col justify-between cursor-pointer transition hover:scale-[1.01] z-10">
+<div class="flex items-center justify-between text-[10px] text-amber-400 font-bold">
+<span>FITNESS</span>
+<span>17:30 - 18:30</span>
+</div>
+<div class="font-bold text-slate-300 text-[11px] truncate">Zone 2 Stationary Bike</div>
+</div>
+<!-- LIVE TIME SCRUBBER LINE @ 19:54 -->
+<!-- 19:54 is (12 + 54/60) hours from 07:00 = 12.9 * 58px ≈ 748px -->
+<div class="absolute inset-x-0 top-[748px] z-30 pointer-events-none">
+<!-- Glow line spanning full day column -->
+<div class="h-0.5 bg-cyber-neon shadow-[0_0_12px_#39ff14]"></div>
+<!-- Badge tag with current time -->
+<div class="absolute -top-3 -left-2 bg-cyber-neon text-obsidian-950 font-black text-[10px] px-1.5 py-0.5 rounded shadow-[0_0_8px_#39ff14] flex items-center gap-1">
+<span>19:54</span>
+</div>
+</div>
+</div>
+<!-- Column 5: Fri 6 -->
+<div class="relative border-r border-obsidian-800/80">
+<div class="absolute inset-0 pointer-events-none">
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+<div class="cal-hour-row border-b border-obsidian-800/50"></div>
+</div>
+<!-- Block: Team Sync (13:00 - 14:00) -> top: 6*58 = 348px, height: 1*58 = 58px -->
+<div class="absolute inset-x-1.5 top-[348px] h-[58px] bg-slate-800/40 hover:bg-slate-800/60 border-l-4 border-l-slate-400 border border-slate-700 rounded px-2 py-1 text-xs flex flex-col justify-between cursor-pointer transition z-10">
+<div class="flex items-center justify-between text-[10px] text-slate-400 font-bold">
+<span>STANDUP</span>
+<span>13:00 - 14:00</span>
+</div>
+<div class="font-bold text-slate-300 text-[11px] truncate">Weekly Core Team Sync</div>
+</div>
+<!-- Block: Project Retrospective (15:00 - 17:00) -> top: 8*58 = 464px, height: 2*58 = 116px -->
+<div class="absolute inset-x-1.5 top-[464px] h-[116px] bg-cyan-950/40 hover:bg-cyan-900/40 border-l-4 border-l-cyber-cyan border border-cyber-cyan/40 rounded p-2 text-xs flex flex-col justify-between cursor-pointer transition hover:scale-[1.01] z-10">
+<div>
+<div class="flex items-center justify-between text-[10px] text-cyber-cyan font-bold">
+<span>SPRINT</span>
+<span>15:00 - 17:00</span>
+</div>
+<div class="font-bold text-slate-200 text-xs">Project Retrospective</div>
+<div class="text-[10px] text-slate-400 mt-1">Review release blockers and telemetry</div>
+</div>
+<span class="text-[10px] text-cyan-300">Room 101 / Hybrid</span>
+</div>
+</div>
+<!-- Column 6: Sat 7 (Weekend) -->
+<div class="relative border-r border-obsidian-800/80 bg-obsidian-950/30">
+<div class="absolute inset-0 pointer-events-none">
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+<span class="text-xs uppercase tracking-widest text-slate-600 font-bold rotate-90">Open Slot</span>
+</div>
+</div>
+<!-- Column 7: Sun 8 (Weekend) -->
+<div class="relative bg-obsidian-950/30">
+<div class="absolute inset-0 pointer-events-none">
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+<div class="cal-hour-row border-b border-obsidian-800/30"></div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+<span class="text-xs uppercase tracking-widest text-slate-600 font-bold rotate-90">Open Slot</span>
+</div>
+</div>
+<!-- Live Scrubber across entire width for the week -->
+<div class="absolute inset-x-0 top-[748px] pointer-events-none border-t border-cyber-neon/40 opacity-70 z-20"></div>
+</div>
+</div>
+</div>
+<!-- RIGHT: Inspector Sidebar (25% width) -->
+<aside class="w-80 2xl:w-96 bg-obsidian-900 flex flex-col shrink-0 overflow-y-auto divide-y divide-obsidian-750">
+<!-- PANE 1: Activity Node Inspector -->
+<section class="p-3.5 space-y-3">
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-1.5 font-bold text-slate-200">
+<span class="w-2 h-2 bg-cyber-green rounded-sm"></span>
+<span>Activity Node Inspector</span>
+</div>
+<span class="text-[10px] text-cyber-neon font-mono bg-obsidian-950 px-1.5 py-0.5 rounded border border-cyber-green/40">ID: NODE_AI_804</span>
+</div>
+<!-- Node Details Card -->
+<div class="bg-obsidian-950 p-3 rounded border border-obsidian-750 space-y-2.5">
+<div>
+<div class="flex items-center justify-between text-[11px]">
+<span class="text-cyber-green font-bold uppercase tracking-wider text-[10px]">Active Selection</span>
+<span class="text-slate-400 text-[10px]">120 mins</span>
+</div>
+<h3 class="text-sm font-bold text-white mt-0.5">AI Literacy &amp; Prompt Engineering</h3>
+<p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Evaluating multi-turn chain-of-thought heuristics and deterministic schema outputs.
+            </p>
+</div>
+<!-- Attributes Grid -->
+<div class="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-obsidian-800">
+<div>
+<span class="text-slate-500 block text-[10px]">SCHEDULE:</span>
+<span class="text-slate-200 font-medium">Thu, 11:00 - 13:00</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[10px]">LOCATION:</span>
+<span class="text-slate-200 font-medium">Auditorium C</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[10px]">LOAD FACTOR:</span>
+<span class="text-cyber-cyan font-medium">0.85 (High Cognitive)</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[10px]">RECURRENCE:</span>
+<span class="text-slate-200 font-medium">Weekly (Thu)</span>
+</div>
+</div>
+<!-- Tags -->
+<div class="flex flex-wrap gap-1 pt-1">
+<span class="px-2 py-0.5 bg-obsidian-850 text-cyber-purple text-[10px] rounded border border-cyber-purple/30">#university</span>
+<span class="px-2 py-0.5 bg-obsidian-850 text-cyber-cyan text-[10px] rounded border border-cyber-cyan/30">#ai-systems</span>
+<span class="px-2 py-0.5 bg-obsidian-850 text-emerald-400 text-[10px] rounded border border-emerald-400/30">#in-person</span>
+</div>
+<!-- Quick Action Buttons -->
+<div class="pt-2 flex items-center gap-1.5">
+<button class="flex-1 py-1.5 bg-obsidian-800 hover:bg-obsidian-750 text-slate-200 hover:text-white rounded text-xs font-semibold border border-obsidian-700 transition flex items-center justify-center gap-1">
+<span>Open Slides</span>
+</button>
+<button class="py-1.5 px-3 bg-obsidian-800 hover:bg-obsidian-750 text-cyber-cyan rounded text-xs font-semibold border border-obsidian-700 transition">
+              Reschedule
+            </button>
+<button class="py-1.5 px-2 bg-obsidian-800 hover:bg-rose-950/60 text-rose-400 rounded text-xs border border-obsidian-700 hover:border-rose-800/80 transition" title="Delete Block">
+              ✕
+            </button>
+</div>
+</div>
+</section>
+<!-- PANE 2: Cognitive Load Matrix -->
+<section class="p-3.5 space-y-3">
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-1.5 font-bold text-slate-200">
+<span class="text-cyber-purple">::</span>
+<span>Cognitive Load Matrix</span>
+</div>
+<span class="text-slate-400 font-mono text-[11px]">16.0 hrs Total</span>
+</div>
+<div class="space-y-2 bg-obsidian-950 p-3 rounded border border-obsidian-750 text-xs">
+<!-- Category 1 -->
+<div>
+<div class="flex justify-between text-[11px] mb-1">
+<span class="flex items-center gap-1.5 text-slate-300">
+<span class="w-2 h-2 rounded-full bg-cyber-purple"></span>
+<span>University &amp; Timetable</span>
+</span>
+<span class="font-bold text-slate-200">16.0h <span class="text-slate-500 font-normal">/ 20h</span></span>
+</div>
+<div class="w-full bg-obsidian-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-cyber-purple h-full rounded-full" style="width: 80%"></div>
+</div>
+</div>
+<!-- Category 2 -->
+<div>
+<div class="flex justify-between text-[11px] mb-1">
+<span class="flex items-center gap-1.5 text-slate-300">
+<span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
+<span>Course Study &amp; Projects</span>
+</span>
+<span class="font-bold text-slate-200">8.5h <span class="text-slate-500 font-normal">/ 15h</span></span>
+</div>
+<div class="w-full bg-obsidian-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-cyber-cyan h-full rounded-full" style="width: 56%"></div>
+</div>
+</div>
+<!-- Category 3 -->
+<div>
+<div class="flex justify-between text-[11px] mb-1">
+<span class="flex items-center gap-1.5 text-slate-300">
+<span class="w-2 h-2 rounded-full bg-amber-400"></span>
+<span>Health &amp; Physical Capacity</span>
+</span>
+<span class="font-bold text-slate-200">3.5h <span class="text-slate-500 font-normal">/ 5h</span></span>
+</div>
+<div class="w-full bg-obsidian-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-amber-400 h-full rounded-full" style="width: 70%"></div>
+</div>
+</div>
+</div>
+<!-- Daily Workload Distribution (7 Days) -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-[10px] text-slate-400 uppercase font-semibold">
+<span>Daily Workload (7 Days)</span>
+<span>Cap: 8h/day</span>
+</div>
+<div class="grid grid-cols-7 gap-1.5 text-center">
+<!-- Mon -->
+<div class="bg-obsidian-950 p-1.5 rounded border border-obsidian-750">
+<div class="text-[10px] text-slate-400 font-bold">M</div>
+<div class="h-10 flex items-end justify-center my-1 bg-obsidian-900 rounded">
+<div class="w-full bg-cyber-purple/80 rounded-b" style="height: 50%"></div>
+</div>
+<div class="text-[9px] text-slate-400 font-mono">4.0h</div>
+</div>
+<!-- Tue -->
+<div class="bg-obsidian-950 p-1.5 rounded border border-obsidian-750">
+<div class="text-[10px] text-slate-400 font-bold">T</div>
+<div class="h-10 flex items-end justify-center my-1 bg-obsidian-900 rounded">
+<div class="w-full bg-cyber-purple/80 rounded-b" style="height: 50%"></div>
+</div>
+<div class="text-[9px] text-slate-400 font-mono">4.0h</div>
+</div>
+<!-- Wed -->
+<div class="bg-obsidian-950 p-1.5 rounded border border-obsidian-750">
+<div class="text-[10px] text-slate-400 font-bold">W</div>
+<div class="h-10 flex items-end justify-center my-1 bg-obsidian-900 rounded">
+<div class="w-full bg-cyber-purple/80 rounded-b" style="height: 38%"></div>
+</div>
+<div class="text-[9px] text-slate-400 font-mono">3.0h</div>
+</div>
+<!-- Thu (Today) -->
+<div class="bg-obsidian-950 p-1.5 rounded border border-cyber-green/40 shadow-[0_0_8px_rgba(57,255,20,0.1)]">
+<div class="text-[10px] text-cyber-neon font-black">T</div>
+<div class="h-10 flex items-end justify-center my-1 bg-obsidian-900 rounded">
+<div class="w-full bg-cyber-green rounded-b shadow-[0_0_8px_#39ff14]" style="height: 62%"></div>
+</div>
+<div class="text-[9px] text-cyber-neon font-mono font-bold">5.0h</div>
+</div>
+<!-- Fri -->
+<div class="bg-obsidian-950 p-1.5 rounded border border-obsidian-750">
+<div class="text-[10px] text-slate-400 font-bold">F</div>
+<div class="h-10 flex items-end justify-center my-1 bg-obsidian-900 rounded">
+<div class="w-full bg-cyber-cyan/80 rounded-b" style="height: 38%"></div>
+</div>
+<div class="text-[9px] text-slate-400 font-mono">3.0h</div>
+</div>
+<!-- Sat -->
+<div class="bg-obsidian-950 p-1.5 rounded border border-obsidian-750 opacity-60">
+<div class="text-[10px] text-slate-500 font-bold">S</div>
+<div class="h-10 flex items-end justify-center my-1 bg-obsidian-900 rounded">
+<div class="w-full bg-slate-700 rounded-b" style="height: 0%"></div>
+</div>
+<div class="text-[9px] text-slate-500 font-mono">0.0h</div>
+</div>
+<!-- Sun -->
+<div class="bg-obsidian-950 p-1.5 rounded border border-obsidian-750 opacity-60">
+<div class="text-[10px] text-slate-500 font-bold">S</div>
+<div class="h-10 flex items-end justify-center my-1 bg-obsidian-900 rounded">
+<div class="w-full bg-slate-700 rounded-b" style="height: 0%"></div>
+</div>
+<div class="text-[9px] text-slate-500 font-mono">0.0h</div>
+</div>
+</div>
+</div>
+</section>
+<!-- PANE 3: Conflicts & Unscheduled -->
+<section class="p-3.5 space-y-2.5">
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-1.5 font-bold text-slate-200">
+<span class="text-rose-400">⏰</span>
+<span>Conflicts &amp; Unscheduled</span>
+</div>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 font-bold border border-emerald-800">
+            0 CONFLICTS
+          </span>
+</div>
+<div class="bg-obsidian-950 p-3 rounded border border-obsidian-750 text-center space-y-2">
+<p class="text-[11px] text-slate-400">
+            All tasks and lectures scheduled cleanly within weekly capacity limits.
+          </p>
+<button class="w-full py-2 bg-obsidian-800 hover:bg-obsidian-700 text-cyan-400 hover:text-cyan-300 rounded text-xs font-semibold border border-cyan-800/50 transition">
+            RESCHEDULE MISSED (0)
+          </button>
+</div>
+</section>
+<!-- PANE 4: Hyprland / Dotfiles Keybindings Cheat Sheet -->
+<section class="p-3.5 space-y-2 text-xs">
+<div class="flex items-center justify-between">
+<span class="font-bold text-slate-300 uppercase text-[11px] tracking-wider">HYPR / DOTFILES KEYBINDINGS</span>
+<span class="text-[10px] text-slate-500">MODE: NORMAL</span>
+</div>
+<div class="bg-obsidian-950 p-2.5 rounded border border-obsidian-750 space-y-2 text-[11px]">
+<div class="flex items-center justify-between">
+<span class="text-cyber-green font-bold">[n]</span>
+<span class="text-slate-400">new block</span>
+<span class="text-cyber-green font-bold">[r]</span>
+<span class="text-slate-400">recalculate</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-cyber-green font-bold">[t]</span>
+<span class="text-slate-400">jump today</span>
+<span class="text-cyber-green font-bold">[h / l]</span>
+<span class="text-slate-400">&lt; / &gt; week</span>
+</div>
+<div class="flex items-center justify-between pt-1 border-t border-obsidian-800">
+<span class="text-slate-500">Space+p</span>
+<span class="text-slate-400">palette</span>
+<span class="text-slate-500">Esc</span>
+<span class="text-slate-400">blur selection</span>
+</div>
+</div>
+</section>
+</aside>
+</main>
+<!-- END: MainContentSplit -->
+<!-- BEGIN: BottomStatusBar -->
+<footer class="h-7 bg-obsidian-950 border-t border-obsidian-750 px-3 flex items-center justify-between text-[11px] text-slate-400 shrink-0 z-40 select-none">
+<!-- Left: Statusline and Engine status -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5">
+<span class="text-cyber-green font-black">λ</span>
+<span class="text-slate-300 font-semibold">monolith:</span>
+<span class="text-slate-400">26 scheduled blocks / SQLite local-first</span>
+</div>
+<span class="text-slate-600">|</span>
+<div class="flex items-center gap-1 text-slate-300">
+<span class="text-slate-500">NEXT EVENT:</span>
+<span class="text-cyber-neon font-semibold">AI Literacy &amp; Prompt Engineering</span>
+<span class="text-slate-500 font-mono">(in 85h 7m)</span>
+</div>
+</div>
+<!-- Right: Vim navigation tips, zoom scale, & display protocol -->
+<div class="flex items-center gap-3">
+<div class="hidden md:flex items-center gap-2 text-slate-500">
+<span><kbd class="text-slate-400">[t]</kbd> today</span>
+<span>·</span>
+<span><kbd class="text-slate-400">[h/l]</kbd> nav</span>
+<span>·</span>
+<span><kbd class="text-slate-400">[1-5]</kbd> views</span>
+<span>·</span>
+<span class="text-slate-400 font-mono">zoom: 1h/58px</span>
+</div>
+<div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-obsidian-900 border border-obsidian-750 text-cyber-neon font-bold text-[10px]">
+<span class="w-1.5 h-1.5 rounded-full bg-cyber-neon animate-pulse"></span>
+<span>WAYLAND // HYPR</span>
+</div>
+</div>
+</footer>
+<!-- END: BottomStatusBar -->
+</body></html>

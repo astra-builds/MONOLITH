@@ -1,4 +1,7 @@
-import pytest
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+import pytest  # noqa: E402
 
 from app import db
 from app.ai.context import get_planning_context

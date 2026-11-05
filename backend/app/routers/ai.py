@@ -60,8 +60,23 @@ def chat(req: AIPlanRequest):
 def provider_status():
     p = service.get_provider()
     if p is None or not p.is_configured():
-        return {"configured": False, "provider": "none", "capabilities": {}}
-    return {"configured": True, "provider": p.__class__.__name__, "model": p.model, "capabilities": p.capabilities()}
+        return {
+            "configured": False,
+            "provider": "none",
+            "status": "not_configured",
+            "capabilities": {},
+            "last_error": None,
+        }
+    last_error = service.last_provider_error()
+    status = "error" if last_error else "connected"
+    return {
+        "configured": True,
+        "provider": p.__class__.__name__,
+        "model": p.model,
+        "status": status,
+        "capabilities": p.capabilities(),
+        "last_error": last_error,
+    }
 
 @router.post("/recalculate")
 def recalculate():

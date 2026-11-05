@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .. import db
+from .base import ProviderError
 from .context import get_planning_context
 from .gemini import GeminiProvider
 from .openrouter import OpenRouterProvider
@@ -12,6 +13,25 @@ from .prompts import build_planning_prompt
 from .schemas import PlanningIntent, PlanningProposal
 from .tools import execute_tool
 from ..scheduler import schedule as run_schedule, schedule_diff
+
+# Last provider error observed during an actual AI call.  Kept in-memory so
+# /ai/provider can report real connection state without making a probe call on
+# every status check (Refine.txt §3: provider status reflects real connection
+# state, but must stay cheap).  Cleared on a successful call, set on failure.
+_LAST_PROVIDER_ERROR: dict | None = None
+
+
+def _provider_error(exc: Exception) -> dict:
+    """Normalize a provider failure into a surfacable error dict."""
+    if isinstance(exc, ProviderError):
+        return {"kind": exc.kind, "message": str(exc), "retryable": exc.retryable}
+    return {"kind": "provider_error", "message": str(exc), "retryable": False}
+
+
+def last_provider_error() -> dict | None:
+    """Return the last observed provider error, if any (for /ai/provider)."""
+    return _LAST_PROVIDER_ERROR
+
 
 def get_provider():
     s = db.get_settings()
@@ -25,13 +45,15 @@ def get_provider():
     key = s.get("ai_api_key", "") or (os.environ.get("GEMINI_API_KEY") if provider=="gemini" else os.environ.get("OPENROUTER_API_KEY"))
     model = s.get("ai_model", "") or (os.environ.get("GEMINI_MODEL") if provider=="gemini" else os.environ.get("OPENROUTER_MODEL"))
     if provider == "gemini":
-        return GeminiProvider(key or "", model or "gemini-1.5-flash")
+        return GeminiProvider(key or "", model or "gemini-2.5-flash")
     if provider == "openrouter":
         return OpenRouterProvider(key or "", model or "meta-llama/llama-3.1-8b-instruct:free")
     return None
 
 def extract_and_preview(text: str) -> dict:
+    global _LAST_PROVIDER_ERROR
     p = get_provider()
+    ai_error = None
     # Try AI provider if configured
     if p is not None and p.is_configured():
         try:
@@ -40,23 +62,34 @@ def extract_and_preview(text: str) -> dict:
             data.setdefault("commitments", [])
             data.setdefault("projects", [])
             data.setdefault("clarifications", [])
+            _LAST_PROVIDER_ERROR = None  # successful call clears prior error
             return {"configured": True, "source": "ai", "proposal": data}
-        except Exception as e:
-            # Fall back to offline parser on AI error
-            pass
+        except Exception as exc:
+            # Surface provider errors clearly instead of silently falling back.
+            # The app stays usable via the offline parser, but the caller can
+            # tell AI actually failed (Refine.txt §2).
+            ai_error = _provider_error(exc)
+            _LAST_PROVIDER_ERROR = ai_error
 
-    # Seamless offline parser fallback
+    # Offline parser fallback (keeps the app usable without a working AI provider).
     data = parse_offline(text)
     data.setdefault("tasks", [])
     data.setdefault("commitments", [])
     data.setdefault("projects", [])
     data.setdefault("clarifications", [])
-    return {
+    result = {
         "configured": False,
         "source": "offline",
         "proposal": data,
         "message": "Parsed using built-in command interpreter (works offline).",
     }
+    if ai_error is not None:
+        result["ai_error"] = ai_error
+        result["message"] = (
+            f"AI provider unavailable ({ai_error['kind']}); "
+            "using offline fallback."
+        )
+    return result
 
 
 def classify_request(text: str) -> str:
@@ -133,8 +166,8 @@ def _normalize_raw_intent(raw: dict) -> PlanningIntent:
             "tag": item.get("tag", "personal"),
             "recurrence": item.get("recurrence", "weekly"),
             "days_of_week": item.get("days_of_week", []),
-            "start_time": item.get("start_time", "09:00"),
-            "end_time": item.get("end_time", "10:00"),
+            "start_time": item.get("start_time") or "09:00",
+            "end_time": item.get("end_time") or "10:00",
             "start_date": item.get("start_date"),
             "end_date": item.get("end_date"),
             "one_time_date": item.get("one_time_date"),
@@ -177,13 +210,18 @@ def plan_request(text: str, conversation_id: str | None = None) -> dict:
     provider = get_provider()
     source = "offline"
     raw = None
+    ai_error = None
+    global _LAST_PROVIDER_ERROR
     if provider is not None and provider.is_configured():
         try:
             raw = provider.extract(build_planning_prompt(text, context))
             source = _provider_name(provider)
-        except Exception:
+            _LAST_PROVIDER_ERROR = None  # successful call clears prior error
+        except Exception as exc:
             # A provider outage must not make the application unusable.
             raw = None
+            ai_error = _provider_error(exc)
+            _LAST_PROVIDER_ERROR = ai_error
     if raw is None:
         raw = parse_offline(text)
 
@@ -208,6 +246,7 @@ def plan_request(text: str, conversation_id: str | None = None) -> dict:
         "proposal_id": stored["id"],
         "intent_type": classify_request(text),
         "source": source,
+        "configured": source != "offline",
         "proposal": proposal.model_dump(mode="json"),
         "context_summary": {
             "projects": len(context["projects"]),
@@ -215,7 +254,9 @@ def plan_request(text: str, conversation_id: str | None = None) -> dict:
             "commitments": len(context["commitments"]),
             "schedule_blocks": len(context["schedule_blocks"]),
         },
-    }
+    } | ({"ai_error": ai_error,
+          "message": f"AI provider unavailable ({ai_error['kind']}); using offline fallback."}
+         if ai_error is not None else {})
 
 
 def _resolve_task_reference(text: str):

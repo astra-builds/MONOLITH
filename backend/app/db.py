@@ -147,9 +147,71 @@ def connect():
 def init_db():
     with connect() as conn:
         conn.executescript(SCHEMA)
+        _ensure_columns(conn)
         row = conn.execute("SELECT id FROM settings WHERE id=1").fetchone()
         if not row:
             conn.execute("INSERT INTO settings(id,data) VALUES(1,?)", (json.dumps(DEFAULT_SETTINGS),))
+
+
+def _ensure_columns(conn):
+    """Migration shim: add any columns missing from existing tables.
+
+    Reads ``PRAGMA table_info`` for each table and issues ``ALTER TABLE ADD
+    COLUMN`` for expected columns that are absent, so an older SQLite file can
+    be opened without a wipe (R5).
+    """
+    expected = {
+        "settings": ["id", "data"],
+        "projects": [
+            "id", "name", "description", "kind", "total_sessions",
+            "session_minutes", "target_deadline", "created_at", "updated_at",
+        ],
+        "tasks": [
+            "id", "project_id", "title", "description", "estimated_minutes",
+            "remaining_minutes", "deadline", "priority", "preferred_days",
+            "preferred_start", "preferred_end", "min_session_minutes",
+            "max_session_minutes", "splittable", "flexible", "dependencies",
+            "status", "completed_at", "created_at", "updated_at",
+        ],
+        "commitments": [
+            "id", "title", "kind", "tag", "recurrence", "days_of_week",
+            "start_time", "end_time", "start_date", "end_date",
+            "one_time_date", "created_at", "updated_at",
+        ],
+        "schedule_blocks": [
+            "id", "task_id", "commitment_id", "title", "tag", "start_dt",
+            "end_dt", "status", "locked", "reason", "created_at", "updated_at",
+        ],
+        "milestones": [
+            "id", "project_id", "title", "description", "deadline", "sequence",
+            "status", "created_at", "updated_at",
+        ],
+        "availability_rules": [
+            "id", "weekday", "start_time", "end_time", "available", "source",
+            "created_at", "updated_at",
+        ],
+        "planning_proposals": [
+            "id", "conversation_id", "status", "source", "request_text",
+            "structured_plan_json", "schedule_preview_json", "created_at",
+            "updated_at", "approved_at",
+        ],
+        "ai_operations": [
+            "id", "proposal_id", "operation_type", "target_type", "target_id",
+            "arguments_json", "status", "result_json", "error_message",
+            "idempotency_key", "created_at", "updated_at",
+        ],
+        "ai_conversations": ["id", "messages_json", "created_at", "updated_at"],
+    }
+    for table, columns in expected.items():
+        exists = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        ).fetchone()
+        if not exists:
+            continue
+        existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+        for col in columns:
+            if col not in existing:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {col}")
 
 def _json_column(value, default):
     if value in (None, ""):

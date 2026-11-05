@@ -1,4 +1,27 @@
 const BASE = "/api";
+
+// Shared error surface so failed API calls surface in one banner instead of
+// being silently logged to the console (Step 3.7 [P1]).
+let errorHandler: ((message: string) => void) | null = null;
+export function setErrorHandler(handler: (message: string) => void) {
+  errorHandler = handler;
+}
+function emitError(message: string) {
+  if (errorHandler) errorHandler(message);
+  else console.error("[api]", message);
+}
+
+// Wrap a promise so a rejection is reported through the shared error banner
+// instead of silently swallowed. Returns undefined on failure.
+export async function guard<T>(p: Promise<T>, ctx = "request"): Promise<T | undefined> {
+  try {
+    return await p;
+  } catch (e: any) {
+    emitError(`${ctx}: ${e?.message || String(e)}`);
+    return undefined;
+  }
+}
+
 async function req(path: string, opts: RequestInit = {}) {
   const r = await fetch(BASE + path, { ...opts, headers: { "Content-Type": "application/json", ...(opts.headers||{}) } });
   if (!r.ok) throw new Error(await r.text());

@@ -76,3 +76,20 @@ body {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
   vertical-align: middle;
 }
+
+/* Usability (Refine.txt §7/§9): clear interaction states for small brutalist
+   controls without changing the visual language. */
+.btn-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #c5ff42, 0 0 0 4px #0a0c0f;
+}
+.btn-active:active {
+  transform: scale(0.96);
+}
+
+/* Interactive calendar chips: clear focus + pressed states for keyboard use. */
+.chip-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #c5ff42, 0 0 0 4px #0a0c0f;
+  z-index: 20;
+}

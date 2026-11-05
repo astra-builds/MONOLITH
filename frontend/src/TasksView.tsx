@@ -13,11 +13,11 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
     description: "",
     project_id: "",
     estimated_minutes: 60,
+    min_session_minutes: 25,
+    max_session_minutes: 90,
     deadline: "",
     priority: 3,
     preferred_days: [],
-    min_session_minutes: 25,
-    max_session_minutes: 90,
     splittable: true,
     flexible: true,
     dependencies: [] as number[],
@@ -242,6 +242,27 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                   className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
                   value={form.deadline}
                   onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <span className="text-[9px] text-zinc-400 block mb-0.5">MIN SESSION MINS</span>
+                <input
+                  type="number"
+                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  value={form.min_session_minutes}
+                  onChange={(e) => setForm({ ...form, min_session_minutes: Number(e.target.value) || 25 })}
+                />
+              </div>
+              <div>
+                <span className="text-[9px] text-zinc-400 block mb-0.5">MAX SESSION MINS</span>
+                <input
+                  type="number"
+                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  value={form.max_session_minutes}
+                  onChange={(e) => setForm({ ...form, max_session_minutes: Number(e.target.value) || 90 })}
                 />
               </div>
             </div>
