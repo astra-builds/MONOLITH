@@ -145,14 +145,14 @@ export default function SettingsView({
   );
 
   return (
-    <div className="w-full max-w-none bg-[#0d0f12] border border-[#232733] rounded p-6 font-mono text-zinc-300 text-xs">
+    <div className="w-full max-w-none bg-obsidian-900 border border-obsidian-750 rounded p-6 font-mono text-slate-300 text-xs">
       {/* Title bar: spans full width, SAVE primary action immediately recognizable */}
-      <div className="border-b border-[#232733] pb-3 mb-6 flex items-center justify-between">
+      <div className="border-b border-obsidian-750 pb-3 mb-6 flex items-center justify-between">
         <div>
           <span className="font-headline font-black text-white text-lg tracking-tight uppercase">
             System Configuration & Storage
           </span>
-          <p className="text-[10px] text-zinc-500 mt-0.5">
+          <p className="text-[10px] text-slate-500 mt-0.5">
             Local scheduling constraints, working capacity, AI model adapters, and persistent storage
           </p>
         </div>
@@ -173,13 +173,13 @@ export default function SettingsView({
       {/* Two-column architectural grid using available screen space */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ====== SECTION 1: AVAILABILITY ====== */}
-        <section className="bg-[#11141a] border border-[#232733] rounded overflow-hidden flex flex-col">
-          <div className="bg-[#151922] border-b border-[#232733] px-3 py-2 flex items-center justify-between">
+        <section className="bg-obsidian-900 border border-obsidian-750 rounded overflow-hidden flex flex-col">
+          <div className="bg-obsidian-850 border-b border-obsidian-750 px-3 py-2 flex items-center justify-between">
             {sectionBadge("1 · AVAILABILITY", "bg-[#c5ff42]/10 text-[#c5ff42] border border-[#c5ff42]/30")}
           </div>
           <div className="p-4 space-y-4">
             <div>
-              <span className="text-[10px] text-zinc-400 block mb-2">WORKING DAYS</span>
+              <span className="text-[10px] text-slate-400 block mb-2">WORKING DAYS</span>
               <div className="flex gap-1.5 flex-wrap">
                 {DAY_NAMES.map((d, i) => {
                   const active = (form.working_days || []).includes(i);
@@ -191,7 +191,7 @@ export default function SettingsView({
                       className={`px-3 py-1.5 font-bold rounded border transition-colors ${
                         active
                           ? "bg-[#c5ff42] text-black border-[#c5ff42]"
-                          : "bg-[#0d0f12] text-zinc-500 border-[#232733]"
+                          : "bg-obsidian-900 text-slate-500 border-obsidian-750"
                       }`}
                     >
                       {d}
@@ -203,19 +203,19 @@ export default function SettingsView({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">WORKING HOURS START</label>
+                <label className="text-[10px] text-slate-400 block mb-1">WORKING HOURS START</label>
                 <input
                   type="time"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-2 text-white rounded outline-none focus:border-[#c5ff42]"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none focus:border-[#c5ff42]"
                   value={form.working_start || "09:00"}
                   onChange={(e) => setForm({ ...form, working_start: e.target.value })}
                 />
               </div>
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">WORKING HOURS END</label>
+                <label className="text-[10px] text-slate-400 block mb-1">WORKING HOURS END</label>
                 <input
                   type="time"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-2 text-white rounded outline-none focus:border-[#c5ff42]"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none focus:border-[#c5ff42]"
                   value={form.working_end || "18:00"}
                   onChange={(e) => setForm({ ...form, working_end: e.target.value })}
                 />
@@ -225,49 +225,49 @@ export default function SettingsView({
         </section>
 
         {/* ====== SECTION 2: SCHEDULING ====== */}
-        <section className="bg-[#11141a] border border-[#232733] rounded overflow-hidden flex flex-col">
-          <div className="bg-[#151922] border-b border-[#232733] px-3 py-2 flex items-center justify-between">
+        <section className="bg-obsidian-900 border border-obsidian-750 rounded overflow-hidden flex flex-col">
+          <div className="bg-obsidian-850 border-b border-obsidian-750 px-3 py-2 flex items-center justify-between">
             {sectionBadge("2 · SCHEDULING", "bg-[#73a7f7]/10 text-[#73a7f7] border border-[#73a7f7]/30")}
           </div>
           <div className="p-4 space-y-4">
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">MAX DAILY MINUTES</label>
+                <label className="text-[10px] text-slate-400 block mb-1">MAX DAILY MINUTES</label>
                 <input
                   type="number"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-2 text-white rounded outline-none"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none"
                   value={form.max_daily_minutes || 480}
                   onChange={(e) => setForm({ ...form, max_daily_minutes: Number(e.target.value) })}
                 />
-                <span className="text-[9px] text-zinc-500 block mt-0.5">8h cap default</span>
+                <span className="text-[9px] text-slate-500 block mt-0.5">8h cap default</span>
               </div>
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">MIN BREAK (MINUTES)</label>
+                <label className="text-[10px] text-slate-400 block mb-1">MIN BREAK (MINUTES)</label>
                 <input
                   type="number"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-2 text-white rounded outline-none"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none"
                   value={form.min_break_minutes || 15}
                   onChange={(e) => setForm({ ...form, min_break_minutes: Number(e.target.value) })}
                 />
-                <span className="text-[9px] text-zinc-500 block mt-0.5">Gap between sessions</span>
+                <span className="text-[9px] text-slate-500 block mt-0.5">Gap between sessions</span>
               </div>
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">DEFAULT SESSION (MINUTES)</label>
+                <label className="text-[10px] text-slate-400 block mb-1">DEFAULT SESSION (MINUTES)</label>
                 <input
                   type="number"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-2 text-white rounded outline-none"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none"
                   value={form.default_session_minutes || 60}
                   onChange={(e) => setForm({ ...form, default_session_minutes: Number(e.target.value) })}
                 />
-                <span className="text-[9px] text-zinc-500 block mt-0.5">Atomic session size</span>
+                <span className="text-[9px] text-slate-500 block mt-0.5">Atomic session size</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* ====== SECTION 3: AI PROVIDER ====== */}
-        <section className="bg-[#11141a] border border-[#232733] rounded overflow-hidden flex flex-col">
-          <div className="bg-[#151922] border-b border-[#232733] px-3 py-2 flex items-center justify-between">
+        <section className="bg-obsidian-900 border border-obsidian-750 rounded overflow-hidden flex flex-col">
+          <div className="bg-obsidian-850 border-b border-obsidian-750 px-3 py-2 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               {sectionBadge("3 · AI PROVIDER (OPTIONAL)", "bg-[#ff7d8d]/10 text-[#ff7d8d] border border-[#ff7d8d]/30")}
               {provider && (
@@ -277,7 +277,7 @@ export default function SettingsView({
                       ? "bg-[#172514] text-[#c5ff42] border-[#3b661d]"
                       : provider.status === "error"
                       ? "bg-[#3a1419] text-[#ff7d8d] border-[#7d222e]"
-                      : "bg-[#1c202a] text-zinc-500 border-[#232733]"
+                      : "bg-[#1c202a] text-slate-500 border-obsidian-750"
                   }`}
                 >
                   {provider.status === "connected"
@@ -291,44 +291,44 @@ export default function SettingsView({
           </div>
           <div className="p-4 space-y-4">
             {/* Connection status line */}
-            <div className="bg-[#0c0e13] rounded border border-[#232733] p-2.5 text-[10px]">
+            <div className="bg-[#0c0e13] rounded border border-obsidian-750 p-2.5 text-[10px]">
               <div className="flex justify-between mb-1">
-                <span className="text-zinc-400">ACTIVE PROVIDER</span>
+                <span className="text-slate-400">ACTIVE PROVIDER</span>
                 <span className="text-white font-mono">
                   {providerActive ? provider.provider.toUpperCase() : "NONE (OFFLINE)"}
                 </span>
               </div>
               <div className="flex justify-between mb-1">
-                <span className="text-zinc-400">SELECTED MODEL</span>
+                <span className="text-slate-400">SELECTED MODEL</span>
                 <span className="text-white font-mono truncate max-w-xs">
                   {provider && provider.model ? provider.model : "—"}
                 </span>
               </div>
               <div className="flex justify-between mb-1">
-                <span className="text-zinc-400">API KEY STORED</span>
-                <span className={`text-[9px] font-mono ${keyPresent ? "text-[#c5ff42]" : "text-zinc-500"}`}>
+                <span className="text-slate-400">API KEY STORED</span>
+                <span className={`text-[9px] font-mono ${keyPresent ? "text-[#c5ff42]" : "text-slate-500"}`}>
                   {keyPresent ? "YES (backend only)" : "NO"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">AI AVAILABLE</span>
-                <span className={`text-[9px] font-mono ${aiAvailable ? "text-[#c5ff42]" : "text-zinc-500"}`}>
+                <span className="text-slate-400">AI AVAILABLE</span>
+                <span className={`text-[9px] font-mono ${aiAvailable ? "text-[#c5ff42]" : "text-slate-500"}`}>
                   {aiAvailable ? "YES" : "NO — APP USABLE WITHOUT AI"}
                 </span>
               </div>
             </div>
 
             <div>
-              <span className="text-[10px] text-zinc-400 block mb-2">CONFIGURATION</span>
-              <p className="text-[10px] text-zinc-500 mb-2">
+              <span className="text-[10px] text-slate-400 block mb-2">CONFIGURATION</span>
+              <p className="text-[10px] text-slate-500 mb-2">
                 Free Gemini API or free OpenRouter models. Keys are stored locally on the backend —
                 never sent to the browser.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] text-zinc-400 block mb-1">PROVIDER</label>
+                  <label className="text-[10px] text-slate-400 block mb-1">PROVIDER</label>
                   <select
-                    className="w-full bg-[#0d0f12] border border-[#232733] p-2 text-white rounded outline-none"
+                    className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none"
                     value={form.ai_provider || "none"}
                     onChange={(e) => setForm({ ...form, ai_provider: e.target.value })}
                   >
@@ -340,20 +340,20 @@ export default function SettingsView({
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] text-zinc-400 block mb-1">MODEL IDENTIFIER</label>
+                  <label className="text-[10px] text-slate-400 block mb-1">MODEL IDENTIFIER</label>
                   <input
                     placeholder="e.g. gemini-2.5-flash"
-                    className="w-full bg-[#0d0f12] border border-[#232733] p-2 text-white rounded outline-none"
+                    className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none"
                     value={form.ai_model || ""}
                     onChange={(e) => setForm({ ...form, ai_model: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-zinc-400 block mb-1">API KEY</label>
+                  <label className="text-[10px] text-slate-400 block mb-1">API KEY</label>
                   <input
                     type="password"
                     placeholder="Stored locally on backend"
-                    className="w-full bg-[#0d0f12] border border-[#232733] p-2 text-white rounded outline-none"
+                    className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none"
                     value={form.ai_api_key || ""}
                     onChange={(e) => setForm({ ...form, ai_api_key: e.target.value })}
                   />
@@ -366,27 +366,69 @@ export default function SettingsView({
                 </div>
               )}
             </div>
+
+            <div className="border-t border-obsidian-750 pt-3">
+              <span className="text-[10px] text-slate-400 block mb-2">OPERATOR SAFETY</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">AUTONOMY</label>
+                  <select
+                    className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none"
+                    value={form.ai_autonomy || "assisted"}
+                    onChange={(e) => setForm({ ...form, ai_autonomy: e.target.value })}
+                  >
+                    <option value="suggestion">SUGGESTION — PREVIEW ONLY</option>
+                    <option value="assisted">ASSISTED — CONFIRM CHANGES</option>
+                    <option value="full">FULL — WITH SAFETY LIMITS</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">MAX MUTATIONS / RUN</label>
+                  <input type="number" min={1} max={1000}
+                    className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none"
+                    value={form.ai_max_mutations || 25}
+                    onChange={(e) => setForm({ ...form, ai_max_mutations: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">AI HORIZON (DAYS)</label>
+                  <input type="number" min={1} max={730}
+                    className="w-full bg-obsidian-900 border border-obsidian-750 p-2 text-white rounded outline-none"
+                    value={form.ai_max_horizon_days || 180}
+                    onChange={(e) => setForm({ ...form, ai_max_horizon_days: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-[10px] text-slate-400 mt-3">
+                <input type="checkbox" checked={Boolean(form.ai_dry_run)} onChange={(e) => setForm({ ...form, ai_dry_run: e.target.checked })} />
+                DRY RUN — NEVER APPLY AI WRITES
+              </label>
+              <label className="flex items-center gap-2 text-[10px] text-slate-400 mt-2">
+                <input type="checkbox" checked={form.ai_require_delete_confirmation !== false} onChange={(e) => setForm({ ...form, ai_require_delete_confirmation: e.target.checked })} />
+                REQUIRE EXPLICIT CONFIRMATION FOR DELETES
+              </label>
+            </div>
           </div>
         </section>
 
         {/* ====== SECTION 4: DATA / STORAGE ====== */}
-        <section className="bg-[#11141a] border border-[#232733] rounded overflow-hidden flex flex-col">
-          <div className="bg-[#151922] border-b border-[#232733] px-3 py-2 flex items-center justify-between">
+        <section className="bg-obsidian-900 border border-obsidian-750 rounded overflow-hidden flex flex-col">
+          <div className="bg-obsidian-850 border-b border-obsidian-750 px-3 py-2 flex items-center justify-between">
             {sectionBadge("4 · DATA / STORAGE", "bg-[#c5ff42]/10 text-[#c5ff42] border border-[#c5ff42]/30")}
           </div>
           <div className="p-4 space-y-3">
-            <p className="text-[10px] text-zinc-400">
+            <p className="text-[10px] text-slate-400">
               Local-first SQLite storage in <code className="text-zinc-200">backend/data/monolith.db</code>.
               No cloud dependency or account required.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <button
                 onClick={handleExport}
-                className="px-3 py-2 bg-[#14171f] hover:bg-[#202635] text-zinc-200 border border-[#232733] rounded text-xs font-bold btn-focus btn-active"
+                className="px-3 py-2 bg-obsidian-850 hover:bg-[#202635] text-zinc-200 border border-obsidian-750 rounded text-xs font-bold btn-focus btn-active"
               >
                 📥 EXPORT BACKUP (.JSON)
               </button>
-              <label className="px-3 py-2 bg-[#14171f] hover:bg-[#202635] text-zinc-200 border border-[#232733] rounded text-xs font-bold cursor-pointer inline-block btn-focus btn-active">
+              <label className="px-3 py-2 bg-obsidian-850 hover:bg-[#202635] text-zinc-200 border border-obsidian-750 rounded text-xs font-bold cursor-pointer inline-block btn-focus btn-active">
                 📤 IMPORT BACKUP (.JSON)
                 <input
                   type="file"

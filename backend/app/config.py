@@ -18,4 +18,8 @@ DEFAULT_SETTINGS = {
     "ai_model": "",
     "ai_api_key": "",
     "ai_autonomy": "assisted",
+    "ai_max_mutations": 25,
+    "ai_max_horizon_days": 180,
+    "ai_dry_run": False,
+    "ai_require_delete_confirmation": True,
 }

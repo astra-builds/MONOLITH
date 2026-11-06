@@ -1,5 +1,5 @@
 import json
-from typing import Optional
+from typing import Any, Optional
 
 class ProviderError(RuntimeError):
     def __init__(self, message, *, kind="provider_error", retryable=False):
@@ -12,7 +12,7 @@ Return ONLY valid JSON with this shape:
 {
   "summary": "short summary",
   "tasks": [
-    {"title": "...", "description": "...", "estimated_minutes": 60, "deadline": "YYYY-MM-DD or null", "priority": 3, "preferred_days": [0-6], "preferred_start": "HH:MM or null", "preferred_end": "HH:MM or null", "min_session_minutes": 25, "max_session_minutes": 90, "splittable": true, "flexible": true, "dependencies": []}
+    {"title": "...", "description": "...", "estimated_minutes": 60, "deadline": "YYYY-MM-DD or null", "active_until": "YYYY-MM-DD or null", "tag": "university|personal|course|project or null", "priority": 3, "preferred_days": [0-6], "preferred_start": "HH:MM or null", "preferred_end": "HH:MM or null", "min_session_minutes": 25, "max_session_minutes": 90, "splittable": true, "flexible": true, "dependencies": []}
   ],
   "commitments": [
     {"title": "...", "tag": "university|personal|course|project", "recurrence": "weekly|once", "days_of_week": [0-6], "start_time": "HH:MM", "end_time": "HH:MM", "one_time_date": "YYYY-MM-DD or null", "start_date": null, "end_date": null}
@@ -34,6 +34,18 @@ class AIProvider:
         return bool(self.api_key)
     def capabilities(self):
         return {"structured_output": False, "tool_calling": False, "streaming": False}
+
+    def tool_schemas(self):
+        """Return provider-neutral function schemas for model tool calling."""
+        return []
+
+    def chat_turn(self, messages: list[dict[str, Any]], tools=None) -> dict[str, Any]:
+        """Return a normalized assistant turn.
+
+        Providers that do not implement native tools deliberately fail loudly;
+        the operator can then fall back to the existing extraction flow.
+        """
+        raise ProviderError("This provider does not implement tool calling", kind="unsupported", retryable=False)
     def extract(self, text: str) -> dict:
         raise NotImplementedError
     def chat(self, text: str) -> str:

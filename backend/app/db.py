@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     flexible INTEGER DEFAULT 1,
     dependencies TEXT DEFAULT '[]',
     status TEXT DEFAULT 'todo',
+    tag TEXT,
+    active_until TEXT,
     completed_at TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
@@ -172,6 +174,7 @@ def _ensure_columns(conn):
             "preferred_start", "preferred_end", "min_session_minutes",
             "max_session_minutes", "splittable", "flexible", "dependencies",
             "status", "completed_at", "created_at", "updated_at",
+            "tag", "active_until",
         ],
         "commitments": [
             "id", "title", "kind", "tag", "recurrence", "days_of_week",
@@ -231,7 +234,9 @@ def save_settings(s):
 
 def now_iso():
     from datetime import datetime, timezone
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    # Metadata timestamps double as optimistic-concurrency versions; retain
+    # microseconds so two edits in one second cannot share a version.
+    return datetime.now(timezone.utc).isoformat()
 
 def row_to_dict(r):
     return dict(r) if r else None
@@ -313,20 +318,20 @@ def create_task(data):
     ts = now_iso()
     with connect() as conn:
         cur = conn.execute(
-            "INSERT INTO tasks(project_id,title,description,estimated_minutes,remaining_minutes,deadline,priority,preferred_days,preferred_start,preferred_end,min_session_minutes,max_session_minutes,splittable,flexible,dependencies,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO tasks(project_id,title,description,estimated_minutes,remaining_minutes,deadline,priority,preferred_days,preferred_start,preferred_end,min_session_minutes,max_session_minutes,splittable,flexible,dependencies,status,tag,active_until,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (data.get("project_id"), data["title"], data.get("description",""),
              data.get("estimated_minutes",60), data.get("remaining_minutes", data.get("estimated_minutes",60)),
              data.get("deadline"), data.get("priority",3),
              json.dumps(data.get("preferred_days",[])), data.get("preferred_start"), data.get("preferred_end"),
              data.get("min_session_minutes",25), data.get("max_session_minutes",90),
              1 if data.get("splittable",True) else 0, 1 if data.get("flexible",True) else 0,
-             json.dumps(data.get("dependencies",[])), data.get("status","todo"), ts, ts))
+             json.dumps(data.get("dependencies",[])), data.get("status","todo"), data.get("tag"), data.get("active_until"), ts, ts))
         new_id = cur.lastrowid
     return get_task(new_id)
 
 def update_task(tid, data):
     ts = now_iso()
-    simple = ["project_id","title","description","estimated_minutes","remaining_minutes","deadline","priority","preferred_start","preferred_end","min_session_minutes","max_session_minutes","status","completed_at"]
+    simple = ["project_id","title","description","estimated_minutes","remaining_minutes","deadline","priority","preferred_start","preferred_end","min_session_minutes","max_session_minutes","status","completed_at","tag","active_until"]
     fields=[]; vals=[]
     for k in simple:
         if k in data:
@@ -450,6 +455,23 @@ def get_planning_proposal(pid):
         result["schedule_preview"] = _json_column(result.pop("schedule_preview_json"), None)
         return result
 
+def list_planning_proposals(conversation_id=None):
+    q = "SELECT * FROM planning_proposals"
+    params = []
+    if conversation_id is not None:
+        q += " WHERE conversation_id=?"
+        params.append(conversation_id)
+    q += " ORDER BY id DESC"
+    with connect() as conn:
+        rows = conn.execute(q, params).fetchall()
+        out = []
+        for row in rows:
+            item = dict(row)
+            item["structured_plan"] = _json_column(item.pop("structured_plan_json"), {})
+            item["schedule_preview"] = _json_column(item.pop("schedule_preview_json"), None)
+            out.append(item)
+        return out
+
 def update_planning_proposal(pid, data):
     fields = []
     values = []
@@ -499,6 +521,19 @@ def get_ai_operation_by_key(key):
         result["result"] = _json_column(result.pop("result_json"), None)
         return result
 
+def get_latest_ai_operation_for_proposal(proposal_id, operation_type="approve_proposal"):
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM ai_operations WHERE proposal_id=? AND operation_type=? ORDER BY id DESC LIMIT 1",
+            (proposal_id, operation_type),
+        ).fetchone()
+        if not row:
+            return None
+        result = dict(row)
+        result["arguments"] = _json_column(result.pop("arguments_json"), {})
+        result["result"] = _json_column(result.pop("result_json"), None)
+        return result
+
 def get_conversation(conversation_id):
     with connect() as conn:
         row = conn.execute("SELECT * FROM ai_conversations WHERE id=?", (conversation_id,)).fetchone()
@@ -518,6 +553,79 @@ def save_conversation(conversation_id, messages):
         )
     return get_conversation(conversation_id)
 
+
+def _apply_change_operations(conn, operations, ts, created):
+    """Apply a validated change set inside the caller's SQLite transaction."""
+    table_fields = {
+        "project": {"name", "description", "kind", "total_sessions", "session_minutes", "target_deadline"},
+        "task": {"project_id", "title", "description", "estimated_minutes", "remaining_minutes", "deadline", "priority", "preferred_days", "preferred_start", "preferred_end", "min_session_minutes", "max_session_minutes", "splittable", "flexible", "dependencies", "status", "completed_at", "tag", "active_until"},
+        "commitment": {"title", "kind", "tag", "recurrence", "days_of_week", "start_time", "end_time", "start_date", "end_date", "one_time_date"},
+    }
+    tables = {"project": "projects", "task": "tasks", "commitment": "commitments"}
+    id_keys = {"project": "project_id", "task": "task_id", "commitment": "commitment_id"}
+    for op in operations or []:
+        entity = op["entity_type"]
+        action = op["operation"]
+        fields = dict(op.get("fields") or {})
+        if entity == "milestone":
+            if action == "create":
+                conn.execute(
+                    "INSERT INTO milestones(project_id,title,description,deadline,sequence,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                    (fields.get("project_id"), fields["title"], fields.get("description", ""), fields.get("deadline"), fields.get("sequence", 0), fields.get("status", "todo"), ts, ts),
+                )
+                created["milestones"].append({"id": conn.execute("SELECT last_insert_rowid()").fetchone()[0], "title": fields["title"]})
+                continue
+            table, record_id = "milestones", op.get("target_id")
+            current = conn.execute("SELECT updated_at FROM milestones WHERE id=?", (record_id,)).fetchone()
+            if not current:
+                raise ValueError(f"Milestone {record_id} not found")
+            allowed = {"project_id", "title", "description", "deadline", "sequence", "status"}
+        else:
+            table, record_id = tables[entity], op.get("target_id")
+            if action == "create":
+                allowed = table_fields[entity]
+                insert_fields = [key for key in fields if key in allowed]
+                defaults = {"project": {"name": fields.get("name", "Untitled project")}, "task": {"title": fields.get("title", "Untitled task")}, "commitment": {"title": fields.get("title", "Untitled commitment" )}}
+                insert_fields = list(dict.fromkeys(insert_fields + [key for key in defaults[entity] if key not in insert_fields]))
+                values = []
+                for key in insert_fields:
+                    value = fields.get(key, defaults[entity].get(key))
+                    if key in ("preferred_days", "dependencies", "days_of_week"):
+                        value = json.dumps(value if value is not None else [])
+                    elif key in ("splittable", "flexible") and value is not None:
+                        value = 1 if value else 0
+                    values.append(value)
+                conn.execute(f"INSERT INTO {table}({','.join(insert_fields)},created_at,updated_at) VALUES({','.join('?' for _ in insert_fields)},?,?)", (*values, ts, ts))
+                new_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                created[f"{entity}s"].append({"id": new_id, "title": fields.get("title") or fields.get("name"), "name": fields.get("name")})
+                continue
+            allowed = table_fields[entity]
+            current = conn.execute(f"SELECT updated_at FROM {table} WHERE id=?", (record_id,)).fetchone()
+            if not current:
+                raise ValueError(f"{entity.title()} {record_id} not found")
+        expected = op.get("expected_updated_at")
+        if expected and current["updated_at"] != expected:
+            raise ValueError(f"{entity.title()} {record_id} changed since this proposal was created")
+        if action == "delete":
+            conn.execute(f"DELETE FROM {table} WHERE id=?", (record_id,))
+            created["deleted"].append({"entity_type": entity, "id": record_id})
+            continue
+        safe = {key: value for key, value in fields.items() if key in allowed}
+        if not safe:
+            continue
+        assignments = []
+        values = []
+        for key, value in safe.items():
+            if key in ("preferred_days", "dependencies", "days_of_week"):
+                value = json.dumps(value)
+            elif key in ("splittable", "flexible"):
+                value = 1 if value else 0
+            assignments.append(f"{key}=?")
+            values.append(value)
+        assignments.append("updated_at=?")
+        values.extend([ts, record_id])
+        conn.execute(f"UPDATE {table} SET {','.join(assignments)} WHERE id=?", values)
+
 def apply_planning_proposal_transaction(proposal_id, intent, preview_blocks):
     """Apply a validated plan and its schedule in one SQLite transaction.
 
@@ -528,12 +636,57 @@ def apply_planning_proposal_transaction(proposal_id, intent, preview_blocks):
     project_map = {}
     task_map = {}
     commitment_map = {}
-    created = {"projects": [], "milestones": [], "tasks": [], "commitments": [], "blocks": []}
+    created = {"projects": [], "milestones": [], "tasks": [], "commitments": [], "blocks": [], "deleted": []}
 
     with connect() as conn:
         row = conn.execute("SELECT status FROM planning_proposals WHERE id=?", (proposal_id,)).fetchone()
         if not row or row["status"] not in ("draft", "previewed"):
             raise ValueError("Planning proposal is no longer applicable")
+
+        undo_operations = []
+        for operation in intent.get("operations", []):
+            entity = operation["entity_type"]
+            target_id = operation.get("target_id")
+            table = {"project": "projects", "task": "tasks", "commitment": "commitments", "milestone": "milestones"}.get(entity)
+            if operation["operation"] in ("update", "set_recurrence", "delete") and table and target_id is not None:
+                before = conn.execute(f"SELECT * FROM {table} WHERE id=?", (target_id,)).fetchone()
+                if before:
+                    before = dict(before)
+                    if operation["operation"] == "delete":
+                        fields = {key: value for key, value in before.items() if key not in ("id", "created_at", "updated_at")}
+                        for key in ("preferred_days", "dependencies", "days_of_week"):
+                            if key in fields and isinstance(fields[key], str):
+                                fields[key] = json.loads(fields[key] or "[]")
+                        undo_operations.append({"operation": "create", "entity_type": entity, "fields": fields, "reason": f"Undo deletion of {entity} #{target_id}"})
+                    else:
+                        mutable = set(operation.get("fields", {}))
+                        undo_operations.append({"operation": "update", "entity_type": entity, "target_id": target_id, "fields": {key: before[key] for key in mutable if key in before}, "reason": f"Undo update of {entity} #{target_id}"})
+
+        _apply_change_operations(conn, intent.get("operations", []), ts, created)
+        operation_now = datetime.now().replace(microsecond=0).isoformat()
+        for operation in intent.get("operations", []):
+            entity = operation["entity_type"]
+            target_id = operation.get("target_id")
+            if operation["operation"] in ("update", "set_recurrence", "delete") and target_id is not None:
+                if entity == "commitment":
+                    conn.execute("DELETE FROM schedule_blocks WHERE commitment_id=? AND status='scheduled' AND start_dt >= ?", (target_id, operation_now))
+                elif entity == "task" and operation["operation"] == "delete":
+                    conn.execute("DELETE FROM schedule_blocks WHERE task_id=? AND status='scheduled' AND start_dt >= ?", (target_id, operation_now))
+        for item in created["projects"]:
+            if item.get("name"):
+                project_map[item["name"].casefold()] = item["id"]
+        for item in created["tasks"]:
+            if item.get("title"):
+                task_map[item["title"].casefold()] = item["id"]
+        for item in created["commitments"]:
+            if item.get("title"):
+                commitment_map[item["title"].casefold()] = item["id"]
+        # Operation-created rows are reversible as well.
+        for entity, key in (("project", "projects"), ("task", "tasks"), ("commitment", "commitments"), ("milestone", "milestones")):
+            for item in created.get(key, []):
+                if item.get("id") and intent.get("operations"):
+                    undo_operations.append({"operation": "delete", "entity_type": entity, "target_id": item["id"], "fields": {}, "reason": f"Undo created {entity} #{item['id']}"})
+        created["undo_operations"] = undo_operations
 
         existing_projects = {
             row["name"].casefold(): dict(row)
@@ -580,13 +733,13 @@ def apply_planning_proposal_transaction(proposal_id, intent, preview_blocks):
                 elif isinstance(dependency, str) and dependency.casefold() in task_map:
                     dependencies.append(task_map[dependency.casefold()])
             cur = conn.execute(
-                "INSERT INTO tasks(project_id,title,description,estimated_minutes,remaining_minutes,deadline,priority,preferred_days,preferred_start,preferred_end,min_session_minutes,max_session_minutes,splittable,flexible,dependencies,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO tasks(project_id,title,description,estimated_minutes,remaining_minutes,deadline,priority,preferred_days,preferred_start,preferred_end,min_session_minutes,max_session_minutes,splittable,flexible,dependencies,status,tag,active_until,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (project_id, task["title"], task.get("description", ""), task.get("estimated_minutes", 60),
                  task.get("estimated_minutes", 60), task.get("deadline"), task.get("priority", 3),
                  json.dumps(task.get("preferred_days", [])), task.get("preferred_start"), task.get("preferred_end"),
                  task.get("min_session_minutes", 25), task.get("max_session_minutes", 90),
                  1 if task.get("splittable", True) else 0, 1 if task.get("flexible", True) else 0,
-                 json.dumps(dependencies), "todo", ts, ts),
+                 json.dumps(dependencies), "todo", task.get("tag"), task.get("active_until"), ts, ts),
             )
             task_map[task["title"].casefold()] = cur.lastrowid
             previous_task_id = cur.lastrowid
@@ -647,6 +800,30 @@ def apply_planning_proposal_transaction(proposal_id, intent, preview_blocks):
              "success", json.dumps(created), ts, ts),
         )
     return created
+
+
+def revert_planning_proposal(proposal_id):
+    ts = now_iso()
+    with connect() as conn:
+        proposal = conn.execute("SELECT status FROM planning_proposals WHERE id=?", (proposal_id,)).fetchone()
+        if not proposal or proposal["status"] != "approved":
+            raise ValueError("Only an approved proposal can be reverted")
+        row = conn.execute(
+            "SELECT result_json FROM ai_operations WHERE proposal_id=? AND operation_type='approve_proposal' ORDER BY id DESC LIMIT 1",
+            (proposal_id,),
+        ).fetchone()
+        result = _json_column(row["result_json"], {}) if row else {}
+        undo = result.get("undo_operations", [])
+        if not undo:
+            raise ValueError("This proposal has no reversible change set")
+        reverted = {"projects": [], "milestones": [], "tasks": [], "commitments": [], "blocks": [], "deleted": []}
+        _apply_change_operations(conn, undo, ts, reverted)
+        conn.execute("UPDATE planning_proposals SET status='reverted', updated_at=? WHERE id=?", (ts, proposal_id))
+        conn.execute(
+            "INSERT INTO ai_operations(proposal_id,operation_type,target_type,target_id,arguments_json,status,result_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+            (proposal_id, "revert_proposal", "planning_proposal", proposal_id, json.dumps({"proposal_id": proposal_id}), "success", json.dumps(reverted), ts, ts),
+        )
+        return reverted
 
 def list_commitments(tag=None):
     q = "SELECT * FROM commitments"
@@ -859,8 +1036,8 @@ def import_all(payload: dict) -> dict:
                 "INSERT INTO tasks(id,project_id,title,description,estimated_minutes,remaining_minutes,"
                 "deadline,priority,preferred_days,preferred_start,preferred_end,"
                 "min_session_minutes,max_session_minutes,splittable,flexible,"
-                "dependencies,status,completed_at,created_at,updated_at) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "dependencies,status,tag,active_until,completed_at,created_at,updated_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (t.get("id"), t.get("project_id"), t["title"], t.get("description", ""),
                  t.get("estimated_minutes", 60), t.get("remaining_minutes", t.get("estimated_minutes", 60)),
                  t.get("deadline"), t.get("priority", 3), pdays,
@@ -868,7 +1045,7 @@ def import_all(payload: dict) -> dict:
                  t.get("min_session_minutes", 25), t.get("max_session_minutes", 90),
                  1 if t.get("splittable", True) else 0,
                  1 if t.get("flexible", True) else 0,
-                 deps, t.get("status", "todo"), t.get("completed_at"),
+                 deps, t.get("status", "todo"), t.get("tag"), t.get("active_until"), t.get("completed_at"),
                  ts, t.get("updated_at", ts)),
             )
         counts["tasks"] = len(payload.get("tasks", []))

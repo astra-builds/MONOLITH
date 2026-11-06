@@ -140,21 +140,21 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
   };
 
   return (
-    <div className="flex-1 flex flex-col p-2 gap-2 bg-[#0d0f12] overflow-hidden text-zinc-300 font-mono">
+    <div className="flex-1 flex flex-col p-2 gap-2 bg-obsidian-900 overflow-hidden text-slate-300 font-mono">
       {/* Top Header & Filters */}
-      <div className="bg-[#11141a] border border-[#232733] p-3 rounded flex flex-wrap items-center justify-between gap-2">
+      <div className="bg-obsidian-900 border border-obsidian-750 p-3 rounded flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <span className="font-headline font-black text-white text-base tracking-tight uppercase">
             Fixed Commitments & University Timetable
           </span>
-          <span className="text-[10px] text-zinc-500">
+          <span className="text-[10px] text-slate-500">
             Rules 1 & 2: Fixed commitments take absolute precedence over flexible work
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Tag filters */}
-          <div className="flex items-center bg-[#151922] p-0.5 rounded border border-[#232733] text-[10px]">
+          <div className="flex items-center bg-obsidian-850 p-0.5 rounded border border-obsidian-750 text-[10px]">
             {["all", "university", "personal", "course", "health"].map((t) => (
               <button
                 key={t}
@@ -162,7 +162,7 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
                 className={`px-2 py-0.5 uppercase font-bold rounded-sm transition-colors ${
                   filterTag === t
                     ? "bg-[#8b61c9] text-white"
-                    : "text-zinc-400 hover:text-white"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 {t}
@@ -186,23 +186,23 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-2 overflow-hidden">
         {/* Left Column: Form or Overview */}
         {showForm && (
-          <div className="lg:col-span-1 bg-[#11141a] border border-[#232733] p-3 rounded overflow-y-auto space-y-3">
-            <div className="flex items-center justify-between border-b border-[#232733] pb-2">
+          <div className="lg:col-span-1 bg-obsidian-900 border border-obsidian-750 p-3 rounded overflow-y-auto space-y-3">
+            <div className="flex items-center justify-between border-b border-obsidian-750 pb-2">
               <span className="font-bold text-white text-xs">
                 {editingId ? "Edit Commitment" : "Add Fixed Commitment"}
               </span>
               <button
                 onClick={() => setShowForm(false)}
-                className="text-zinc-500 hover:text-white text-xs"
+                className="text-slate-500 hover:text-white text-xs"
               >
                 ✕
               </button>
             </div>
 
             <div>
-              <label className="text-[10px] text-zinc-400 block mb-1">TITLE</label>
+              <label className="text-[10px] text-slate-400 block mb-1">TITLE</label>
               <input
-                className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded focus:border-[#c5ff42] outline-none"
+                className="w-full bg-obsidian-900 border border-obsidian-750 px-2 py-1.5 text-xs text-white rounded focus:border-[#c5ff42] outline-none"
                 placeholder="e.g. CS101 Lecture or Team Sync"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -211,9 +211,9 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">TAG / CATEGORY</label>
+                <label className="text-[10px] text-slate-400 block mb-1">TAG / CATEGORY</label>
                 <select
-                  className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 px-2 py-1.5 text-xs text-white rounded outline-none"
                   value={form.tag}
                   onChange={(e) => setForm({ ...form, tag: e.target.value })}
                 >
@@ -225,9 +225,9 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
               </div>
 
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">KIND</label>
+                <label className="text-[10px] text-slate-400 block mb-1">KIND</label>
                 <select
-                  className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 px-2 py-1.5 text-xs text-white rounded outline-none"
                   value={form.kind}
                   onChange={(e) => setForm({ ...form, kind: e.target.value })}
                 >
@@ -239,9 +239,9 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">RECURRENCE</label>
+                <label className="text-[10px] text-slate-400 block mb-1">RECURRENCE</label>
                 <select
-                  className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 px-2 py-1.5 text-xs text-white rounded outline-none"
                   value={form.recurrence}
                   onChange={(e) => setForm({ ...form, recurrence: e.target.value })}
                 >
@@ -253,7 +253,7 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
 
             {form.recurrence === "weekly" ? (
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">DAYS OF WEEK</label>
+                <label className="text-[10px] text-slate-400 block mb-1">DAYS OF WEEK</label>
                 <div className="flex gap-1 flex-wrap">
                   {dayNames.map((d, i) => (
                     <button
@@ -263,7 +263,7 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
                       className={`px-2 py-1 text-[10px] font-bold rounded border ${
                         form.days_of_week.includes(i)
                           ? "bg-[#c5ff42] text-black border-[#c5ff42]"
-                          : "bg-[#151922] text-zinc-400 border-[#232733]"
+                          : "bg-obsidian-850 text-slate-400 border-obsidian-750"
                       }`}
                     >
                       {d}
@@ -273,10 +273,10 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
               </div>
             ) : (
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">DATE (YYYY-MM-DD)</label>
+                <label className="text-[10px] text-slate-400 block mb-1">DATE (YYYY-MM-DD)</label>
                 <input
                   type="date"
-                  className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 px-2 py-1.5 text-xs text-white rounded outline-none"
                   value={form.one_time_date}
                   onChange={(e) => setForm({ ...form, one_time_date: e.target.value })}
                 />
@@ -285,26 +285,26 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">START TIME</label>
+                <label className="text-[10px] text-slate-400 block mb-1">START TIME</label>
                 <input
                   type="time"
-                  className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 px-2 py-1.5 text-xs text-white rounded outline-none"
                   value={form.start_time}
                   onChange={(e) => setForm({ ...form, start_time: e.target.value })}
                 />
               </div>
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">END TIME</label>
+                <label className="text-[10px] text-slate-400 block mb-1">END TIME</label>
                 <input
                   type="time"
-                  className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 px-2 py-1.5 text-xs text-white rounded outline-none"
                   value={form.end_time}
                   onChange={(e) => setForm({ ...form, end_time: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2 border-t border-[#232733]">
+            <div className="flex gap-2 pt-2 border-t border-obsidian-750">
               <button
                 onClick={save}
                 className="flex-1 py-1.5 bg-[#c5ff42] text-black font-bold text-xs rounded hover:bg-[#b5f030] transition-colors"
@@ -313,7 +313,7 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
               </button>
               <button
                 onClick={() => setShowForm(false)}
-                className="px-3 py-1.5 bg-[#1c202a] text-zinc-400 text-xs rounded border border-[#232733]"
+                className="px-3 py-1.5 bg-[#1c202a] text-slate-400 text-xs rounded border border-obsidian-750"
               >
                 CANCEL
               </button>
@@ -322,10 +322,10 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
         )}
 
         {/* Right / Full Column: Weekly Visual Grid & Commitments List */}
-        <div className={`${showForm ? "lg:col-span-2" : "lg:col-span-3"} bg-[#11141a] border border-[#232733] p-3 rounded flex flex-col gap-3 overflow-y-auto`}>
+        <div className={`${showForm ? "lg:col-span-2" : "lg:col-span-3"} bg-obsidian-900 border border-obsidian-750 p-3 rounded flex flex-col gap-3 overflow-y-auto`}>
           {/* Visual Weekly Distribution */}
           <div>
-            <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">
+            <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1">
               WEEKLY TIMETABLE OVERVIEW
             </span>
             <div className="grid grid-cols-7 gap-1">
@@ -336,11 +336,11 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
                 return (
                   <div
                     key={i}
-                    className="bg-[#0e1117] border border-[#232733] p-2 rounded flex flex-col gap-1 min-h-[120px]"
+                    className="bg-obsidian-900 border border-obsidian-750 p-2 rounded flex flex-col gap-1 min-h-[120px]"
                   >
-                    <div className="flex items-center justify-between border-b border-[#232733] pb-1">
+                    <div className="flex items-center justify-between border-b border-obsidian-750 pb-1">
                       <span className="text-[10px] font-bold text-white">{d}</span>
-                      <span className="text-[9px] text-zinc-500 font-mono">
+                      <span className="text-[9px] text-slate-500 font-mono">
                         {dayCommits.length}
                       </span>
                     </div>
@@ -350,11 +350,11 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
                           key={c.id}
                           onClick={() => startEdit(c)}
                           className={`p-1 rounded border text-[9px] cursor-pointer hover:border-[#c5ff42] transition-colors ${
-                            tagColors[c.tag] || "border-[#232733] bg-[#14171f]"
+                            tagColors[c.tag] || "border-obsidian-750 bg-obsidian-850"
                           }`}
                         >
                           <div className="font-bold truncate">{c.title}</div>
-                          <div className="text-[8px] text-zinc-400">
+                          <div className="text-[8px] text-slate-400">
                             {c.start_time}–{c.end_time}
                           </div>
                         </div>
@@ -367,15 +367,15 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
           </div>
 
           {/* List View */}
-          <div className="pt-2 border-t border-[#232733]">
-            <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-2">
+          <div className="pt-2 border-t border-obsidian-750">
+            <span className="text-[10px] text-slate-500 font-bold uppercase block mb-2">
               ALL COMMITMENT RULES ({commitments.length})
             </span>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
               {commitments.map((c) => (
                 <div
                   key={c.id}
-                  className="bg-[#0e1117] border border-[#232733] p-2.5 rounded flex flex-col justify-between hover:border-zinc-500 transition-colors"
+                  className="bg-obsidian-900 border border-obsidian-750 p-2.5 rounded flex flex-col justify-between hover:border-zinc-500 transition-colors"
                 >
                   <div>
                     <div className="flex items-center justify-between text-[9px] mb-1">
@@ -390,7 +390,7 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
                       >
                         {c.tag}
                       </span>
-                      <span className="text-zinc-500 font-mono">
+                      <span className="text-slate-500 font-mono">
                         {c.recurrence === "weekly"
                           ? (c.days_of_week || []).map((di) => dayNames[di]).join(", ")
                           : c.one_time_date}
@@ -399,12 +399,12 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
                     <span className="text-xs font-bold text-white block mt-1">
                       {c.title}
                     </span>
-                    <span className="text-[10px] text-zinc-400 font-mono mt-0.5 block">
+                    <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
                       {c.start_time} — {c.end_time}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 mt-2 border-t border-[#232733] text-[9px]">
+                  <div className="flex items-center justify-between pt-2 mt-2 border-t border-obsidian-750 text-[9px]">
                     <span className="text-[#c5ff42] flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#c5ff42]"></span>
                       LOCKED
@@ -412,7 +412,7 @@ export default function CommitmentsView({ onChange }: { onChange: () => void }) 
                     <div className="flex gap-2">
                       <button
                         onClick={() => startEdit(c)}
-                        className="text-zinc-400 hover:text-white"
+                        className="text-slate-400 hover:text-white"
                       >
                         edit
                       </button>

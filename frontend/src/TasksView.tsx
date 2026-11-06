@@ -151,21 +151,21 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
   });
 
   return (
-    <div className="flex-1 flex flex-col p-2 gap-2 bg-[#0d0f12] overflow-hidden text-zinc-300 font-mono">
+    <div className="flex-1 flex flex-col p-2 gap-2 bg-obsidian-900 overflow-hidden text-slate-300 font-mono">
       {/* Header */}
-      <div className="bg-[#11141a] border border-[#232733] p-3 rounded flex items-center justify-between">
+      <div className="bg-obsidian-900 border border-obsidian-750 p-3 rounded flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="font-headline font-black text-white text-base tracking-tight uppercase">
             Tasks & Backlog Triage
           </span>
-          <span className="text-[10px] text-zinc-500">
+          <span className="text-[10px] text-slate-500">
             Manual task controls, dependency graphs, and duration constraints
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Status filter tabs */}
-          <div className="flex items-center bg-[#151922] p-0.5 rounded border border-[#232733] text-[10px]">
+          <div className="flex items-center bg-obsidian-850 p-0.5 rounded border border-obsidian-750 text-[10px]">
             {["all", "todo", "done"].map((s) => (
               <button
                 key={s}
@@ -173,7 +173,7 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                 className={`px-2 py-0.5 uppercase font-bold rounded-sm transition-colors ${
                   statusFilter === s
                     ? "bg-[#8b61c9] text-white"
-                    : "text-zinc-400 hover:text-white"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 {s}
@@ -193,26 +193,26 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-2 overflow-hidden">
         {/* Form Column */}
         {showForm && (
-          <div className="lg:col-span-1 bg-[#11141a] border border-[#232733] p-3 rounded overflow-y-auto space-y-2.5">
-            <div className="flex items-center justify-between border-b border-[#232733] pb-1.5">
+          <div className="lg:col-span-1 bg-obsidian-900 border border-obsidian-750 p-3 rounded overflow-y-auto space-y-2.5">
+            <div className="flex items-center justify-between border-b border-obsidian-750 pb-1.5">
               <span className="font-bold text-white text-xs">CREATE NEW TASK</span>
-              <button onClick={() => setShowForm(false)} className="text-zinc-500 hover:text-white">✕</button>
+              <button onClick={() => setShowForm(false)} className="text-slate-500 hover:text-white">✕</button>
             </div>
 
             <div>
-              <span className="text-[9px] text-zinc-400 block mb-0.5">TITLE</span>
+              <span className="text-[9px] text-slate-400 block mb-0.5">TITLE</span>
               <input
                 placeholder="e.g. Implement Distributed Lock"
-                className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded outline-none focus:border-[#c5ff42]"
+                className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded outline-none focus:border-[#c5ff42]"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
             </div>
 
             <div>
-              <span className="text-[9px] text-zinc-400 block mb-0.5">PROJECT / COURSE</span>
+              <span className="text-[9px] text-slate-400 block mb-0.5">PROJECT / COURSE</span>
               <select
-                className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                 value={form.project_id}
                 onChange={(e) => setForm({ ...form, project_id: e.target.value })}
               >
@@ -227,19 +227,19 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <span className="text-[9px] text-zinc-400 block mb-0.5">ESTIMATED MINS</span>
+                <span className="text-[9px] text-slate-400 block mb-0.5">ESTIMATED MINS</span>
                 <input
                   type="number"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                   value={form.estimated_minutes}
                   onChange={(e) => setForm({ ...form, estimated_minutes: e.target.value })}
                 />
               </div>
               <div>
-                <span className="text-[9px] text-zinc-400 block mb-0.5">DEADLINE</span>
+                <span className="text-[9px] text-slate-400 block mb-0.5">DEADLINE</span>
                 <input
                   type="date"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                   value={form.deadline}
                   onChange={(e) => setForm({ ...form, deadline: e.target.value })}
                 />
@@ -248,19 +248,19 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <span className="text-[9px] text-zinc-400 block mb-0.5">MIN SESSION MINS</span>
+                <span className="text-[9px] text-slate-400 block mb-0.5">MIN SESSION MINS</span>
                 <input
                   type="number"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                   value={form.min_session_minutes}
                   onChange={(e) => setForm({ ...form, min_session_minutes: Number(e.target.value) || 25 })}
                 />
               </div>
               <div>
-                <span className="text-[9px] text-zinc-400 block mb-0.5">MAX SESSION MINS</span>
+                <span className="text-[9px] text-slate-400 block mb-0.5">MAX SESSION MINS</span>
                 <input
                   type="number"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                   value={form.max_session_minutes}
                   onChange={(e) => setForm({ ...form, max_session_minutes: Number(e.target.value) || 90 })}
                 />
@@ -269,19 +269,19 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <span className="text-[9px] text-zinc-400 block mb-0.5">PREFERRED START</span>
+                <span className="text-[9px] text-slate-400 block mb-0.5">PREFERRED START</span>
                 <input
                   type="time"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                   value={form.preferred_start}
                   onChange={(e) => setForm({ ...form, preferred_start: e.target.value })}
                 />
               </div>
               <div>
-                <span className="text-[9px] text-zinc-400 block mb-0.5">PREFERRED END</span>
+                <span className="text-[9px] text-slate-400 block mb-0.5">PREFERRED END</span>
                 <input
                   type="time"
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                   value={form.preferred_end}
                   onChange={(e) => setForm({ ...form, preferred_end: e.target.value })}
                 />
@@ -290,9 +290,9 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <span className="text-[9px] text-zinc-400 block mb-0.5">PRIORITY (1=HIGH, 5=LOW)</span>
+                <span className="text-[9px] text-slate-400 block mb-0.5">PRIORITY (1=HIGH, 5=LOW)</span>
                 <select
-                  className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                  className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                   value={form.priority}
                   onChange={(e) => setForm({ ...form, priority: Number(e.target.value) })}
                 >
@@ -304,7 +304,7 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                 </select>
               </div>
               <div>
-                <span className="text-[9px] text-zinc-400 block mb-0.5">SPLITTABLE SESSIONS</span>
+                <span className="text-[9px] text-slate-400 block mb-0.5">SPLITTABLE SESSIONS</span>
                 <label className="flex items-center gap-1.5 mt-2 cursor-pointer text-xs">
                   <input
                     type="checkbox"
@@ -317,7 +317,7 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
             </div>
 
             <div>
-              <span className="text-[9px] text-zinc-400 block mb-0.5">PREFERRED DAYS</span>
+              <span className="text-[9px] text-slate-400 block mb-0.5">PREFERRED DAYS</span>
               <div className="flex gap-1 flex-wrap">
                 {dayNames.map((d, i) => (
                   <button
@@ -327,7 +327,7 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                     className={`px-2 py-1 text-[10px] font-bold rounded border ${
                       form.preferred_days.includes(i)
                         ? "bg-[#c5ff42] text-black border-[#c5ff42]"
-                        : "bg-[#151922] text-zinc-400 border-[#232733]"
+                        : "bg-obsidian-850 text-slate-400 border-obsidian-750"
                     }`}
                   >
                     {d}
@@ -337,9 +337,9 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
             </div>
 
             <div>
-              <span className="text-[9px] text-zinc-400 block mb-0.5">PREREQUISITE DEPENDENCY</span>
+              <span className="text-[9px] text-slate-400 block mb-0.5">PREREQUISITE DEPENDENCY</span>
               <select
-                className="w-full bg-[#0d0f12] border border-[#232733] p-1.5 text-xs text-white rounded"
+                className="w-full bg-obsidian-900 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                 value={form.dependencies[0] || ""}
                 onChange={(e) =>
                   setForm({
@@ -361,7 +361,7 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
               </select>
             </div>
 
-            <div className="flex gap-2 pt-2 border-t border-[#232733]">
+            <div className="flex gap-2 pt-2 border-t border-obsidian-750">
               <button
                 onClick={editingId ? saveEdit : create}
                 className="flex-1 py-1.5 bg-[#c5ff42] text-black font-bold text-xs rounded hover:bg-[#b5f030]"
@@ -373,7 +373,7 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                   setShowForm(false);
                   setEditingId(null);
                 }}
-                className="px-3 py-1.5 bg-[#1c202a] text-zinc-400 text-xs rounded"
+                className="px-3 py-1.5 bg-[#1c202a] text-slate-400 text-xs rounded"
               >
                 CANCEL
               </button>
@@ -385,10 +385,10 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
         <div
           className={`${
             showForm ? "lg:col-span-2" : "lg:col-span-3"
-          } bg-[#11141a] border border-[#232733] p-3 rounded flex flex-col overflow-y-auto`}
+          } bg-obsidian-900 border border-obsidian-750 p-3 rounded flex flex-col overflow-y-auto`}
         >
           <table className="w-full text-xs text-left">
-            <thead className="text-[10px] text-zinc-500 uppercase border-b border-[#232733]">
+            <thead className="text-[10px] text-slate-500 uppercase border-b border-obsidian-750">
               <tr>
                 <th className="py-2 px-1">ID</th>
                 <th className="py-2">Title</th>
@@ -403,8 +403,8 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
               {filteredTasks.map((t) => {
                 const done = t.status === "done";
                 return (
-                  <tr key={t.id} className="hover:bg-[#151922] transition-colors">
-                    <td className="py-2 px-1 font-mono text-zinc-500 text-[10px]">
+                  <tr key={t.id} className="hover:bg-obsidian-850 transition-colors">
+                    <td className="py-2 px-1 font-mono text-slate-500 text-[10px]">
                       #{t.id}
                     </td>
                     <td className="py-2 font-bold text-white">
@@ -424,13 +424,13 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                               ? "bg-[#3a131a] text-[#ff7d8d] border border-[#7d222e]"
                               : t.status === "waiting"
                                 ? "bg-[#2e2115] text-[#f59e0b] border border-[#7d222e]"
-                                : "bg-[#161c27] text-zinc-300 border border-[#232733]"
+                                : "bg-[#161c27] text-slate-300 border border-obsidian-750"
                         }`}
                       >
                         {t.status}
                       </span>
                     </td>
-                    <td className="py-2 font-mono text-zinc-400">{t.remaining_minutes}m</td>
+                    <td className="py-2 font-mono text-slate-400">{t.remaining_minutes}m</td>
                     <td className="py-2">
                       <span
                         className={`px-1 py-0.2 rounded font-bold text-[9px] ${
@@ -438,13 +438,13 @@ export default function TasksView({ onChange }: { onChange: () => void }) {
                             ? "bg-[#3a131a] text-[#ff7d8d]"
                             : t.priority === 2
                             ? "bg-[#2e2115] text-[#f59e0b]"
-                            : "text-zinc-500"
+                            : "text-slate-500"
                         }`}
                       >
                         P{t.priority}
                       </span>
                     </td>
-                    <td className="py-2 font-mono text-zinc-400 text-[10px]">
+                    <td className="py-2 font-mono text-slate-400 text-[10px]">
                       {t.deadline || "—"}
                     </td>
                     <td className="py-2 text-right space-x-1.5">

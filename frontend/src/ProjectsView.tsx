@@ -94,14 +94,14 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
   const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
-    <div className="flex-1 flex flex-col p-2 gap-2 bg-[#0d0f12] overflow-hidden text-zinc-300 font-mono">
+    <div className="flex-1 flex flex-col p-2 gap-2 bg-obsidian-900 overflow-hidden text-slate-300 font-mono">
       {/* Top Banner */}
-      <div className="bg-[#11141a] border border-[#232733] p-3 rounded flex items-center justify-between">
+      <div className="bg-obsidian-900 border border-obsidian-750 p-3 rounded flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="font-headline font-black text-white text-base tracking-tight uppercase">
             Project & Course Architecture Lab
           </span>
-          <span className="text-[10px] text-zinc-500">
+          <span className="text-[10px] text-slate-500">
             Ordered session roadmaps, milestones, and projected completion telemetry
           </span>
         </div>
@@ -116,27 +116,27 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-2 overflow-hidden">
         {/* Left Column: Projects & Courses List */}
-        <div className="lg:col-span-1 bg-[#11141a] border border-[#232733] p-3 rounded flex flex-col gap-2 overflow-y-auto">
+        <div className="lg:col-span-1 bg-obsidian-900 border border-obsidian-750 p-3 rounded flex flex-col gap-2 overflow-y-auto">
           {showForm && (
-            <div className="bg-[#0e1117] border border-[#232733] p-3 rounded space-y-2 mb-2">
+            <div className="bg-obsidian-900 border border-obsidian-750 p-3 rounded space-y-2 mb-2">
               <span className="font-bold text-white text-xs block">NEW GOAL SPECIFICATION</span>
               <input
                 placeholder="Title (e.g. Agentic AI Course)"
-                className="w-full bg-[#14171f] border border-[#232733] p-1.5 text-xs text-white rounded outline-none focus:border-[#c5ff42]"
+                className="w-full bg-obsidian-850 border border-obsidian-750 p-1.5 text-xs text-white rounded outline-none focus:border-[#c5ff42]"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
               <textarea
                 placeholder="Description / curriculum notes..."
-                className="w-full bg-[#14171f] border border-[#232733] p-1.5 text-xs text-white rounded outline-none h-14"
+                className="w-full bg-obsidian-850 border border-obsidian-750 p-1.5 text-xs text-white rounded outline-none h-14"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-[9px] text-zinc-400 block mb-0.5">KIND</span>
+                  <span className="text-[9px] text-slate-400 block mb-0.5">KIND</span>
                   <select
-                    className="w-full bg-[#14171f] border border-[#232733] p-1.5 text-xs text-white rounded"
+                    className="w-full bg-obsidian-850 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                     value={form.kind}
                     onChange={(e) => setForm({ ...form, kind: e.target.value })}
                   >
@@ -145,10 +145,10 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                   </select>
                 </div>
                 <div>
-                  <span className="text-[9px] text-zinc-400 block mb-0.5">SESSIONS</span>
+                  <span className="text-[9px] text-slate-400 block mb-0.5">SESSIONS</span>
                   <input
                     type="number"
-                    className="w-full bg-[#14171f] border border-[#232733] p-1.5 text-xs text-white rounded"
+                    className="w-full bg-obsidian-850 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                     value={form.total_sessions}
                     onChange={(e) => setForm({ ...form, total_sessions: e.target.value })}
                   />
@@ -156,19 +156,19 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-[9px] text-zinc-400 block mb-0.5">SESSION MINS</span>
+                  <span className="text-[9px] text-slate-400 block mb-0.5">SESSION MINS</span>
                   <input
                     type="number"
-                    className="w-full bg-[#14171f] border border-[#232733] p-1.5 text-xs text-white rounded"
+                    className="w-full bg-obsidian-850 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                     value={form.session_minutes}
                     onChange={(e) => setForm({ ...form, session_minutes: e.target.value })}
                   />
                 </div>
                 <div>
-                  <span className="text-[9px] text-zinc-400 block mb-0.5">TARGET DEADLINE</span>
+                  <span className="text-[9px] text-slate-400 block mb-0.5">TARGET DEADLINE</span>
                   <input
                     type="date"
-                    className="w-full bg-[#14171f] border border-[#232733] p-1.5 text-xs text-white rounded"
+                    className="w-full bg-obsidian-850 border border-obsidian-750 p-1.5 text-xs text-white rounded"
                     value={form.target_deadline}
                     onChange={(e) => setForm({ ...form, target_deadline: e.target.value })}
                   />
@@ -183,7 +183,7 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                 </button>
                 <button
                   onClick={() => setShowForm(false)}
-                  className="px-3 py-1.5 bg-[#1c202a] text-zinc-400 text-xs rounded"
+                  className="px-3 py-1.5 bg-[#1c202a] text-slate-400 text-xs rounded"
                 >
                   CANCEL
                 </button>
@@ -191,7 +191,7 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
             </div>
           )}
 
-          <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">
+          <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1">
             GOALS & COURSES ({projects.length})
           </span>
 
@@ -205,7 +205,7 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                   className={`w-full text-left p-2 rounded border flex flex-col gap-1 transition-colors ${
                     active
                       ? "bg-[#182613] border-[#c5ff42] text-white"
-                      : "bg-[#0e1117] border-[#232733] text-zinc-300 hover:border-zinc-500"
+                      : "bg-obsidian-900 border-obsidian-750 text-slate-300 hover:border-zinc-500"
                   }`}
                 >
                   <div className="flex items-center justify-between text-[9px]">
@@ -218,7 +218,7 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                     >
                       {p.kind}
                     </span>
-                    <span className="text-zinc-500">
+                    <span className="text-slate-500">
                       {p.total_sessions ? `${p.total_sessions} sessions` : ""}
                     </span>
                   </div>
@@ -230,15 +230,15 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
         </div>
 
         {/* Right 2 Columns: Detailed Inspection, Session Roadmap, and Course Generator */}
-        <div className="lg:col-span-2 bg-[#11141a] border border-[#232733] p-4 rounded overflow-y-auto">
+        <div className="lg:col-span-2 bg-obsidian-900 border border-obsidian-750 p-4 rounded overflow-y-auto">
           {!selected ? (
-            <div className="h-full flex items-center justify-center text-zinc-500 text-xs">
+            <div className="h-full flex items-center justify-center text-slate-500 text-xs">
               Select a project or course from the list to view its architecture trace and session roadmap.
             </div>
           ) : (
             <div className="space-y-4">
               {/* Header */}
-              <div className="flex items-start justify-between border-b border-[#232733] pb-3">
+              <div className="flex items-start justify-between border-b border-obsidian-750 pb-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <span
@@ -255,7 +255,7 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                     </h2>
                   </div>
                   {selected.description && (
-                    <p className="text-zinc-400 text-xs mt-1">{selected.description}</p>
+                    <p className="text-slate-400 text-xs mt-1">{selected.description}</p>
                   )}
                 </div>
 
@@ -280,20 +280,20 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
 
               {/* Course Session Generator Modal (Scenario A) */}
               {showCourseGen && (
-                <div className="bg-[#0e1117] border border-[#3b5880] p-3 rounded space-y-2">
+                <div className="bg-obsidian-900 border border-[#3b5880] p-3 rounded space-y-2">
                   <span className="font-bold text-[#73a7f7] text-xs block">
                     SCENARIO A: BATCH COURSE SESSION GENERATOR
                   </span>
-                  <p className="text-[10px] text-zinc-400">
+                  <p className="text-[10px] text-slate-400">
                     Creates sequential, ordered study tasks chained with prerequisite dependencies and assigns preferred day.
                   </p>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                     <div>
-                      <span className="text-[9px] text-zinc-400 block mb-0.5">TOTAL SESSIONS</span>
+                      <span className="text-[9px] text-slate-400 block mb-0.5">TOTAL SESSIONS</span>
                       <input
                         type="number"
-                        className="w-full bg-[#14171f] border border-[#232733] p-1.5 text-white rounded"
+                        className="w-full bg-obsidian-850 border border-obsidian-750 p-1.5 text-white rounded"
                         value={courseGenForm.total_sessions}
                         onChange={(e) =>
                           setCourseGenForm({ ...courseGenForm, total_sessions: Number(e.target.value) })
@@ -301,10 +301,10 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                       />
                     </div>
                     <div>
-                      <span className="text-[9px] text-zinc-400 block mb-0.5">SESSION DURATION (M)</span>
+                      <span className="text-[9px] text-slate-400 block mb-0.5">SESSION DURATION (M)</span>
                       <input
                         type="number"
-                        className="w-full bg-[#14171f] border border-[#232733] p-1.5 text-white rounded"
+                        className="w-full bg-obsidian-850 border border-obsidian-750 p-1.5 text-white rounded"
                         value={courseGenForm.session_minutes}
                         onChange={(e) =>
                           setCourseGenForm({ ...courseGenForm, session_minutes: Number(e.target.value) })
@@ -312,9 +312,9 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                       />
                     </div>
                     <div>
-                      <span className="text-[9px] text-zinc-400 block mb-0.5">STUDY DAY</span>
+                      <span className="text-[9px] text-slate-400 block mb-0.5">STUDY DAY</span>
                       <select
-                        className="w-full bg-[#14171f] border border-[#232733] p-1.5 text-white rounded"
+                        className="w-full bg-obsidian-850 border border-obsidian-750 p-1.5 text-white rounded"
                         value={courseGenForm.day_of_week}
                         onChange={(e) =>
                           setCourseGenForm({ ...courseGenForm, day_of_week: Number(e.target.value) })
@@ -328,7 +328,7 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                       </select>
                     </div>
                     <div>
-                      <span className="text-[9px] text-zinc-400 block mb-0.5">SPLIT HALF-SESSIONS</span>
+                      <span className="text-[9px] text-slate-400 block mb-0.5">SPLIT HALF-SESSIONS</span>
                       <label className="flex items-center gap-1.5 mt-2 cursor-pointer text-zinc-200">
                         <input
                           type="checkbox"
@@ -348,7 +348,7 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-2 border-t border-[#232733]">
+                  <div className="flex gap-2 pt-2 border-t border-obsidian-750">
                     <button
                       onClick={handleGenerateCourseSessions}
                       className="px-4 py-1.5 bg-[#c5ff42] text-black font-bold text-xs rounded hover:bg-[#b5f030]"
@@ -357,7 +357,7 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                     </button>
                     <button
                       onClick={() => setShowCourseGen(false)}
-                      className="px-3 py-1.5 bg-[#1c202a] text-zinc-400 text-xs rounded"
+                      className="px-3 py-1.5 bg-[#1c202a] text-slate-400 text-xs rounded"
                     >
                       CANCEL
                     </button>
@@ -367,8 +367,8 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
 
               {/* Progress & Estimated Completion Telemetry */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
-                <div className="bg-[#0e1117] p-2.5 rounded border border-[#232733]">
-                  <span className="text-[9px] text-zinc-500 uppercase block">COMPLETION STATUS</span>
+                <div className="bg-obsidian-900 p-2.5 rounded border border-obsidian-750">
+                  <span className="text-[9px] text-slate-500 uppercase block">COMPLETION STATUS</span>
                   <span className="text-base font-bold text-white block mt-0.5">
                     {selected.completed} / {selected.tasks?.length || 0}
                   </span>
@@ -377,26 +377,26 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                   </span>
                 </div>
 
-                <div className="bg-[#0e1117] p-2.5 rounded border border-[#232733]">
-                  <span className="text-[9px] text-zinc-500 uppercase block">ESTIMATED COMPLETION</span>
+                <div className="bg-obsidian-900 p-2.5 rounded border border-obsidian-750">
+                  <span className="text-[9px] text-slate-500 uppercase block">ESTIMATED COMPLETION</span>
                   <span className="text-xs font-bold text-[#c5ff42] block mt-1 truncate">
                     {selected.estimated_completion
                       ? selected.estimated_completion.slice(0, 10)
                       : "Pending schedule"}
                   </span>
-                  <span className="text-[9px] text-zinc-500">
+                  <span className="text-[9px] text-slate-500">
                     {selected.target_deadline
                       ? `Target: ${selected.target_deadline}`
                       : "No target deadline"}
                   </span>
                 </div>
 
-                <div className="bg-[#0e1117] p-2.5 rounded border border-[#232733]">
-                  <span className="text-[9px] text-zinc-500 uppercase block">REMAINING WORK</span>
+                <div className="bg-obsidian-900 p-2.5 rounded border border-obsidian-750">
+                  <span className="text-[9px] text-slate-500 uppercase block">REMAINING WORK</span>
                   <span className="text-base font-bold text-white block mt-0.5">
                     {selected.remaining_tasks} tasks
                   </span>
-                  <span className="text-[9px] text-zinc-500">
+                  <span className="text-[9px] text-slate-500">
                     {(
                       (selected.tasks || []).reduce(
                         (acc: number, t: any) => acc + (t.remaining_minutes || 0),
@@ -407,8 +407,8 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                   </span>
                 </div>
 
-                <div className="bg-[#0e1117] p-2.5 rounded border border-[#232733]">
-                  <span className="text-[9px] text-zinc-500 uppercase block">SCHEDULED BLOCKS</span>
+                <div className="bg-obsidian-900 p-2.5 rounded border border-obsidian-750">
+                  <span className="text-[9px] text-slate-500 uppercase block">SCHEDULED BLOCKS</span>
                   <span className="text-base font-bold text-white block mt-0.5">
                     {selected.blocks?.length || 0}
                   </span>
@@ -418,7 +418,7 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
 
               {/* Progress bar */}
               <div>
-                <div className="h-1.5 bg-[#0e1117] border border-[#232733] rounded overflow-hidden">
+                <div className="h-1.5 bg-obsidian-900 border border-obsidian-750 rounded overflow-hidden">
                   <div
                     className="h-full bg-[#c5ff42]"
                     style={{ width: `${selected.progress || 0}%` }}
@@ -442,28 +442,28 @@ export default function ProjectsView({ onChange }: { onChange: () => void }) {
                         key={t.id}
                         className={`p-2 rounded border flex items-center justify-between text-xs ${
                           done
-                            ? "bg-[#14231b]/60 border-[#2b593a] text-zinc-400"
-                            : "bg-[#0e1117] border-[#232733] text-zinc-200"
+                            ? "bg-[#14231b]/60 border-[#2b593a] text-slate-400"
+                            : "bg-obsidian-900 border-obsidian-750 text-zinc-200"
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className="font-bold text-zinc-500 text-[10px] w-6">
+                          <span className="font-bold text-slate-500 text-[10px] w-6">
                             #{String(index + 1).padStart(2, "0")}
                           </span>
-                          <span className={done ? "line-through text-zinc-500" : "font-bold text-white"}>
+                          <span className={done ? "line-through text-slate-500" : "font-bold text-white"}>
                             {t.title}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-3 text-[10px] font-mono">
-                          <span className="text-zinc-500">
+                          <span className="text-slate-500">
                             {t.remaining_minutes}m
                           </span>
                           <span
                             className={`px-1 rounded uppercase font-bold text-[8px] ${
                               done
                                 ? "bg-[#1f3817] text-[#c5ff42]"
-                                : "bg-[#1c202a] text-zinc-400"
+                                : "bg-[#1c202a] text-slate-400"
                             }`}
                           >
                             {t.status}

@@ -1,4 +1,7 @@
+import json
 import os
+import copy
+from datetime import datetime
 from typing import Any
 
 from pydantic import ValidationError
@@ -10,8 +13,8 @@ from .gemini import GeminiProvider
 from .openrouter import OpenRouterProvider
 from .offline_parser import parse_offline
 from .prompts import build_planning_prompt
-from .schemas import PlanningIntent, PlanningProposal
-from .tools import execute_tool
+from .schemas import ChangeOperation, PlanningIntent, PlanningProposal
+from .tools import TOOL_DEFINITIONS, execute_tool
 from ..scheduler import schedule as run_schedule, schedule_diff
 
 # Last provider error observed during an actual AI call.  Kept in-memory so
@@ -123,6 +126,7 @@ def _clean_task(raw: dict[str, Any], project_name: str | None = None) -> dict:
         "preferred_start", "preferred_end", "min_session_minutes",
         "max_session_minutes", "splittable", "flexible", "dependencies",
         "project_name",
+        "tag", "active_until",
     }
     task = {key: value for key, value in raw.items() if key in allowed}
     if project_name and not task.get("project_name"):
@@ -182,6 +186,7 @@ def _normalize_raw_intent(raw: dict) -> PlanningIntent:
         "constraints": raw.get("constraints") or {},
         "clarifications": raw.get("clarifications") or [],
         "assumptions": raw.get("assumptions") or [],
+        "operations": raw.get("operations") or [],
     }
     return PlanningIntent.model_validate(intent)
 
@@ -302,7 +307,7 @@ def handle_conversation_message(conversation_id: str, text: str, confirm: bool =
         action = execute_tool("get_tasks", {"status": "todo"}, conversation_id=conversation_id)
         reply = {"type": "tool_result", "tool": action, "message": "Here are your remaining tasks."}
     else:
-        planned = plan_request(text, conversation_id=conversation_id)
+        planned = operator_request(text, conversation_id=conversation_id)
         reply = {"type": "proposal", **planned}
 
     messages.append({"role": "assistant", "content": reply})
@@ -310,8 +315,141 @@ def handle_conversation_message(conversation_id: str, text: str, confirm: bool =
     return {"conversation_id": conversation_id, **reply}
 
 
+OPERATOR_SYSTEM = """You are MONOLITH's state-aware planning operator.
+Use read tools to inspect the user's actual records before proposing changes.
+Never invent IDs, records, availability, or calendar timestamps. Do not modify
+the database in this phase: return a JSON change set for review. If the target
+is ambiguous, return clarifications instead of guessing. The backend scheduler
+will decide concrete calendar slots.
+
+Return JSON only when you are done:
+{"summary":"...", "clarifications":[], "assumptions":[],
+ "operations":[{"operation":"update|create|delete|set_recurrence",
+ "entity_type":"project|task|commitment|milestone", "target_id":123,
+ "fields":{}, "reason":"..."}], "tasks":[], "projects":[],
+ "commitments":[]}
+"""
+
+
+def _decode_operator_json(content: str) -> dict:
+    content = (content or "").strip()
+    if content.startswith("```"):
+        content = content.strip("`")
+        if content.startswith("json"):
+            content = content[4:]
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Operator returned malformed structured output") from exc
+
+
+def _validate_operator_operations(intent: PlanningIntent) -> PlanningIntent:
+    """Reject guessed/missing targets before a proposal can be reviewed."""
+    clarifications = list(intent.clarifications)
+    checked = []
+    for operation in intent.operations:
+        if operation.operation == "create":
+            checked.append(operation)
+            continue
+        getters = {
+            "project": db.get_project,
+            "task": db.get_task,
+            "commitment": db.get_commitment,
+            "milestone": db.get_milestone,
+        }
+        target = getters[operation.entity_type](operation.target_id)
+        if not target:
+            clarifications.append(f"I could not find {operation.entity_type} #{operation.target_id}.")
+        else:
+            checked.append(operation.model_copy(update={"expected_updated_at": target.get("updated_at")}))
+    return intent.model_copy(update={"clarifications": list(dict.fromkeys(clarifications)), "operations": checked})
+
+
+def operator_request(text: str, conversation_id: str | None = None) -> dict:
+    """Run a bounded read/inspect/draft loop and persist a reviewable proposal.
+
+    Only read tools are exposed. Mutations are represented as typed operations
+    in the proposal and remain subject to the existing approval pipeline.
+    """
+    if not text or not text.strip():
+        raise ValueError("Operator request cannot be empty")
+    provider = get_provider()
+    if provider is None or not provider.is_configured() or not provider.capabilities().get("tool_calling"):
+        return plan_request(text, conversation_id=conversation_id)
+
+    context = get_planning_context(conversation_id)
+    compact_context = {
+        "timezone": context["settings"].get("timezone", "UTC"),
+        "today": datetime.now().date().isoformat(),
+        "counts": {key: len(context[key]) for key in ("projects", "tasks", "commitments", "schedule_blocks")},
+        "conversation": context.get("conversation"),
+        "pending_proposals": db.list_planning_proposals(conversation_id) if conversation_id else [],
+    }
+    messages = [
+        {"role": "system", "content": OPERATOR_SYSTEM + "\nApplication metadata:\n" + json.dumps(compact_context, default=str)},
+        {"role": "user", "content": text.strip()},
+    ]
+    max_turns = 8
+    all_tool_events = []
+    for _ in range(max_turns):
+        try:
+            turn = provider.chat_turn(messages, tools=provider.tool_schemas())
+        except Exception as exc:
+            global _LAST_PROVIDER_ERROR
+            _LAST_PROVIDER_ERROR = _provider_error(exc)
+            return plan_request(text, conversation_id=conversation_id) | {"ai_error": _LAST_PROVIDER_ERROR, "operator_fallback": True}
+        calls = turn.get("tool_calls") or []
+        if not calls:
+            raw = _decode_operator_json(turn.get("content", ""))
+            try:
+                intent = _normalize_raw_intent(raw)
+            except (ValidationError, TypeError, ValueError) as exc:
+                raise ValueError(f"Operator response failed validation: {exc}") from exc
+            intent = _validate_operator_operations(intent)
+            proposal = PlanningProposal(
+                request_text=text.strip(), source=_provider_name(provider), intent=intent,
+                risk_level="high" if intent.operations else "medium" if intent.clarifications else "low",
+            )
+            stored = db.create_planning_proposal({
+                "conversation_id": conversation_id,
+                "request_text": proposal.request_text,
+                "source": proposal.source,
+                "structured_plan": proposal.model_dump(mode="json"),
+            })
+            return {
+                "proposal_id": stored["id"], "intent_type": classify_request(text),
+                "source": _provider_name(provider), "configured": True,
+                "proposal": proposal.model_dump(mode="json"),
+                "operator": {"turns": len(all_tool_events) + 1, "tool_events": all_tool_events},
+            }
+        assistant_message = {"role": "assistant", "content": turn.get("content", ""), "tool_calls": calls}
+        messages.append(assistant_message)
+        for call in calls:
+            name = call.get("name")
+            definition = TOOL_DEFINITIONS.get(name)
+            if not definition or definition["risk"] != "read":
+                result = {"name": name, "success": False, "error": "Only read tools are available during operator inspection."}
+            else:
+                result = execute_tool(name, call.get("arguments") or {}, conversation_id=conversation_id)
+            all_tool_events.append({"name": name, "success": result.get("success"), "error": result.get("error")})
+            messages.append({"role": "tool", "tool_name": name, "tool_call_id": call.get("id"), "content": json.dumps(result, default=str)})
+    raise ValueError("Operator exceeded the maximum of 8 inspection turns")
+
+
 def _proposal_intent(proposal: dict) -> dict:
     return proposal.get("structured_plan", {}).get("intent", {})
+
+
+def _validate_change_set(intent: dict, settings: dict):
+    operations = intent.get("operations", [])
+    limit = int(settings.get("ai_max_mutations", 25))
+    if len(operations) > limit:
+        raise ValueError(f"Proposal contains {len(operations)} mutations; limit is {limit}")
+    if settings.get("ai_require_delete_confirmation", True):
+        deletes = [op for op in operations if op.get("operation") == "delete"]
+        if deletes and settings.get("ai_autonomy") == "suggestion":
+            raise ValueError("Delete operations require assisted or full autonomy plus explicit approval")
+    return operations
 
 
 def _preview_inputs(intent: dict, context: dict):
@@ -375,7 +513,54 @@ def _preview_inputs(intent: dict, context: dict):
         commitment["id"] = next_id
         next_id -= 1
         commitments.append(commitment)
-    return tasks, commitments, projects
+
+    affected = {"task": set(), "commitment": set(), "project": set(), "milestone": set()}
+    # Operations are applied to copies only. They become real changes only in
+    # the transactional approval path.
+    for operation in intent.get("operations", []):
+        entity = operation["entity_type"]
+        op = operation["operation"]
+        target_id = operation.get("target_id")
+        fields = dict(operation.get("fields") or {})
+        rows = {"task": tasks, "commitment": commitments, "project": projects}.get(entity, [])
+        if op == "create":
+            if entity == "project":
+                record = {**fields, "id": next_id, "name": fields.get("name", "Untitled project")}
+                next_id -= 1
+                projects.append(record)
+            elif entity == "task":
+                record = {**fields, "id": next_id, "title": fields.get("title", "Untitled task"), "remaining_minutes": fields.get("remaining_minutes", fields.get("estimated_minutes", 60)), "status": "todo", "dependencies": fields.get("dependencies", []), "preferred_days": fields.get("preferred_days", [])}
+                next_id -= 1
+                tasks.append(record)
+            elif entity == "commitment":
+                record = {**fields, "id": next_id, "title": fields.get("title", "Untitled commitment"), "days_of_week": fields.get("days_of_week", [])}
+                next_id -= 1
+                commitments.append(record)
+            continue
+        record = next((row for row in rows if row.get("id") == target_id), None)
+        if not record:
+            continue
+        affected[entity].add(target_id)
+        if op in ("update", "set_recurrence"):
+            record.update(fields)
+        elif op == "delete":
+            rows.remove(record)
+    return tasks, commitments, projects, affected
+
+
+def _filter_affected_existing_blocks(blocks, affected):
+    """Remove stale future generated rows for changed domain records."""
+    now = datetime.now().replace(microsecond=0).isoformat()
+    result = []
+    for block in blocks:
+        entity = "task" if block.get("task_id") is not None else "commitment" if block.get("commitment_id") is not None else None
+        target = block.get("task_id") if entity == "task" else block.get("commitment_id")
+        if entity and target in affected.get(entity, set()) and block.get("status") == "scheduled" and block.get("start_dt", "") >= now:
+            # Generated task blocks are flexible; generated commitment rows are
+            # rebuilt from the updated recurrence. Historical/complete rows stay.
+            continue
+        result.append(block)
+    return result
 
 
 def preview_proposal(proposal_id: int) -> dict:
@@ -387,14 +572,16 @@ def preview_proposal(proposal_id: int) -> dict:
 
     context = get_planning_context()
     intent = _proposal_intent(stored)
-    tasks, commitments, projects = _preview_inputs(intent, context)
+    _validate_change_set(intent, context["settings"])
+    tasks, commitments, projects, affected = _preview_inputs(intent, context)
+    existing_blocks = _filter_affected_existing_blocks(context["schedule_blocks"], affected)
     new_blocks, unscheduled = run_schedule(
         tasks,
         commitments,
         context["settings"],
-        context["schedule_blocks"],
+        existing_blocks,
         projects=projects,
-        horizon_days=180,
+        horizon_days=int(context["settings"].get("ai_max_horizon_days", 180)),
     )
 
     # The scheduler intentionally emits fixed intervals and preserved rows.
@@ -419,6 +606,10 @@ def preview_proposal(proposal_id: int) -> dict:
         "diff": diff,
         "unscheduled": unscheduled,
         "projected_completion_dates": projected,
+        "change_set": {
+            "operations": intent.get("operations", []),
+            "affected": {key: sorted(value) for key, value in affected.items() if value},
+        },
     }
     updated = db.update_planning_proposal(proposal_id, {
         "status": "previewed",
@@ -443,6 +634,8 @@ def approve_proposal(proposal_id: int) -> dict:
     # prevents approval from applying a stale calendar proposal.
     current_preview = preview_proposal(proposal_id)
     preview = current_preview["preview"]
+    if db.get_settings().get("ai_dry_run"):
+        return {"proposal_id": proposal_id, "status": "dry_run", "created": {}, "schedule": preview}
     result = db.apply_planning_proposal_transaction(
         proposal_id,
         _proposal_intent(stored),
@@ -454,6 +647,16 @@ def approve_proposal(proposal_id: int) -> dict:
         "created": result,
         "schedule": preview,
     }
+
+
+def revert_proposal(proposal_id: int) -> dict:
+    """Revert the last approved change set, then regenerate the calendar."""
+    result = db.revert_planning_proposal(proposal_id)
+    # Domain rows and future flexible blocks are restored transactionally;
+    # schedule regeneration remains deterministic and preserves history.
+    from ..routers.schedule import regenerate
+    schedule_result = regenerate()
+    return {"proposal_id": proposal_id, "status": "reverted", "reverted": result, "schedule": schedule_result}
 
 def apply_proposal(proposal: dict) -> dict:
     # create projects, tasks, commitments in DB. Does not schedule.

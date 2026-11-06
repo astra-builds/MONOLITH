@@ -222,6 +222,8 @@ def split_sessions(task):
 
 def tag_for_task(t, project_map=None):
     """Derive a tag string for the task from its project (if any)."""
+    if t.get("tag"):
+        return t["tag"]
     if project_map and t.get("project_id") in (project_map or {}):
         kind = project_map[t["project_id"]].get("kind")
         if kind:
@@ -433,6 +435,22 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
     # All immovable intervals (used for conflict detection)
     all_blocked = locked_intervals + fixed_intervals
 
+    # Index intervals by date. The previous implementation scanned every
+    # blocked and placed interval for every five-minute candidate, which made
+    # slot search degrade quadratically as calendars grew.
+    blocked_by_date = defaultdict(list)
+    placed_by_date = defaultdict(list)
+
+    def _index_interval(index, interval):
+        day = interval["start"].date()
+        end_day = interval["end"].date()
+        while day <= end_day:
+            index[day].append(interval)
+            day += timedelta(days=1)
+
+    for interval in all_blocked:
+        _index_interval(blocked_by_date, interval)
+
     # ------------------------------------------------------------------
     # 3. Pre-compute daily capacity used by commitments (Rule 10)
     # ------------------------------------------------------------------
@@ -471,7 +489,10 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
     def conflicts(start, end):
         """Return list of titles that conflict with [start, end).  Empty = no conflict."""
         hits = []
-        for iv in all_blocked + placed:
+        candidates = blocked_by_date.get(start.date(), []) + placed_by_date.get(start.date(), [])
+        if end.date() != start.date():
+            candidates += blocked_by_date.get(end.date(), []) + placed_by_date.get(end.date(), [])
+        for iv in candidates:
             if start < iv["end"] and end > iv["start"]:
                 hits.append(iv.get("title", "unknown"))
         return hits
@@ -537,7 +558,7 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
                     if we <= ws:
                         return []
                     blocked = []
-                    for iv in all_blocked + placed:
+                    for iv in blocked_by_date.get(d, []) + placed_by_date.get(d, []):
                         s = max(iv["start"], ws)
                         e = min(iv["end"], we)
                         if e > s:
@@ -594,8 +615,9 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
                             return s, e, scan_date
                         # Advance past the conflict end to avoid wasting iterations
                         if hit:
+                            candidates = blocked_by_date.get(s.date(), []) + placed_by_date.get(s.date(), [])
                             conflict_end = max(
-                                iv["end"] for iv in all_blocked + placed
+                                iv["end"] for iv in candidates
                                 if s < iv["end"] and e > iv["start"]
                             )
                             cur_t = conflict_end
@@ -678,6 +700,13 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
             else:
                 deadline_dt = datetime(dl_date.year, dl_date.month, dl_date.day,
                                        wh_e_h, wh_e_m)
+        # ``deadline`` means finish-by; ``active_until`` means the last date
+        # on which this routine/task may receive a session. They are distinct
+        # concepts, but both bound placement when present.
+        if t.get("active_until"):
+            active_date = parse_date(t["active_until"])
+            active_dt = datetime(active_date.year, active_date.month, active_date.day, wh_e_h, wh_e_m)
+            deadline_dt = active_dt if deadline_dt is None else min(deadline_dt, active_dt)
 
         preferred_days = t.get("preferred_days") or []
 
@@ -713,6 +742,7 @@ def schedule(tasks, commitments, settings, existing_blocks, projects=None,
                 "reason": reason,
             }
             placed.append(block)
+            _index_interval(placed_by_date, block)
             placed_for_task.append(block)
             daily_used[day] += dur
             _update_day_last_end(day, e)

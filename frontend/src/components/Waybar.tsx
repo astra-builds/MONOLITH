@@ -27,7 +27,7 @@ export default function Waybar({
     const update = () => {
       const now = new Date();
       setTimeStr(format(now, "HH:mm:ss"));
-      setDateStr(format(now, "yyyy-MM-dd EEE"));
+      setDateStr(format(now, "yyyy-MM-dd"));
     };
     update();
     const interval = setInterval(update, 1000);
@@ -42,121 +42,82 @@ export default function Waybar({
     { id: "settings", num: 5, label: "config" },
   ];
 
+  const dayDone = Math.round(completedPercent);
+
   return (
-    <header className="h-8 w-full bg-[#0a0c0f] border-b border-[#232733] flex items-center justify-between px-2 text-[10px] tracking-wide select-none z-50 shrink-0 font-mono">
-      {/* Left: Workspaces + Routine path + Scrubber timestamp + Completion Pill */}
-      <div className="flex items-center gap-2">
-        {/* Workspaces */}
-        <div className="flex items-center bg-[#14171f] p-0.5 rounded border border-[#232733]">
+    <header className="h-10 bg-obsidian-950 border-b border-obsidian-750 flex items-center justify-between px-3 text-xs tracking-wider shrink-0 z-40 select-none font-mono">
+      {/* Left: window controls + app tabs + active file path */}
+      <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-1.5 pr-2 border-r border-obsidian-700/60">
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+        </div>
+        <nav className="flex items-center space-x-1">
           {WORKSPACES.map((ws) => {
             const active = currentView === ws.id;
             return (
               <button
                 key={ws.id}
                 onClick={() => onViewChange(ws.id)}
-                className={`px-2 py-1 btn-focus btn-active font-bold text-[9px] rounded-sm transition-colors ${
+                className={`px-2.5 py-1 rounded font-semibold flex items-center gap-1.5 transition ${
                   active
-                    ? "bg-[#8b61c9] text-white shadow"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    ? "bg-obsidian-800 text-cyber-neon border border-cyber-neon/40 shadow-[0_0_10px_rgba(57,255,20,0.15)]"
+                    : "hover:bg-obsidian-800 text-slate-400 hover:text-slate-200"
                 }`}
                 title={`Switch to workspace ${ws.num} (${ws.label})`}
               >
-                {ws.num}:{ws.label}
+                <span className={`text-[10px] font-bold opacity-80 ${active ? "text-emerald-400" : "text-slate-500"}`}>
+                  {ws.num}:
+                </span>
+                {ws.label}
               </button>
             );
           })}
-        </div>
-
-        {/* Command / Routine path indicator */}
-        <div className="hidden md:flex items-center gap-1 bg-[#14171f] px-2 py-0.5 rounded border border-[#232733] text-zinc-400">
-          <span className="text-[#c5ff42] font-bold">λ</span>
-          <span className="text-zinc-300 font-mono">~/dotfiles/routine.sh</span>
-        </div>
-
-        {/* Live Scrubber Timestamp */}
-        <div className="flex items-center gap-1 bg-[#14171f] px-2 py-0.5 rounded border border-[#232733] text-zinc-300 font-medium">
-          <span className="text-zinc-400">{dateStr}</span>
-          <span className="text-white font-bold tabular-nums">{timeStr}</span>
-        </div>
-
-        {/* Completion / Workload Pill */}
-        <div
-          className={`flex items-center gap-1.5 px-2 py-0.5 rounded font-bold text-[9px] border ${
-            conflictCount > 0
-              ? "bg-[#3a181d] border-[#7d222e] text-[#ff7d8d]"
-              : "bg-[#172514] border-[#3b661d] text-[#c5ff42]"
-          }`}
-          title={conflictCount > 0 ? `${conflictCount} scheduling conflicts require attention` : "Schedule status"}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              conflictCount > 0
-                ? "bg-[#ff4a68] animate-pulse"
-                : "bg-[#c5ff42] animate-pulse"
-            }`}
-          />
-          <span>
-            {conflictCount > 0
-              ? `! ${conflictCount} CONFLICT${conflictCount > 1 ? "S" : ""}`
-              : `${Math.round(completedPercent)}% DAY COMPLETED`}
-          </span>
+        </nav>
+        <div className="hidden lg:flex items-center gap-1 text-[11px] text-slate-400 bg-obsidian-900 px-2 py-0.5 rounded border border-obsidian-750">
+          <span className="text-cyber-green font-bold">λ</span>
+          <span className="text-slate-300 font-mono">~/dotfiles/routine.sh</span>
         </div>
       </div>
 
-      {/* Center Breadcrumbs / Navigation */}
-      <nav className="hidden xl:flex items-center gap-3 text-[10px] font-bold text-zinc-400 uppercase">
-        {WORKSPACES.map((ws) => (
-          <button
-            key={ws.id}
-            onClick={() => onViewChange(ws.id)}
-            className={`transition-colors pb-0.5 ${
-              currentView === ws.id
-                ? "text-white border-b border-[#c5ff42]"
-                : "hover:text-white"
-            }`}
-          >
-            {ws.label}
-          </button>
-        ))}
-      </nav>
-
-      {/* Right: Telemetry & Status Badges */}
-      <div className="flex items-center gap-2">
-        {/* Planner Quick Trigger */}
-        {onOpenCommandBar && (
-          <button
-            onClick={onOpenCommandBar}
-            className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 bg-[#14171f] hover:bg-[#202635] text-zinc-300 hover:text-white rounded border border-[#232733] transition-colors text-[9px]"
-            title="Open Natural Language Planner (Ctrl+K)"
-          >
-            <span className="text-[#c5ff42] font-black">■</span>
-            <span>⌘K / PLANNER</span>
-          </button>
-        )}
-
-        {/* Demo Seed Quick Trigger */}
-        {onSeedDemo && (
-          <button
-            onClick={onSeedDemo}
-            className="hidden lg:flex items-center gap-1 px-1.5 py-0.5 bg-[#1c2738] hover:bg-[#283850] text-[#73a7f7] rounded border border-[#3b5880] text-[9px]"
-            title="Seed Scenario A & B Demo Data"
-          >
-            <span>⟳ SEED DEMO</span>
-          </button>
-        )}
-
-        {/* Arch & Network telemetry status (decorative) */}
-        <div className="hidden sm:flex items-center gap-2 bg-[#14171f] px-2 py-0.5 rounded border border-[#232733] text-zinc-400 font-mono text-[9px]">
-          <span className="opacity-50">DECORATIVE</span>
-          <span>CPU <strong className="text-zinc-200">12%</strong></span>
-          <span className="text-[#232733]">|</span>
-          <span>RAM <strong className="text-zinc-200">4.2G</strong></span>
+      {/* Right: datetime + day-done pill + quick triggers + telemetry */}
+      <div className="flex items-center space-x-3 text-[11px]">
+        <div className="flex items-center gap-2 bg-obsidian-900 border border-obsidian-750 px-2.5 py-0.5 rounded font-medium">
+          <span className="text-slate-400">{dateStr}</span>
+          <span className="text-cyber-cyan font-semibold tabular-nums">{timeStr}</span>
+          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] bg-emerald-950/80 text-emerald-400 border border-emerald-700/50">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
+            {dayDone}% DAY DONE
+          </span>
         </div>
-
-        {/* Status indicator */}
-        <div className="flex items-center gap-1.5 text-zinc-400 pl-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#c5ff42]"></span>
-          <span className="text-zinc-500 text-[10px] hidden md:inline">monolith @ local</span>
+        <div className="flex items-center gap-1">
+          {onOpenCommandBar && (
+            <button
+              onClick={onOpenCommandBar}
+              className="px-2.5 py-1 bg-obsidian-850 hover:bg-obsidian-750 border border-obsidian-700 rounded text-slate-300 hover:text-white transition flex items-center gap-1 text-[10px]"
+              title="Open Natural Language Planner (Ctrl+K)"
+            >
+              <span className="text-cyber-purple font-bold">⌘K</span> PLANNER
+            </button>
+          )}
+          {onSeedDemo && (
+            <button
+              onClick={onSeedDemo}
+              className="px-2 py-1 bg-obsidian-850 hover:bg-obsidian-750 border border-obsidian-700 rounded text-cyan-400 hover:text-cyan-300 transition text-[10px]"
+              title="Seed Scenario A & B Demo Data"
+            >
+              SEED DEMO
+            </button>
+          )}
+        </div>
+        <div className="hidden xl:flex items-center gap-2 text-slate-400 text-[10px] pl-2 border-l border-obsidian-750">
+          <span>CPU <strong className="text-emerald-400 font-semibold">12%</strong></span>
+          <span>RAM <strong className="text-cyan-400 font-semibold">4.2G</strong></span>
+          <span className="flex items-center gap-1 text-slate-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyber-green"></span>
+            <span className="text-slate-500 text-[10px] hidden md:inline">monolith @ local</span>
+          </span>
         </div>
       </div>
     </header>

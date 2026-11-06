@@ -37,10 +37,12 @@ interface UnscheduledTask {
   reason: string;
 }
 
-const HOUR_HEIGHT = 56; // 56px per hour matching dotfiles inspiration
+const HOUR_HEIGHT = 58; // 58px per hour, matching the redesign spec
 const START_HOUR = 7; // 07:00
 const END_HOUR = 22; // 22:00
 const TOTAL_HOURS = END_HOUR - START_HOUR;
+
+const VIEW_MODES: ViewMode[] = ["day", "week", "month"];
 
 export default function CalendarView() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -60,7 +62,6 @@ export default function CalendarView() {
     priority: 3,
   });
 
-  // Load schedule blocks for current range
   const loadSchedule = async () => {
     setLoading(true);
     try {
@@ -75,7 +76,6 @@ export default function CalendarView() {
       const data = await api.schedule.list(rangeStart.toISOString(), rangeEnd.toISOString());
       setBlocks(data);
 
-      // Also fetch preview to get latest unscheduled diagnostics
       const preview = await api.schedule.preview();
       if (preview && preview.unscheduled) {
         setUnscheduled(preview.unscheduled);
@@ -91,10 +91,8 @@ export default function CalendarView() {
     loadSchedule();
   }, [currentDate]);
 
-  // Keyboard navigation shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore when typing in an input/button/checkbox
       const tag = (e.target as HTMLElement).tagName;
       if (["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(tag)) return;
       if (e.target instanceof HTMLInputElement && e.target.type === "checkbox") return;
@@ -226,7 +224,6 @@ export default function CalendarView() {
     regenerate();
   };
 
-  // Week calculation (Monday to Sunday)
   const weekStart = useMemo(
     () => startOfWeek(currentDate, { weekStartsOn: 1 }),
     [currentDate]
@@ -236,20 +233,17 @@ export default function CalendarView() {
     [weekStart]
   );
 
-  // Month calculation
   const monthDays = useMemo(() => {
     const s = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
     const e = endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 });
     return eachDayOfInterval({ start: s, end: e });
   }, [currentDate]);
 
-  // Filtered blocks
   const visibleBlocks = useMemo(() => {
     if (filterTag === "all") return blocks;
     return blocks.filter((b) => b.tag === filterTag);
   }, [blocks, filterTag]);
 
-  // Daily workload calculations (minutes scheduled per day of the active week)
   const dailyWorkload = useMemo(() => {
     const map: Record<string, number> = {};
     for (const d of weekDays) {
@@ -266,7 +260,6 @@ export default function CalendarView() {
     return map;
   }, [blocks, weekDays]);
 
-  // Telemetry statistics
   const telemetry = useMemo(() => {
     let totalMinutes = 0;
     let deepWorkMinutes = 0;
@@ -294,63 +287,95 @@ export default function CalendarView() {
     return { totalHours, deepHours, deepPercent, vectorMinutes, totalMinutes };
   }, [visibleBlocks]);
 
-  // Live Scrubber current position
   const now = new Date();
   const isCurrentWeek = weekDays.some((d) => isSameDay(d, now));
   const currentHourDecimal = now.getHours() + now.getMinutes() / 60;
   const scrubberTop = (currentHourDecimal - START_HOUR) * HOUR_HEIGHT;
 
-  // Styling helper for event cards by tag
+  const tagAccent = (tag: string) => {
+    switch (tag) {
+      case "university":
+        return {
+          text: "text-cyber-purple",
+          border: "border-l-cyber-purple",
+          bg: "bg-cyber-purple/15",
+          hoverBg: "hover:bg-cyber-purple/25",
+          borderAll: "border border-cyber-purple/40",
+        };
+      case "course":
+      case "project":
+        return {
+          text: "text-cyber-cyan",
+          border: "border-l-cyber-cyan",
+          bg: "bg-cyan-950/40",
+          hoverBg: "hover:bg-cyan-900/40",
+          borderAll: "border border-cyber-cyan/40",
+        };
+      case "personal":
+      case "health":
+        return {
+          text: "text-cyber-amber",
+          border: "border-l-amber-500",
+          bg: "bg-amber-950/30",
+          hoverBg: "hover:bg-amber-900/40",
+          borderAll: "border border-amber-500/40",
+        };
+      default:
+        return {
+          text: "text-slate-400",
+          border: "border-l-slate-400",
+          bg: "bg-slate-800/40",
+          hoverBg: "hover:bg-slate-800/60",
+          borderAll: "border border-slate-700",
+        };
+    }
+  };
+
   const getBlockStyle = (block: ScheduleBlock) => {
     const isSelected = selectedBlock?.id === block.id;
-    let bg = "bg-[#161c27]/90 border-[#3b5880] text-[#73a7f7]"; // default project/task
-
-    if (block.tag === "university") {
-      bg = "bg-[#221735]/95 border-[#8b61c9] text-[#c19bf5]";
-    } else if (block.tag === "course") {
-      bg = "bg-[#162714]/95 border-[#4e8529] text-[#c5ff42]";
-    } else if (block.tag === "personal" || block.tag === "health") {
-      bg = "bg-[#12231e]/90 border-[#28665c] text-[#4ee6b6]";
-    }
+    const a = tagAccent(block.tag);
+    let statusOverride = "";
 
     if (block.status === "completed") {
-      bg = "bg-[#132218]/80 border-[#2f5934] text-[#86efac] opacity-75";
+      statusOverride = "bg-[#132218]/80 border-[#2f5934] text-[#86efac] opacity-75";
     } else if (block.status === "missed" || block.status === "skipped") {
-      bg = "bg-[#3a131a]/90 border-[#e0314b] text-[#ff7d8d]";
+      statusOverride = "bg-[#3a131a]/90 border-[#e0314b] text-[#ff7d8d]";
     }
 
-    return `${bg} ${isSelected ? "ring-2 ring-[#c5ff42] z-20 shadow-[0_0_12px_rgba(197,255,66,0.3)]" : ""}`;
+    const base = `${a.bg} ${a.hoverBg} ${a.border} ${a.borderAll} rounded p-2 text-xs flex flex-col justify-between cursor-pointer transition hover:scale-[1.01] z-10 ${statusOverride}`;
+    const selectedExtra = isSelected
+      ? "border-2 border-cyber-green border-l-4 border-l-cyber-neon shadow-[0_0_20px_rgba(57,255,20,0.25)] z-20"
+      : "";
+    return `${base} ${selectedExtra}`;
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-68px)] overflow-hidden bg-[#0d0f12] text-zinc-300 font-mono text-[11px] select-none">
-      {/* SUB-BAR & FILTER CONTROLS */}
-      <div className="bg-[#0f1217] border-b border-[#232733] px-3 py-1.5 flex flex-wrap items-center justify-between gap-y-2 shrink-0 text-[10px]">
-        {/* Left: Views + Cycle + Commands */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* View mode toggles */}
-          <div className="flex items-center bg-[#151922] p-0.5 rounded border border-[#232733] font-bold">
-            {(["day", "week", "month"] as ViewMode[]).map((v, i) => (
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-obsidian-950 text-slate-300 font-mono text-[11px] select-none">
+      {/* TIMELINE CONTROLS BAR */}
+      <div className="h-12 bg-obsidian-850 border-b border-obsidian-750 px-3 flex items-center justify-between gap-3 shrink-0 z-20">
+        <div className="flex items-center gap-2">
+          {/* View switcher */}
+          <div className="flex items-center bg-obsidian-950 p-0.5 rounded border border-obsidian-750">
+            {VIEW_MODES.map((v, i) => (
               <button
                 key={v}
                 onClick={() => setViewMode(v)}
-                className={`px-2 py-0.5 rounded-sm uppercase transition-colors ${
+                className={`px-2.5 py-1 text-xs rounded transition font-medium ${
                   viewMode === v
-                    ? "bg-[#8b61c9] text-white shadow"
-                    : "text-zinc-400 hover:text-white"
+                    ? "bg-obsidian-750 text-cyber-neon font-semibold border border-cyber-neon/30 shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                {i + 1}: {v}
+                {i + 1}: {v.toUpperCase()}
               </button>
             ))}
           </div>
-
-          {/* Cycle tag & date range */}
-          <div className="flex items-center gap-1.5 bg-[#151922] px-2 py-1 rounded border border-[#232733]">
-            <span className="bg-[#242b3b] text-[#c5ff42] px-1 font-bold text-[9px] rounded">
+          {/* Active range badge */}
+          <div className="flex items-center gap-2 bg-obsidian-900 border border-obsidian-700/80 px-2.5 py-1 rounded text-xs">
+            <span className="px-1.5 py-0.2 bg-obsidian-800 text-cyber-cyan text-[10px] rounded font-bold border border-cyber-cyan/30">
               W{format(currentDate, "w")}
             </span>
-            <span className="font-bold text-white tracking-wider">
+            <span className="font-bold text-slate-200 tracking-tight">
               {viewMode === "week"
                 ? `${format(weekStart, "MMM d")} — ${format(addDays(weekStart, 6), "MMM d, yyyy")}`
                 : viewMode === "day"
@@ -358,72 +383,72 @@ export default function CalendarView() {
                 : format(currentDate, "MMMM yyyy")}
             </span>
           </div>
-
-          {/* Nav buttons */}
-          <div className="flex items-center gap-1 text-zinc-400">
+          {/* Nav controls */}
+          <div className="flex items-center gap-1">
             <button
               onClick={() => navigate(-1)}
-              className="px-2 py-1 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 rounded border border-[#232733]"
-              title="Previous [h]"
+              className="h-8 px-2.5 bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 hover:text-white border border-obsidian-700 rounded text-xs flex items-center gap-1 transition"
+              title="Previous Week [h]"
             >
-              <strong>[h]</strong> PREV
+              <span className="text-[10px] text-slate-500 font-bold">[h]</span> PREV
             </button>
             <button
               onClick={() => setCurrentDate(new Date())}
-              className="px-2 py-1 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-[#c5ff42] rounded border border-[#232733] font-bold"
-              title="Today [t]"
+              className="h-8 px-3 bg-cyber-green/10 hover:bg-cyber-green/20 text-cyber-green hover:text-cyber-neon border border-cyber-green/40 rounded text-xs font-semibold flex items-center gap-1 transition"
+              title="Jump to Today [t]"
             >
-              <strong>[t]</strong> TODAY
+              <span className="text-[10px] text-cyber-green/80 font-bold">[t]</span> TODAY
             </button>
             <button
               onClick={() => navigate(1)}
-              className="px-2 py-1 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 rounded border border-[#232733]"
-              title="Next [l]"
+              className="h-8 px-2.5 bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 hover:text-white border border-obsidian-700 rounded text-xs flex items-center gap-1 transition"
+              title="Next Week [l]"
             >
-              <strong>[l]</strong> NEXT
-            </button>
-            <button
-              onClick={regeneratePreview}
-              disabled={loading}
-              className="px-2 py-1 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-[#71d99b] rounded border border-[#232733] flex items-center gap-1"
-              title="Regenerate Preview [r]"
-            >
-              <span>⟳</span> REGEN <span className="text-zinc-500">[r]</span>
-            </button>
-            <button
-              onClick={() => setShowNewModal(true)}
-              className="px-2 py-1 btn-focus btn-active bg-[#253245] hover:bg-[#c5ff42] hover:text-black text-[#c5ff42] font-bold rounded border border-[#232733] flex items-center gap-1 transition-colors"
-              title="Add New Block [n]"
-            >
-              <span>+ NEW BLOCK</span> <span className="opacity-70 text-[9px]">[n]</span>
+              <span className="text-[10px] text-slate-500 font-bold">[l]</span> NEXT
             </button>
           </div>
+          <button
+            onClick={regeneratePreview}
+            disabled={loading}
+            className="h-8 px-2.5 bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 hover:text-white border border-obsidian-700 rounded text-xs flex items-center gap-1.5 transition"
+            title="Regenerate Preview [r]"
+          >
+            <span className="text-cyber-cyan text-[10px] font-bold">@ REGEN</span>
+            <span className="text-[10px] text-slate-500">[r]</span>
+          </button>
+          <button
+            onClick={() => setShowNewModal(true)}
+            className="h-8 px-3.5 bg-emerald-600 hover:bg-emerald-500 text-obsidian-950 font-bold text-xs rounded border border-emerald-400 flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.25)] transition"
+            title="Add New Block [n]"
+          >
+            <span>+ NEW BLOCK</span>
+            <span className="text-[10px] bg-obsidian-950/30 px-1 rounded text-obsidian-950 font-mono">[n]</span>
+          </button>
         </div>
 
-        {/* Right: Telemetry & Tag Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="hidden md:flex items-center gap-2 text-zinc-400 border-r border-[#232733] pr-3 text-[9px]">
-            <span>TOTAL: <strong className="text-white">{telemetry.totalHours}h</strong></span>
-            <span>DEEP WORK: <strong className="text-[#c5ff42]">{telemetry.deepHours}h ({telemetry.deepPercent}%)</strong></span>
-            <span className={unscheduled.length > 0 ? "text-[#ff7d8d] font-bold" : "text-[#71d99b]"}>
-              ● {unscheduled.length} CONFLICTS
+        <div className="flex items-center gap-3">
+          <div className="hidden 2xl:flex items-center gap-3 text-xs bg-obsidian-900/90 px-3 py-1 rounded border border-obsidian-750">
+            <span className="text-slate-400">TOTAL: <strong className="text-slate-200">{telemetry.totalHours}h</strong></span>
+            <span className="text-slate-500">|</span>
+            <span className="text-slate-400">DEEP WORK: <strong className="text-cyber-cyan">{telemetry.deepHours}h ({telemetry.deepPercent}%)</strong></span>
+            <span className={`text-emerald-400 flex items-center gap-1 ${unscheduled.length > 0 ? "text-[#ff7d8d] font-bold" : ""}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              {unscheduled.length} CONFLICTS
             </span>
           </div>
-
-          {/* Tag filters */}
-          <div className="flex items-center gap-1 text-[9px]">
-            <span className="text-zinc-500">FILTER:</span>
+          <div className="flex items-center gap-1 bg-obsidian-950 p-0.5 rounded border border-obsidian-750 text-xs">
+            <span className="text-[10px] text-slate-500 px-1 font-semibold uppercase">FILTER:</span>
             {["all", "university", "course", "project", "personal"].map((t) => (
               <button
                 key={t}
                 onClick={() => setFilterTag(t)}
-                className={`px-1.5 py-0.5 rounded border uppercase transition-colors ${
+                className={`px-2 py-0.5 rounded text-[11px] transition ${
                   filterTag === t
-                    ? "bg-[#253245] text-white border-[#c5ff42]"
-                    : "bg-[#181d29] text-zinc-400 border-[#232733] hover:border-zinc-500"
+                    ? "bg-obsidian-750 text-cyber-neon font-bold border border-cyber-neon/30"
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                {t}
+                {t.toUpperCase()}
               </button>
             ))}
           </div>
@@ -431,676 +456,473 @@ export default function CalendarView() {
       </div>
 
       {statusMsg && (
-        <div className="bg-[#1b2318] border-b border-[#3b661d] text-[#c5ff42] px-3 py-1 text-[10px] flex items-center justify-between">
+        <div className="bg-[#1b2318] border-b border-[#3b661d] text-[#c5ff42] px-3 py-1 text-[10px] flex items-center justify-between shrink-0">
           <span>{statusMsg}</span>
           <button onClick={() => setStatusMsg("")} className="text-zinc-400 hover:text-white">✕</button>
         </div>
       )}
 
-      {/* MAIN VIEWPORT: 2-COLUMN BSP-TILED WINDOW SPLIT */}
-      <main className="flex-1 flex overflow-hidden p-1 gap-1">
-        {/* LEFT COLUMN: WEEK / DAY / MONTH TIMELINE */}
-        <section className="flex-1 flex flex-col bg-[#11141a] rounded border border-[#232733] overflow-hidden min-w-0">
-          {/* Window Titlebar */}
-          <div className="h-6 bg-[#161a22] border-b border-[#232733] px-2 flex items-center justify-between text-[10px] shrink-0">
+      {/* MAIN SPLIT: CALENDAR + INSPECTOR SIDEBAR */}
+      <main className="flex-1 flex overflow-hidden">
+        {/* LEFT: CALENDAR VIEW GRID */}
+        <div className="flex-1 flex flex-col bg-obsidian-950 overflow-hidden border-r border-obsidian-750">
+          <div className="h-7 bg-obsidian-900 border-b border-obsidian-750 px-3 flex items-center justify-between text-[11px] shrink-0 text-slate-400">
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-[#ff5f56]"></span>
-                <span className="w-2 h-2 rounded-full bg-[#ffbd2e]"></span>
-                <span className="w-2 h-2 rounded-full bg-[#27c93f]"></span>
+              <div className="flex items-center gap-1 text-slate-500 font-bold">
+                <span className="text-rose-500">●</span>
+                <span className="text-amber-500">●</span>
+                <span className="text-emerald-500">●</span>
               </div>
-              <span className="font-bold text-zinc-300 tracking-wider">
-                matrix::{viewMode}-view.hypr
-              </span>
+              <span className="text-cyber-green font-semibold">matrix::{viewMode}-view.hypr</span>
             </div>
-            <div className="flex items-center gap-3 text-zinc-400">
-              <span className="text-zinc-500">LAYOUT: <strong className="text-zinc-300">BSP_TILED</strong></span>
-              <span className="flex items-center gap-1 text-[#c5ff42] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#c5ff42] animate-pulse"></span>
-                LIVE SCRUBBER
+            <div className="flex items-center gap-3">
+              <span className="text-slate-500">LAYOUT: <span className="text-slate-300 font-semibold">BSP_TILED</span></span>
+              <span className="flex items-center gap-1.5 text-cyber-neon font-semibold">
+                <span className="w-2 h-2 rounded-full bg-cyber-neon animate-ping inline-block"></span>
+                LIVE SCRUBBER ACTIVE
               </span>
             </div>
           </div>
 
-          {/* ==================== WEEK VIEW ==================== */}
-          {viewMode === "week" && (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Day Header Row */}
-              <div className="grid grid-cols-[50px_repeat(7,1fr)] bg-[#131720] border-b border-[#232733] shrink-0 text-center">
-                <div className="py-1 text-zinc-500 font-mono text-[9px] border-r border-[#232733] flex items-center justify-center">
-                  UTC
+          {/* Days of week header row */}
+          <div className="grid grid-cols-[64px_repeat(7,1fr)] bg-obsidian-900/90 border-b border-obsidian-750 text-xs shrink-0 select-none">
+            <div className="py-2 text-center text-slate-500 font-semibold border-r border-obsidian-750/70 text-[11px] flex items-center justify-center">
+              UTC
+            </div>
+            {weekDays.map((d, i) => {
+              const dayKey = format(d, "yyyy-MM-dd");
+              const activeToday = isToday(d);
+              const mins = dailyWorkload[dayKey] || 0;
+              const hrs = (mins / 60).toFixed(1);
+              return (
+                <div
+                  key={i}
+                  className={`py-2 px-2 text-center flex flex-col items-center relative ${
+                    activeToday
+                      ? "border-r border-cyber-green/40 bg-cyber-green/5"
+                      : i < 6
+                      ? "border-r border-obsidian-750/70"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className={`font-bold ${activeToday ? "text-cyber-neon font-extrabold" : "text-slate-300"}`}>
+                      {format(d, "EEE d").toUpperCase()}
+                    </span>
+                    {activeToday && (
+                      <span className="px-1.5 py-0.2 rounded text-[9px] bg-cyber-green text-obsidian-950 font-black">
+                        TODAY
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-[10px] ${activeToday ? "text-cyber-neon/80" : "text-slate-500"} font-mono font-semibold`}>
+                    {hrs}h / 8h
+                  </span>
+                  {activeToday && (
+                    <div className="absolute bottom-0 inset-x-0 h-[0.5px] bg-cyber-neon shadow-[0_0_8px_#39ff14]"></div>
+                  )}
                 </div>
-                {weekDays.map((d, i) => {
-                  const dayKey = format(d, "yyyy-MM-dd");
-                  const activeToday = isToday(d);
-                  const mins = dailyWorkload[dayKey] || 0;
-                  const hrs = (mins / 60).toFixed(1);
+              );
+            })}
+          </div>
+
+          {/* Scrollable timetable grid */}
+          <div className="flex-1 overflow-y-auto relative cyber-grid">
+            <div className="min-w-[900px] h-[928px] relative grid grid-cols-[64px_repeat(7,1fr)]">
+              {/* Column 0: time labels */}
+              <div className="border-r border-obsidian-750/80 bg-obsidian-900/40 select-none text-[11px] font-mono text-slate-500">
+                {Array.from({ length: TOTAL_HOURS }).map((_, idx) => {
+                  const hourNum = START_HOUR + idx;
                   return (
-                    <div
-                      key={i}
-                      className={`py-1 border-r border-[#232733] ${
-                        activeToday ? "bg-[#182613]/50" : ""
-                      }`}
-                    >
-                      <div className="font-bold text-zinc-300 text-[10px]">
-                        {format(d, "EEE d").toUpperCase()}
-                      </div>
-                      <div className="text-[8px] text-zinc-500">
-                        {hrs}h / 8h
-                      </div>
-                      {activeToday && (
-                        <span className="inline-block mt-0.5 px-1 bg-[#1f3817] border border-[#c5ff42]/60 rounded text-[#c5ff42] font-black text-[7px] uppercase">
-                          TODAY
-                        </span>
-                      )}
+                    <div key={idx} className="cal-hour-row flex items-start justify-center pt-1 border-b border-obsidian-800">
+                      {String(hourNum).padStart(2, "0")}:00
                     </div>
                   );
                 })}
               </div>
 
-              {/* Scrollable Timeline Grid */}
-              <div className="flex-1 overflow-y-auto relative bg-[#0e1117]">
-                {/* Live Scrubber Line (current week only) */}
-                {isCurrentWeek && scrubberTop >= 0 && scrubberTop <= TOTAL_HOURS * HOUR_HEIGHT && (
-                  <div
-                    className="absolute left-0 right-0 z-30 pointer-events-none flex items-center"
-                    style={{ top: `${scrubberTop}px` }}
-                  >
-                    <div className="w-[50px] flex items-center justify-end pr-1">
-                      <span className="bg-[#c5ff42] text-black font-black text-[9px] px-1 py-0.2 rounded-sm shadow-[0_0_8px_rgba(197,255,66,0.6)]">
-                        {format(now, "HH:mm")}
-                      </span>
-                    </div>
-                    <div className="flex-1 h-[1.5px] bg-[#c5ff42] shadow-[0_0_6px_rgba(197,255,66,0.8)] relative">
-                      <span className="absolute -top-1 left-2 w-2 h-2 rounded-full bg-[#c5ff42]"></span>
-                    </div>
-                  </div>
-                )}
+              {/* Day columns with absolute blocks */}
+              {weekDays.map((day, colIndex) => {
+                const dayStr = format(day, "yyyy-MM-dd");
+                const dayBlocks = visibleBlocks.filter((b) => b.start_dt.slice(0, 10) === dayStr);
+                const isWeekend = colIndex >= 5;
 
-                {/* 15 Hourly Background Lines */}
-                <div className="relative min-w-[700px]">
-                  <div className="flex flex-col">
-                    {Array.from({ length: TOTAL_HOURS }).map((_, idx) => {
-                      const hourNum = START_HOUR + idx;
-                      return (
-                        <div
-                          key={idx}
-                          className="h-14 border-b border-[#232733]/40 grid grid-cols-[50px_repeat(7,1fr)]"
-                        >
-                          <span className="text-[9px] text-zinc-600 border-r border-[#232733]/40 text-center pt-1 font-mono">
-                            {String(hourNum).padStart(2, "0")}:00
-                          </span>
-                          {Array.from({ length: 7 }).map((_, col) => (
-                            <div key={col} className="border-r border-[#232733]/20"></div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Absolute Positioned Blocks for 7 Columns */}
-                  <div className="absolute inset-0 left-[50px] grid grid-cols-7 pointer-events-auto">
-                    {weekDays.map((day, colIndex) => {
-                      const dayStr = format(day, "yyyy-MM-dd");
-                      const dayBlocks = visibleBlocks.filter(
-                        (b) => b.start_dt.slice(0, 10) === dayStr
-                      );
-
-                      return (
-                        <div key={colIndex} className="relative border-r border-[#232733]/20 h-full">
-                          {dayBlocks.map((b) => {
-                            const start = new Date(b.start_dt);
-                            const end = new Date(b.end_dt);
-                            const sHour = start.getHours() + start.getMinutes() / 60;
-                            const eHour = end.getHours() + end.getMinutes() / 60;
-
-                            const topPx = Math.max(0, (sHour - START_HOUR) * HOUR_HEIGHT);
-                            const heightPx = Math.max(22, (eHour - sHour) * HOUR_HEIGHT);
-
-                            return (
-                              <div
-                                key={b.id}
-                                tabIndex={0}
-                                role="button"
-                                aria-label={b.title}
-                                onClick={() => setSelectedBlock(b)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" || e.key === " ") {
-                                    e.preventDefault();
-                                    setSelectedBlock(b);
-                                  }
-                                }}
-                                style={{ top: `${topPx}px`, height: `${heightPx}px` }}
-                                className={`absolute left-0.5 right-0.5 rounded p-1 flex flex-col justify-between cursor-pointer border transition-all chip-focus ${getBlockStyle(
-                                  b
-                                )}`}
-                                title={`${b.title} (${format(start, "HH:mm")} - ${format(
-                                  end,
-                                  "HH:mm"
-                                )})`}
-                              >
-                                <div className="overflow-hidden">
-                                  <div className="flex items-center justify-between text-[8px] leading-tight mb-0.5">
-                                    <span className="font-bold uppercase tracking-tight truncate">
-                                      {b.tag}
-                                    </span>
-                                    <span className="font-mono text-zinc-400 shrink-0">
-                                      {format(start, "HH:mm")}
-                                    </span>
-                                  </div>
-                                  <span className="font-bold text-white block truncate text-[9px] leading-tight">
-                                    {b.title}
-                                  </span>
-                                </div>
-
-                                {heightPx > 40 && (
-                                  <div className="flex items-center justify-between text-[7px] text-zinc-400 pt-0.5 border-t border-white/10">
-                                    <span>{b.locked ? "LOCKED" : "FLEX"}</span>
-                                    <span className="capitalize">{b.status}</span>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ==================== DAY VIEW ==================== */}
-          {viewMode === "day" && (
-            <div className="flex-1 flex flex-col overflow-y-auto bg-[#0e1117] p-2">
-              <div className="bg-[#14171f] p-3 rounded border border-[#232733] mb-2 flex items-center justify-between">
-                <div>
-                  <span className="text-xs text-zinc-400 block">DAILY AGENDA</span>
-                  <span className="text-base font-headline font-black text-white">
-                    {format(currentDate, "EEEE, MMMM d, yyyy")}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-zinc-400 block">SCHEDULED WORK</span>
-                  <span className="text-sm font-bold text-[#c5ff42]">
-                    {(
-                      (visibleBlocks.filter(
-                        (b) => b.start_dt.slice(0, 10) === format(currentDate, "yyyy-MM-dd")
-                      ).reduce((acc, b) => acc + (new Date(b.end_dt).getTime() - new Date(b.start_dt).getTime()) / 3600000, 0))
-                    ).toFixed(1)} hrs
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                {visibleBlocks
-                  .filter((b) => b.start_dt.slice(0, 10) === format(currentDate, "yyyy-MM-dd"))
-                  .sort((a, b) => a.start_dt.localeCompare(b.start_dt))
-                  .map((b) => {
-                    const start = new Date(b.start_dt);
-                    const end = new Date(b.end_dt);
-                    return (
-                      <div
-                        key={b.id}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={b.title}
-                        onClick={() => setSelectedBlock(b)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            setSelectedBlock(b);
-                          }
-                        }}
-                        className={`p-2.5 rounded border cursor-pointer flex items-center justify-between chip-focus ${getBlockStyle(
-                          b
-                        )}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="text-center w-14 shrink-0 font-mono">
-                            <span className="font-bold text-white block text-xs">
-                              {format(start, "HH:mm")}
-                            </span>
-                            <span className="text-[9px] text-zinc-500">
-                              {format(end, "HH:mm")}
-                            </span>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-white">{b.title}</span>
-                              <span className="text-[8px] uppercase px-1 rounded border border-white/20">
-                                {b.tag}
-                              </span>
-                            </div>
-                            {b.reason && (
-                              <p className="text-[9px] text-zinc-400 mt-0.5">{b.reason}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markComplete(b);
-                            }}
-                            className="px-2 py-1 bg-[#172514] border border-[#3b661d] text-[#c5ff42] text-[9px] font-bold rounded"
-                          >
-                            DONE
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {/* ==================== MONTH VIEW ==================== */}
-          {viewMode === "month" && (
-            <div className="flex-1 flex flex-col gap-px bg-[#232733] overflow-y-auto p-px">
-              {/* Weekday header row outside the 6-row grid flow */}
-              <div className="grid grid-cols-7 gap-px bg-[#131720]">
-                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
-                  <div key={i} className="bg-[#131720] text-center py-1 text-[10px] font-bold text-zinc-400">
-                    {d}
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 grid-rows-6 gap-px bg-[#232733] overflow-y-auto p-px">
-                {monthDays.map((d, i) => {
-                const dayKey = format(d, "yyyy-MM-dd");
-                const dayBlocks = visibleBlocks.filter((b) => b.start_dt.slice(0, 10) === dayKey);
-                const active = isToday(d);
                 return (
                   <div
-                    key={i}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Day ${format(d, "EEEE d MMMM")}`}
-                    onClick={() => {
-                      setCurrentDate(d);
-                      setViewMode("day");
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setCurrentDate(d);
-                        setViewMode("day");
-                      }
-                    }}
-                    className={`bg-[#0e1117] p-1 flex flex-col justify-between cursor-pointer hover:bg-[#161a22] transition-colors chip-focus ${
-                      active ? "ring-1 ring-[#c5ff42] bg-[#141d14]" : ""
-                    }`}
+                    key={colIndex}
+                    className={`relative h-full ${i < 6 ? "border-r border-obsidian-800/80" : "bg-obsidian-950/30"}`}
                   >
-                    <div className="flex items-center justify-between text-[9px]">
-                      <span className={`font-bold ${active ? "text-[#c5ff42]" : "text-zinc-400"}`}>
-                        {format(d, "d")}
-                      </span>
-                      {dayBlocks.length > 0 && (
-                        <span className="text-[8px] text-zinc-500 font-mono">
-                          {dayBlocks.length} acts
-                        </span>
-                      )}
+                    <div className="absolute inset-0 pointer-events-none">
+                      {Array.from({ length: TOTAL_HOURS }).map(() => (
+                        <div className="cal-hour-row border-b border-obsidian-800/50"></div>
+                      ))}
                     </div>
-                    <div className="space-y-0.5 overflow-hidden max-h-12 mt-1">
-                      {dayBlocks.slice(0, 3).map((b) => (
+                    {isWeekend && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                        <span className="text-xs uppercase tracking-widest text-slate-600 font-bold rotate-90">
+                          Open Slot
+                        </span>
+                      </div>
+                    )}
+                    {dayBlocks.map((b) => {
+                      const start = new Date(b.start_dt);
+                      const end = new Date(b.end_dt);
+                      const sHour = start.getHours() + start.getMinutes() / 60;
+                      const eHour = end.getHours() + end.getMinutes() / 60;
+                      const topPx = Math.max(0, (sHour - START_HOUR) * HOUR_HEIGHT);
+                      const heightPx = Math.max(22, (eHour - sHour) * HOUR_HEIGHT);
+
+                      return (
                         <div
                           key={b.id}
-                          className="text-[8px] truncate px-1 py-0.2 rounded bg-[#18202c] text-zinc-300 border border-[#232733]"
+                          tabIndex={0}
+                          role="button"
+                          aria-label={b.title}
+                          onClick={() => setSelectedBlock(b)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedBlock(b);
+                            }
+                          }}
+                          style={{ top: `${topPx}px`, height: `${heightPx}px` }}
+                          className={`absolute inset-x-1.5 ${getBlockStyle(b)}`}
+                          title={`${b.title} (${format(start, "HH:mm")} - ${format(end, "HH:mm")})`}
                         >
-                          {b.title}
+                          <div>
+                            <div className="flex items-center justify-between text-[10px] font-bold">
+                              <span className={tagAccent(b.tag).text}>
+                                {b.tag.toUpperCase()}
+                              </span>
+                              <span className="text-slate-400">
+                                {format(start, "HH:mm")} - {format(end, "HH:mm")}
+                              </span>
+                            </div>
+                            <div className="font-bold text-slate-200 text-[11px] truncate mt-0.5">{b.title}</div>
+                            {b.reason && (
+                              <div className="text-[10px] text-slate-400 mt-0.5">{b.reason}</div>
+                            )}
+                            {selectedBlock?.id === b.id && (
+                              <div className="flex items-center justify-between text-[10px] pt-1 border-t border-emerald-900/60 mt-1">
+                                <span className="text-cyber-neon font-bold">SELECTED TARGET</span>
+                                <span className="text-slate-300">{format(start, "EEE h:mm")}</span>
+                              </div>
+                            )}
+                          </div>
+                          {heightPx > 40 && (
+                            <div className="flex items-center justify-between text-[10px] pt-1 border-t border-white/10">
+                              <span>{b.locked ? "LOCKED" : "FLEX"}</span>
+                              <span className="capitalize text-slate-400">{b.status}</span>
+                            </div>
+                          )}
                         </div>
-                      ))}
-                      {dayBlocks.length > 3 && (
-                        <span className="text-[7px] text-zinc-500 block">
-                          +{dayBlocks.length - 3} more
-                        </span>
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
                 );
               })}
-            </div>
-            </div>
-          )}
-        </section>
 
-        {/* RIGHT COLUMN: ASIDE TILED INSPECTOR & COGNITIVE TELEMETRY */}
-        <aside className="w-80 flex flex-col gap-1 overflow-y-auto shrink-0 select-none">
-          {/* WINDOW 1: Activity Inspector & Quick Actions */}
-          <div className="bg-[#11141a] rounded border border-[#232733] overflow-hidden shrink-0">
-            <div className="h-6 bg-[#161a22] border-b border-[#232733] px-2 flex items-center justify-between text-[10px]">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[#c5ff42]">■</span>
-                <span className="font-bold text-zinc-200">Activity Node Inspector</span>
+              {/* Live scrubber line across the week */}
+              {isCurrentWeek && scrubberTop >= 0 && scrubberTop <= TOTAL_HOURS * HOUR_HEIGHT && (
+                <div
+                  className="absolute inset-x-0 z-30 pointer-events-none"
+                  style={{ top: `${scrubberTop}px` }}
+                >
+                  <div className="h-[1px] bg-cyber-neon shadow-[0_0_12px_#39ff14]"></div>
+                  <div className="absolute -top-3 -left-2 bg-cyber-neon text-obsidian-950 font-black text-[10px] px-1.5 py-0.5 rounded shadow-[0_0_8px_#39ff14] flex items-center gap-1">
+                    {format(now, "HH:mm")}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: INSPECTOR SIDEBAR */}
+        <aside className="w-80 2xl:w-96 bg-obsidian-900 flex flex-col shrink-0 overflow-y-auto divide-y divide-obsidian-750">
+          {/* PANE 1: Activity Node Inspector */}
+          <section className="p-3.5 space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-slate-200">
+                <span className="w-2 h-2 bg-cyber-green rounded-sm"></span>
+                <span>Activity Node Inspector</span>
               </div>
-              <span className="text-zinc-500 text-[9px]">ID: {selectedBlock ? selectedBlock.id : "NONE"}</span>
+              <span className="text-[10px] text-cyber-neon font-mono bg-obsidian-950 px-1.5 py-0.5 rounded border border-cyber-green/40">
+                ID: {selectedBlock ? `NODE_${selectedBlock.id}` : "NONE"}
+              </span>
             </div>
-
-            <div className="p-3">
+            <div className="bg-obsidian-950 p-3 rounded border border-obsidian-750 space-y-2.5">
               {!selectedBlock ? (
-                <p className="text-zinc-500 text-[10px] leading-relaxed">
+                <p className="text-slate-500 text-[10px] leading-relaxed">
                   Click on any activity chip in the timeline to inspect its constraints, dependencies, scheduling reason, and quick actions.
                 </p>
               ) : (
                 <div className="space-y-2.5">
                   <div>
-                    <span className="text-[9px] text-[#c5ff42] font-bold uppercase tracking-wider block">
-                      {selectedBlock.tag} · {selectedBlock.status}
-                    </span>
-                    <h3 className="font-bold text-white text-xs leading-snug mt-0.5">
-                      {selectedBlock.title}
-                    </h3>
-                    <p className="text-[10px] text-zinc-400 font-mono mt-0.5">
-                      {format(new Date(selectedBlock.start_dt), "EEE, MMM d · HH:mm")} —{" "}
-                      {format(new Date(selectedBlock.end_dt), "HH:mm")}
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-cyber-green font-bold uppercase tracking-wider text-[10px]">
+                        Active Selection
+                      </span>
+                      <span className="text-slate-400 text-[10px]">
+                        {Math.round(
+                          (new Date(selectedBlock.end_dt).getTime() - new Date(selectedBlock.start_dt).getTime()) /
+                            60000
+                        ) /
+                          60
+                        } hrs
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white mt-0.5">{selectedBlock.title}</h3>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                      {selectedBlock.reason || "Scheduled by the deterministic planner."}
                     </p>
                   </div>
-
-                  {/* Scheduling reason transparency */}
-                  {selectedBlock.reason && (
-                    <div className="bg-[#0c0e13] p-2 rounded border border-[#232733] text-[9px] text-zinc-300 leading-normal">
-                      <span className="text-zinc-500 block text-[8px] uppercase font-bold mb-0.5">
-                        SCHEDULER TRANSPARENCY:
+                  <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-obsidian-800">
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">SCHEDULE:</span>
+                      <span className="text-slate-200 font-medium">
+                        {format(new Date(selectedBlock.start_dt), "EEE, MMM d · HH:mm")} —{" "}
+                        {format(new Date(selectedBlock.end_dt), "HH:mm")}
                       </span>
-                      {selectedBlock.reason}
                     </div>
-                  )}
-
-                  {/* Action buttons */}
-                  <div className="grid grid-cols-2 gap-1.5 pt-1">
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">TAG:</span>
+                      <span className="text-slate-200 font-medium">{selectedBlock.tag}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">LOAD FACTOR:</span>
+                      <span className="text-cyber-cyan font-medium">0.85 (High Cognitive)</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">RECURRENCE:</span>
+                      <span className="text-slate-200 font-medium">Weekly</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    <span className="px-2 py-0.5 bg-obsidian-850 text-cyber-purple text-[10px] rounded border border-cyber-purple/30">
+                      #{selectedBlock.tag}
+                    </span>
+                    <span className="px-2 py-0.5 bg-obsidian-850 text-cyber-cyan text-[10px] rounded border border-cyber-cyan/30">
+                      {selectedBlock.status}
+                    </span>
+                    <span className="px-2 py-0.5 bg-obsidian-850 text-emerald-400 text-[10px] rounded border border-emerald-400/30">
+                      {selectedBlock.locked ? "locked" : "flex"}
+                    </span>
+                  </div>
+                  <div className="pt-2 flex items-center gap-1.5">
                     <button
-                      onClick={() => markComplete(selectedBlock)}
-                      className="py-1.5 px-2 btn-focus btn-active bg-[#172514] hover:bg-[#20361c] text-[#c5ff42] border border-[#3b661d] font-bold text-[9px] rounded"
+                      onClick={() => markComplete(selectedBlock!)}
+                      className="flex-1 py-1.5 bg-obsidian-800 hover:bg-obsidian-750 text-slate-200 hover:text-white rounded text-xs font-semibold border border-obsidian-700 transition flex items-center justify-center gap-1"
                     >
-                      ✓ COMPLETE
+                      ✓ Complete
                     </button>
                     <button
-                      onClick={() => markSkip(selectedBlock)}
-                      className="py-1.5 px-2 btn-focus btn-active bg-[#1c1c24] hover:bg-[#282835] text-zinc-300 border border-[#232733] text-[9px] rounded"
+                      onClick={() => markSkip(selectedBlock!)}
+                      className="py-1.5 px-3 bg-obsidian-800 hover:bg-obsidian-750 text-cyber-cyan rounded text-xs font-semibold border border-obsidian-700 transition"
                     >
-                      ↷ SKIP
+                      Reschedule
                     </button>
                     <button
-                      onClick={() => moveBlockDays(selectedBlock, 1)}
-                      className="py-1.5 px-2 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 border border-[#232733] text-[9px] rounded"
+                      onClick={() => deleteBlock(selectedBlock!)}
+                      className="py-1.5 px-2 bg-obsidian-800 hover:bg-rose-950/60 text-rose-400 rounded text-xs border border-obsidian-700 hover:border-rose-800/80 transition" title="Delete Block"
                     >
-                      ◷ +1 DAY
-                    </button>
-                    <button
-                      onClick={() => moveBlockDays(selectedBlock, -1)}
-                      className="py-1.5 px-2 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 border border-[#232733] text-[9px] rounded"
-                    >
-                      ◶ -1 DAY
-                    </button>
-                    <button
-                      onClick={() =>
-                        api.schedule
-                          .updateBlock(selectedBlock.id, { locked: !selectedBlock.locked })
-                          .then(() => loadSchedule())
-                      }
-                      className="py-1.5 px-2 btn-focus btn-active bg-[#151922] hover:bg-[#202635] text-zinc-300 border border-[#232733] text-[9px] rounded"
-                    >
-                      {selectedBlock.locked ? "🔓 UNLOCK" : "🔒 LOCK TIME"}
-                    </button>
-                    <button
-                      onClick={() => deleteBlock(selectedBlock)}
-                      className="py-1.5 px-2 btn-focus btn-active bg-[#261418] hover:bg-[#381a20] text-[#ff7d8d] border border-[#7d222e] text-[9px] rounded"
-                    >
-                      ✕ DELETE
+                      ✕
                     </button>
                   </div>
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
-          {/* WINDOW 2: Cognitive Load Matrix & Vector Distribution */}
-          <div className="bg-[#11141a] rounded border border-[#232733] overflow-hidden shrink-0">
-            <div className="h-6 bg-[#161a22] border-b border-[#232733] px-2 flex items-center justify-between text-[10px]">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[#8b61c9]">☵</span>
-                <span className="font-bold text-zinc-200">Cognitive Load Matrix</span>
+          {/* PANE 2: Cognitive Load Matrix */}
+          <section className="p-3.5 space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-slate-200">
+                <span className="text-cyber-purple">::</span>
+                <span>Cognitive Load Matrix</span>
               </div>
-              <span className="text-[#c5ff42] font-bold text-[9px]">
-                {telemetry.totalHours} hrs Total
-              </span>
+              <span className="text-slate-400 font-mono text-[11px]">{telemetry.totalHours} hrs Total</span>
             </div>
-
-            <div className="p-2.5 space-y-2.5">
-              {/* Vector distribution bars */}
-              <div className="space-y-1.5">
-                <div>
-                  <div className="flex justify-between text-[9px] mb-0.5">
-                    <span className="text-zinc-300 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#8b61c9]"></span>
-                      University & Timetable
-                    </span>
-                    <span className="text-zinc-400 font-mono">
-                      {(telemetry.vectorMinutes.university / 60).toFixed(1)}h
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 bg-[#1c202a] rounded overflow-hidden">
-                    <div
-                      className="h-full bg-[#8b61c9] rounded"
-                      style={{
-                        width: `${
-                          telemetry.totalMinutes
-                            ? (telemetry.vectorMinutes.university / telemetry.totalMinutes) * 100
-                            : 0
-                        }%`,
-                      }}
-                    />
-                  </div>
+            <div className="space-y-2 bg-obsidian-950 p-3 rounded border border-obsidian-750 text-xs">
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="flex items-center gap-1.5 text-slate-300">
+                    <span className="w-2 h-2 rounded-full bg-cyber-purple"></span>
+                    <span>University & Timetable</span>
+                  </span>
+                  <span className="font-bold text-slate-200">
+                    {(telemetry.vectorMinutes.university / 60).toFixed(1)}h <span className="text-slate-500 font-normal">/ 20h</span>
+                  </span>
                 </div>
-
-                <div>
-                  <div className="flex justify-between text-[9px] mb-0.5">
-                    <span className="text-zinc-300 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#c5ff42]"></span>
-                      Course Study & Projects
-                    </span>
-                    <span className="text-[#c5ff42] font-bold font-mono">
-                      {((telemetry.vectorMinutes.course + telemetry.vectorMinutes.project) / 60).toFixed(1)}h
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 bg-[#1c202a] rounded overflow-hidden">
-                    <div
-                      className="h-full bg-[#c5ff42] rounded"
-                      style={{
-                        width: `${
-                          telemetry.totalMinutes
-                            ? ((telemetry.vectorMinutes.course + telemetry.vectorMinutes.project) /
-                                telemetry.totalMinutes) *
-                              100
-                            : 0
-                        }%`,
-                      }}
-                    />
-                  </div>
+                <div className="w-full bg-obsidian-800 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-cyber-purple h-full rounded-full" style={{ width: telemetry.totalMinutes ? (telemetry.vectorMinutes.university / telemetry.totalMinutes) * 100 : 0 }}></div>
                 </div>
               </div>
-
-              {/* Daily Workload Bars (7 Days) */}
-              <div className="pt-2 border-t border-[#232733]">
-                <div className="flex justify-between text-[9px] text-zinc-400 mb-1">
-                  <span>DAILY WORKLOAD (7 DAYS)</span>
-                  <span className="text-zinc-500 font-mono">cap: 8h/day</span>
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="flex items-center gap-1.5 text-slate-300">
+                    <span className="w-2 h-2 rounded-full bg-cyber-cyan"></span>
+                    <span>Course Study & Projects</span>
+                  </span>
+                  <span className="font-bold text-slate-200">
+                    {((telemetry.vectorMinutes.course + telemetry.vectorMinutes.project) / 60).toFixed(1)}h <span className="text-slate-500 font-normal">/ 15h</span>
+                  </span>
                 </div>
-                <div className="grid grid-cols-7 gap-1 text-center font-mono">
-                  {weekDays.map((d, i) => {
-                    const key = format(d, "yyyy-MM-dd");
-                    const mins = dailyWorkload[key] || 0;
-                    const hrs = (mins / 60).toFixed(1);
-                    const overbooked = mins > 480;
-                    return (
-                      <div
-                        key={i}
-                        className={`rounded py-1 border ${
-                          overbooked
-                            ? "bg-[#3a131a] border-[#e0314b]"
-                            : mins > 0
-                            ? "bg-[#172514] border-[#3b661d]"
-                            : "bg-[#141b24] border-[#232733]"
-                        }`}
-                      >
-                        <span className="block text-[8px] text-zinc-400 font-bold">
-                          {format(d, "EEE")[0]}
-                        </span>
-                        <span
-                          className={`block text-[9px] font-bold ${
-                            overbooked
-                              ? "text-[#ff7d8d]"
-                              : mins > 0
-                              ? "text-white"
-                              : "text-zinc-600"
-                          }`}
-                        >
-                          {hrs}h
-                        </span>
+                <div className="w-full bg-obsidian-800 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-cyber-cyan h-full rounded-full" style={{ width: telemetry.totalMinutes ? ((telemetry.vectorMinutes.course + telemetry.vectorMinutes.project) / telemetry.totalMinutes) * 100 : 0 }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="flex items-center gap-1.5 text-slate-300">
+                    <span className="w-2 h-2 rounded-full bg-cyber-amber"></span>
+                    <span>Health & Physical Capacity</span>
+                  </span>
+                  <span className="font-bold text-slate-200">
+                    {(telemetry.vectorMinutes.personal / 60).toFixed(1)}h <span className="text-slate-500 font-normal">/ 5h</span>
+                  </span>
+                </div>
+                <div className="w-full bg-obsidian-800 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-cyber-amber h-full rounded-full" style={{ width: telemetry.totalMinutes ? (telemetry.vectorMinutes.personal / telemetry.totalMinutes) * 100 : 0 }}></div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[10px] text-slate-400 uppercase font-semibold">
+                <span>Daily Workload (7 Days)</span>
+                <span className="text-slate-500 font-mono">cap: 8h/day</span>
+              </div>
+              <div className="grid grid-cols-7 gap-1.5 text-center">
+                {weekDays.map((d, i) => {
+                  const key = format(d, "yyyy-MM-dd");
+                  const mins = dailyWorkload[key] || 0;
+                  const hrs = (mins / 60).toFixed(1);
+                  const today = isToday(d);
+                  const pct = Math.min((mins / 480) * 100, 100);
+                  return (
+                    <div
+                      key={i}
+                      className={`bg-obsidian-950 p-1.5 rounded border ${today ? "border-cyber-green/40 shadow-[0_0_8px_rgba(57,255,20,0.1)]" : "border-obsidian-750"} ${!today ? "opacity-60" : ""}`}
+                    >
+                      <div className={`text-[10px] font-bold ${today ? "text-cyber-neon" : "text-slate-400"} ${today ? "font-black" : ""}`}>
+                        {format(d, "EEE")[0]}
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="h-10 flex items-end justify-center my-1 bg-obsidian-900 rounded">
+                        <div className={`w-full rounded-b ${today ? "bg-cyber-neon shadow-[0_0_8px_#39ff14]" : "bg-cyber-purple/80"}`} style={{ height: `${pct}%` }}></div>
+                      </div>
+                      <div className={`text-[9px] font-mono ${today ? "text-cyber-neon font-bold" : "text-slate-400"}`}>{hrs}h</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* WINDOW 3: Unscheduled Tasks & Conflicts */}
-          <div className="bg-[#11141a] rounded border border-[#232733] overflow-hidden shrink-0">
-            <div className="h-6 bg-[#161a22] border-b border-[#232733] px-2 flex items-center justify-between text-[10px]">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[#ff4a68]">⏰</span>
-                <span className="font-bold text-zinc-200">Conflicts & Unscheduled</span>
+          {/* PANE 3: Conflicts & Unscheduled */}
+          <section className="p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-slate-200">
+                <span className="text-rose-400">⏰</span>
+                <span>Conflicts & Unscheduled</span>
               </div>
-              <span
-                className={`px-1.5 py-0.2 text-[9px] font-bold rounded border ${
-                  unscheduled.length > 0
-                    ? "bg-[#3a1419] text-[#ff7d8d] border-[#7d222e]"
-                    : "bg-[#162714] text-[#c5ff42] border-[#3b661d]"
-                }`}
-              >
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                unscheduled.length > 0 ? "bg-[#3a1419] text-[#ff7d8d] border-[#7d222e]" : "bg-[#162714] text-[#c5ff42] border-[#3b661d]"
+              }`}>
                 {unscheduled.length} CONFLICTS
               </span>
             </div>
+            <div className="bg-obsidian-950 p-3 rounded border border-obsidian-750 text-center space-y-2">
+              <p className="text-[11px] text-slate-400">
+                {unscheduled.length === 0
+                  ? "All tasks scheduled within capacity."
+                  : `${unscheduled.length} task(s) need rescheduling.`}
+              </p>
+              <button
+                onClick={rescheduleMissed}
+                className="w-full py-2 bg-obsidian-800 hover:bg-obsidian-700 text-cyan-400 hover:text-cyan-300 rounded text-xs font-semibold border border-cyan-800/50 transition"
+              >
+                RESCHEDULE MISSED ({unscheduled.length})
+              </button>
+            </div>
+          </section>
 
-            <div className="p-2 space-y-1.5 max-h-48 overflow-y-auto">
-              {unscheduled.length === 0 ? (
-                <div className="text-center py-2 text-zinc-500 text-[10px]">
-                  All tasks scheduled within capacity.
-                </div>
-              ) : (
-                unscheduled.map((u, i) => (
-                  <div
-                    key={i}
-                    className="bg-[#151922] border-l-2 border-[#ff4a68] p-1.5 rounded-r border border-[#232733] text-[9px]"
-                  >
-                    <div className="font-bold text-white leading-tight">{u.title}</div>
-                    <div className="text-zinc-400 text-[8px] mt-0.5 leading-normal">
-                      {u.reason}
-                    </div>
-                  </div>
-                ))
-              )}
-
-              <div className="flex gap-1 pt-1 border-t border-[#232733]">
-                <button
-                  onClick={rescheduleMissed}
-                  className="flex-1 py-1 bg-[#1a2538] hover:bg-[#253650] text-[#73a7f7] border border-[#3b5880] rounded text-[9px] font-bold"
-                >
-                  RESCHEDULE MISSED
-                </button>
+          {/* PANE 4: Hypr / Dotfiles Keybindings */}
+          <section className="p-3.5 space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-300 uppercase text-[11px] tracking-wider">HYPR / DOTFILES KEYBINDINGS</span>
+              <span className="text-[10px] text-slate-500">MODE: NORMAL</span>
+            </div>
+            <div className="bg-obsidian-950 p-2.5 rounded border border-obsidian-750 space-y-2 text-[11px]">
+              <div className="flex items-center justify-between">
+                <span className="text-cyber-green font-bold">[n]</span>
+                <span className="text-slate-400">new block</span>
+                <span className="text-cyber-green font-bold">[r]</span>
+                <span className="text-slate-400">recalculate</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-cyber-green font-bold">[t]</span>
+                <span className="text-slate-400">jump today</span>
+                <span className="text-cyber-green font-bold">[h / l]</span>
+                <span className="text-slate-400">&lt; / &gt; week</span>
+              </div>
+              <div className="flex items-center justify-between pt-1 border-t border-obsidian-800">
+                <span className="text-slate-500">Space+p</span>
+                <span className="text-slate-400">palette</span>
+                <span className="text-slate-500">Esc</span>
+                <span className="text-slate-400">blur selection</span>
               </div>
             </div>
-          </div>
-
-          {/* WINDOW 4: Hypr / Keybindings Reference */}
-          <div className="bg-[#11141a] rounded border border-[#232733] overflow-hidden shrink-0">
-            <div className="h-6 bg-[#161a22] border-b border-[#232733] px-2 flex items-center justify-between text-[10px]">
-              <div className="flex items-center gap-1.5">
-                <span>⌨</span>
-                <span className="font-bold text-zinc-200 uppercase text-[9px]">
-                  HYPR / DOTFILES KEYBINDINGS
-                </span>
-              </div>
-              <span className="text-zinc-500 text-[9px]">MODE: NORMAL</span>
-            </div>
-            <div className="p-2 text-[9px] font-mono grid grid-cols-2 gap-x-2 gap-y-1">
-              <div className="flex justify-between py-0.5 border-b border-[#232733]/50">
-                <span className="text-[#c5ff42] font-bold">[n]</span>
-                <span className="text-zinc-400">new block</span>
-              </div>
-              <div className="flex justify-between py-0.5 border-b border-[#232733]/50">
-                <span className="text-[#c5ff42] font-bold">[r]</span>
-                <span className="text-zinc-400">recalculate</span>
-              </div>
-              <div className="flex justify-between py-0.5 border-b border-[#232733]/50">
-                <span className="text-[#c5ff42] font-bold">[t]</span>
-                <span className="text-zinc-400">jump today</span>
-              </div>
-              <div className="flex justify-between py-0.5 border-b border-[#232733]/50">
-                <span className="text-[#c5ff42] font-bold">[h / l]</span>
-                <span className="text-zinc-400">&lt; / &gt; week</span>
-              </div>
-            </div>
-          </div>
+          </section>
         </aside>
       </main>
 
       {/* QUICK NEW BLOCK MODAL */}
       {showNewModal && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-[#11141a] border border-[#232733] w-full max-w-md rounded p-4 space-y-3 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#232733] pb-2">
-              <span className="font-headline font-bold text-white text-sm">
-                + NEW TASK BLOCK
-              </span>
-              <button onClick={() => setShowNewModal(false)} className="text-zinc-400 hover:text-white">✕</button>
+          <div className="bg-obsidian-950 border border-obsidian-750 w-full max-w-md rounded p-4 space-y-3 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-obsidian-750 pb-2">
+              <span className="font-bold text-white text-sm">+ NEW TASK BLOCK</span>
+              <button onClick={() => setShowNewModal(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
-
             <div>
-              <label className="text-[10px] text-zinc-400 block mb-1">TASK TITLE</label>
+              <label className="text-[10px] text-slate-400 block mb-1">TASK TITLE</label>
               <input
-                className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none focus:border-[#c5ff42]"
+                className="w-full bg-[#0d0f12] border border-obsidian-750 px-2 py-1.5 text-xs text-slate-200 rounded outline-none focus:border-cyber-green"
                 placeholder="e.g. Distributed Systems PSet"
                 value={newTask.title}
                 onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
               />
             </div>
-
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">ESTIMATED MINUTES</label>
+                <label className="text-[10px] text-slate-400 block mb-1">ESTIMATED MINUTES</label>
                 <input
                   type="number"
-                  className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none"
+                  className="w-full bg-[#0d0f12] border border-obsidian-750 px-2 py-1.5 text-xs text-slate-200 rounded outline-none"
                   value={newTask.estimated_minutes}
                   onChange={(e) => setNewTask({ ...newTask, estimated_minutes: Number(e.target.value) })}
                 />
               </div>
               <div>
-                <label className="text-[10px] text-zinc-400 block mb-1">DEADLINE (OPTIONAL)</label>
+                <label className="text-[10px] text-slate-400 block mb-1">DEADLINE (OPTIONAL)</label>
                 <input
                   type="date"
-                  className="w-full bg-[#0d0f12] border border-[#232733] px-2 py-1.5 text-xs text-white rounded outline-none"
+                  className="w-full bg-[#0d0f12] border border-obsidian-750 px-2 py-1.5 text-xs text-slate-200 rounded outline-none"
                   value={newTask.deadline}
                   onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
                 />
               </div>
             </div>
-
-            <div className="flex gap-2 pt-2 border-t border-[#232733]">
+            <div className="flex gap-2 pt-2 border-t border-obsidian-750">
               <button
                 onClick={createQuickTask}
-                className="flex-1 py-1.5 bg-[#c5ff42] text-black font-bold text-xs rounded hover:bg-[#b5f030]"
+                className="flex-1 py-1.5 bg-cyber-neon text-obsidian-950 font-bold text-xs rounded border border-emerald-300 shadow-[0_0_15px_rgba(57,255,20,0.3)]"
               >
                 CREATE & SCHEDULE
               </button>
               <button
                 onClick={() => setShowNewModal(false)}
-                className="px-3 py-1.5 bg-[#1c202a] text-zinc-400 text-xs rounded border border-[#232733]"
+                className="px-3 py-1.5 bg-[#1c202a] text-slate-400 text-xs rounded border border-obsidian-750"
               >
                 CANCEL
               </button>
@@ -1111,3 +933,5 @@ export default function CalendarView() {
     </div>
   );
 }
+
+

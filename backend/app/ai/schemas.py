@@ -32,6 +32,8 @@ class TaskIntent(StrictModel):
     flexible: bool = True
     dependencies: list[str] = Field(default_factory=list)
     project_name: Optional[str] = None
+    tag: Optional[str] = None
+    active_until: Optional[date] = None
 
     @model_validator(mode="after")
     def validate_schedule_preferences(self):
@@ -97,6 +99,24 @@ class PlanningConstraints(StrictModel):
     keep_workload_manageable: bool = True
 
 
+class ChangeOperation(StrictModel):
+    """A proposed state change; it is data until the approval layer applies it."""
+    operation: Literal["create", "update", "delete", "set_recurrence"]
+    entity_type: Literal["project", "task", "commitment", "milestone"]
+    target_id: Optional[int] = None
+    fields: dict = Field(default_factory=dict)
+    reason: str = ""
+    expected_updated_at: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_target(self):
+        if self.operation in ("update", "delete", "set_recurrence") and self.target_id is None:
+            raise ValueError("mutating an existing record requires target_id")
+        if self.operation == "create" and self.target_id is not None:
+            raise ValueError("create operations cannot have target_id")
+        return self
+
+
 class PlanningIntent(StrictModel):
     summary: str = ""
     projects: list[ProjectIntent] = Field(default_factory=list)
@@ -105,6 +125,7 @@ class PlanningIntent(StrictModel):
     constraints: PlanningConstraints = Field(default_factory=PlanningConstraints)
     clarifications: list[str] = Field(default_factory=list)
     assumptions: list[str] = Field(default_factory=list)
+    operations: list[ChangeOperation] = Field(default_factory=list)
 
 
 class PlanningProposal(StrictModel):

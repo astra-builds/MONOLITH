@@ -17,6 +17,14 @@ def plan(req: AIPlanRequest):
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+@router.post("/operator")
+def operator(req: AIPlanRequest):
+    """Run the state-aware read/inspect/draft operator loop."""
+    try:
+        return service.operator_request(req.text, conversation_id=req.conversation_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
 @router.get("/proposals/{proposal_id}")
 def get_proposal(proposal_id: int):
     proposal = db.get_planning_proposal(proposal_id)
@@ -44,6 +52,13 @@ def reject_proposal(proposal_id: int):
     if not proposal:
         raise HTTPException(status_code=404, detail="Planning proposal not found")
     return proposal
+
+@router.post("/proposals/{proposal_id}/revert")
+def revert_proposal(proposal_id: int):
+    try:
+        return service.revert_proposal(proposal_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 @router.post("/apply")
 def apply_proposal(proposal: dict):

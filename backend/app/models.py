@@ -34,6 +34,8 @@ class TaskIn(BaseModel):
     flexible: bool = True
     dependencies: List[int] = []
     status: str = "todo"
+    tag: Optional[str] = None
+    active_until: Optional[str] = None
 
 class TaskUpdate(BaseModel):
     project_id: Optional[int] = None
@@ -53,6 +55,8 @@ class TaskUpdate(BaseModel):
     dependencies: Optional[List[int]] = None
     status: Optional[str] = None
     completed_at: Optional[str] = None
+    tag: Optional[str] = None
+    active_until: Optional[str] = None
 
 class CommitmentIn(BaseModel):
     title: str
@@ -99,11 +103,16 @@ class SettingsUpdate(BaseModel):
     ai_model: Optional[str] = None
     ai_api_key: Optional[str] = None
     ai_autonomy: Optional[Literal["suggestion", "assisted", "full"]] = None
+    ai_max_mutations: Optional[int] = Field(default=None, ge=1, le=1000)
+    ai_max_horizon_days: Optional[int] = Field(default=None, ge=1, le=730)
+    ai_dry_run: Optional[bool] = None
+    ai_require_delete_confirmation: Optional[bool] = None
 
 class AIPlanRequest(BaseModel):
     text: str
     provider: Optional[str] = None
     model: Optional[str] = None
+    conversation_id: Optional[str] = None
 
 class AIConversationMessage(BaseModel):
     conversation_id: str = "default"

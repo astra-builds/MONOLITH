@@ -101,7 +101,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#0a0c0f] text-zinc-300 font-mono overflow-hidden">
+    <div className="flex-1 flex flex-col bg-[#080b0d] text-slate-300 font-mono select-none antialiased overflow-hidden">
       {apiError && (
         <div className="bg-[#3a1419] border-b border-[#7d222e] text-[#ff7d8d] px-3 py-1.5 text-[10px] font-mono flex items-center justify-between shrink-0">
           <span>API ERROR</span>
@@ -131,7 +131,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-hidden flex flex-col bg-[#0d0f12]">
+      <main className="flex-1 overflow-hidden flex flex-col">
         {view === "calendar" && <CalendarView key={refreshKey} />}
         {view === "projects" && <ProjectsView key={refreshKey} onChange={refresh} />}
         {view === "tasks" && <TasksView key={refreshKey} onChange={refresh} />}

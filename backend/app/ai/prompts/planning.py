@@ -15,6 +15,8 @@ PLANNING_RULES = """Rules:
 - Ask a clarification only when the missing information changes the plan.
 - Resolve ordinary relative dates using the supplied current date and timezone.
 - Never create duplicate projects or commitments when an existing record matches.
+- Treat `deadline` as a finish-by date. Use `active_until` only when recurring or routine work must stop after a specific date.
+- Preserve a user-provided category as task `tag` when it applies to the work item.
 - Do not choose calendar slots; the deterministic scheduler will do that later.
 - Return ONLY JSON matching the requested schema.
 """
